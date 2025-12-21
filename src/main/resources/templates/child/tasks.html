@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Aufgaben - Kids Chores & Rewards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .child-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark" style="background: rgba(0,0,0,0.2);">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="/child/dashboard">
+                <span style="font-size: 1.5rem;">📝</span> Meine Aufgaben
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="/child/dashboard" class="btn btn-outline-light me-2">Zurück</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light">Abmelden</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="child-card p-4">
+                    <h3 class="mb-4"><i class="fas fa-tasks"></i> Meine Aufgaben</h3>
+                    
+                    <div th:each="task : ${tasks}" class="card mb-3 border-start border-primary border-5">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="card-title" th:text="${task.title}">Aufgabe</h5>
+                                    <p class="card-text text-muted" th:text="${task.description}">Beschreibung</p>
+                                    <small class="text-muted" th:if="${task.dueDate}">
+                                        📅 Fällig: <span th:text="${#temporals.format(task.dueDate, 'dd.MM.yyyy')}">Datum</span>
+                                    </small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="mb-2">
+                                        <span class="badge bg-success" style="font-size: 1.2rem;">
+                                            ⭐ <span th:text="${task.basePoints}">0</span> Punkte
+                                        </span>
+                                    </div>
+                                    <form th:action="@{/child/tasks/{id}/complete(id=${task.id})}" method="post">
+                                        <button type="submit" class="btn btn-primary">
+                                            ✅ Erledigt!
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${tasks.isEmpty()}" class="alert alert-info">
+                        <i class="fas fa-star"></i> Super! Du hast alle Aufgaben erledigt! 🎉
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

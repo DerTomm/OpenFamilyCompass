@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benutzer erstellen - Kids Chores & Rewards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard">🛡️ Admin Dashboard</a>
+            <div class="navbar-nav ms-auto">
+                <a href="/admin/users" class="btn btn-outline-light me-2">Zurück</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light">Abmelden</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-plus"></i> Neuer Benutzer</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/users/create}" method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Benutzername (Vorname)</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="pin" class="form-label">PIN-Code</label>
+                                <input type="password" class="form-control" id="pin" name="pin" 
+                                       pattern="[0-9]{4,6}" inputmode="numeric" required>
+                                <div class="form-text">4-6 Ziffern</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Rolle</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="" selected disabled>Rolle auswählen...</option>
+                                    <option th:each="role : ${roles}" th:value="${role}" th:text="${role}">Role</option>
+                                </select>
+                            </div>
+
+                            <div id="childFields" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">Vorname des Kindes</label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="avatarPath" class="form-label">Avatar (optional)</label>
+                                    <select class="form-select" id="avatarPath" name="avatarPath">
+                                        <option value="">Kein Avatar</option>
+                                        <option value="/images/avatars/cat.png">🐱 Katze</option>
+                                        <option value="/images/avatars/dog.png">🐶 Hund</option>
+                                        <option value="/images/avatars/bear.png">🐻 Bär</option>
+                                        <option value="/images/avatars/lion.png">🦁 Löwe</option>
+                                        <option value="/images/avatars/elephant.png">🐘 Elefant</option>
+                                        <option value="/images/avatars/giraffe.png">🦒 Giraffe</option>
+                                        <option value="/images/avatars/panda.png">🐼 Panda</option>
+                                        <option value="/images/avatars/unicorn.png">🦄 Einhorn</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save"></i> Benutzer erstellen
+                                </button>
+                                <a href="/admin/users" class="btn btn-outline-secondary">Abbrechen</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('role').addEventListener('change', function() {
+            const childFields = document.getElementById('childFields');
+            const firstNameInput = document.getElementById('firstName');
+            
+            if (this.value === 'CHILD') {
+                childFields.style.display = 'block';
+                firstNameInput.required = true;
+            } else {
+                childFields.style.display = 'none';
+                firstNameInput.required = false;
+            }
+        });
+    </script>
+</body>
+</html>

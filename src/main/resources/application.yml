@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: Kids Chores and Rewards
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kidschores
+    username: kidschores_user
+    password: kidschores_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+  security:
+    user:
+      name: admin
+      password: admin
+
+server:
+  port: 8080
+  error:
+    include-message: always
+
+logging:
+  level:
+    com.family.kidschores: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+
+app:
+  avatars:
+    upload-dir: uploads/avatars
+    predefined:
+      - cat.png
+      - dog.png
+      - bear.png
+      - lion.png
+      - elephant.png
+      - giraffe.png
+      - panda.png
+      - unicorn.png
+  admin:
+    default-username: admin
+    default-pin: "0000"

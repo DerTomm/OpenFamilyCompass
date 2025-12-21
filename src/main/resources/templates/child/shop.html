@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belohnungs-Shop - Kids Chores & Rewards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .shop-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .reward-card {
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .reward-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+        .reward-card.affordable {
+            border-color: #28a745;
+        }
+        .reward-card.too-expensive {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark" style="background: rgba(0,0,0,0.2);">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="/child/dashboard">
+                🛍️ Belohnungs-Shop
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="badge bg-success me-3" style="font-size: 1.2rem;">
+                    ⭐ <span th:text="${totalPoints}">0</span> Punkte
+                </span>
+                <a href="/child/dashboard" class="btn btn-outline-light">Zurück</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Success/Error Messages -->
+        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show">
+            ✅ Belohnung erfolgreich angefordert! Deine Eltern werden sie bald genehmigen.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${param.error == 'notenough'}" class="alert alert-danger alert-dismissible fade show">
+            ❌ Du hast nicht genug Punkte für diese Belohnung!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Available Rewards -->
+        <div class="shop-card p-4 mb-4">
+            <h2 class="mb-4"><i class="fas fa-gifts"></i> Verfügbare Belohnungen</h2>
+            
+            <div class="row">
+                <div class="col-md-4 mb-4" th:each="reward : ${rewards}">
+                    <div class="card reward-card" 
+                         th:classappend="${reward.pointsCost <= totalPoints} ? 'affordable' : 'too-expensive'">
+                        <div class="card-body text-center">
+                            <div th:if="${reward.imagePath}">
+                                <img th:src="@{${reward.imagePath}}" 
+                                     class="img-fluid mb-3" 
+                                     style="max-height: 150px;"
+                                     alt="Belohnung">
+                            </div>
+                            <div th:unless="${reward.imagePath}" 
+                                 class="mb-3" 
+                                 style="font-size: 5rem;">
+                                🎁
+                            </div>
+                            
+                            <h4 class="card-title" th:text="${reward.title}">Belohnung</h4>
+                            <p class="card-text" th:text="${reward.description}">Beschreibung</p>
+                            
+                            <div class="mb-3">
+                                <span class="badge bg-primary" style="font-size: 1.3rem;">
+                                    💎 <span th:text="${reward.pointsCost}">0</span> Punkte
+                                </span>
+                            </div>
+                            
+                            <form th:action="@{/child/shop/redeem/{id}(id=${reward.id})}" method="post">
+                                <button type="submit" 
+                                        class="btn btn-success btn-lg w-100"
+                                        th:disabled="${reward.pointsCost > totalPoints}">
+                                    <span th:if="${reward.pointsCost <= totalPoints}">🛒 Einlösen</span>
+                                    <span th:unless="${reward.pointsCost <= totalPoints}">❌ Zu teuer</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${rewards.isEmpty()}" class="text-center text-muted py-5">
+                <i class="fas fa-inbox fa-4x mb-3"></i>
+                <h4>Noch keine Belohnungen verfügbar</h4>
+                <p>Deine Eltern werden bald tolle Belohnungen hinzufügen!</p>
+            </div>
+        </div>
+
+        <!-- My Redemptions -->
+        <div class="shop-card p-4" th:if="${!myRedemptions.isEmpty()}">
+            <h3 class="mb-4"><i class="fas fa-list"></i> Meine Belohnungen</h3>
+            
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Belohnung</th>
+                            <th>Punkte</th>
+                            <th>Status</th>
+                            <th>Datum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="redemption : ${myRedemptions}">
+                            <td th:text="${redemption.reward.title}">Belohnung</td>
+                            <td th:text="${redemption.pointsSpent}">0</td>
+                            <td>
+                                <span th:if="${redemption.status.name() == 'REQUESTED'}" 
+                                      class="badge bg-warning">⏳ Warte auf Genehmigung</span>
+                                <span th:if="${redemption.status.name() == 'APPROVED'}" 
+                                      class="badge bg-info">✅ Genehmigt</span>
+                                <span th:if="${redemption.status.name() == 'DELIVERED'}" 
+                                      class="badge bg-success">🎉 Erhalten!</span>
+                                <span th:if="${redemption.status.name() == 'CANCELLED'}" 
+                                      class="badge bg-danger">❌ Storniert</span>
+                            </td>
+                            <td th:text="${#temporals.format(redemption.requestedAt, 'dd.MM.yyyy HH:mm')}">Datum</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belohnungen genehmigen - Kids Chores & Rewards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/parent/dashboard">👨‍👩‍👧‍👦 Eltern Dashboard</a>
+            <div class="navbar-nav ms-auto">
+                <a href="/parent/dashboard" class="btn btn-outline-light me-2">Zurück</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light">Abmelden</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fas fa-gift"></i> Belohnungen genehmigen</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3" th:each="redemption : ${redemptions}">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0" th:text="${redemption.child.firstName}">Kind</h5>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${redemption.reward.title}">Belohnung</h5>
+                        <p class="card-text" th:text="${redemption.reward.description}">Beschreibung</p>
+                        <p>
+                            <strong>Kosten:</strong> 
+                            <span class="badge bg-danger" th:text="${redemption.pointsSpent} + ' Punkte'">0 Punkte</span>
+                        </p>
+                        <p>
+                            <strong>Angefordert am:</strong> 
+                            <span th:text="${#temporals.format(redemption.requestedAt, 'dd.MM.yyyy HH:mm')}">Datum</span>
+                        </p>
+                        
+                        <hr>
+                        
+                        <form th:action="@{/parent/redemptions/{id}/approve(id=${redemption.id})}" method="post" class="d-inline">
+                            <input type="text" class="form-control mb-2" name="notes" 
+                                   placeholder="Notizen (optional)">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-check"></i> Genehmigen
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12" th:if="${redemptions.isEmpty()}">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Keine Belohnungsanfragen warten auf Genehmigung.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

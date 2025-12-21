@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belohnungen verwalten - Kids Chores & Rewards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard">🛡️ Admin Dashboard</a>
+            <div class="navbar-nav ms-auto">
+                <a href="/admin/dashboard" class="btn btn-outline-light me-2">Zurück</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light">Abmelden</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fas fa-gift"></i> Belohnungsverwaltung</h2>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="/admin/rewards/create" class="btn btn-danger">
+                    <i class="fas fa-plus"></i> Neue Belohnung
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Alle Belohnungen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3" th:each="reward : ${rewards}">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="mb-3" style="font-size: 3rem;">🎁</div>
+                                        <h5 class="card-title" th:text="${reward.title}">Belohnung</h5>
+                                        <p class="card-text text-muted" th:text="${reward.description}">Beschreibung</p>
+                                        <p class="mb-2">
+                                            <span class="badge bg-danger" style="font-size: 1.2rem;">
+                                                ⭐ <span th:text="${reward.pointsCost}">0</span> Punkte
+                                            </span>
+                                        </p>
+                                        <p>
+                                            <span class="badge" 
+                                                  th:classappend="${reward.active} ? 'bg-success' : 'bg-secondary'"
+                                                  th:text="${reward.active} ? 'Aktiv' : 'Inaktiv'">Status</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12" th:if="${rewards.isEmpty()}">
+                                <p class="text-center text-muted">
+                                    Keine Belohnungen vorhanden. Erstelle die erste Belohnung!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
