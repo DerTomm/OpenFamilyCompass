@@ -34,7 +34,7 @@ public class UserService implements UserDetailsService {
         }
 
         User user = new User();
-        user.setUsername(username);
+        user.setUsername(username.toLowerCase());
         user.setPin(passwordEncoder.encode(pin));
         user.setRole(role);
         user.setActive(true);
