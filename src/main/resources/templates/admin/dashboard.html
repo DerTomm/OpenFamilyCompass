@@ -7,94 +7,55 @@
     <nav th:replace="~{fragments/navbar :: adminNav}"></nav>
 
     <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fas fa-shield-alt"></i> Administrator Dashboard</h2>
+                <p class="text-muted">Verwaltung von Benutzern und Systemeinstellungen</p>
+            </div>
+        </div>
+
+        <!-- User Management -->
         <div class="row">
-            <!-- Quick Stats -->
-            <div class="col-md-3 mb-3">
-                <div class="card bg-info text-white">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-users"></i> Kinder</h5>
-                        <h2 class="mb-0" th:text="${children.size()}">0</h2>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <div class="card bg-warning text-white">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-clock"></i> Warten auf Genehmigung</h5>
-                        <h2 class="mb-0" th:text="${pendingApprovals.size()}">0</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Navigation -->
-        <div class="row mt-4">
-            <div class="col-md-3 mb-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                        <h5>Benutzer verwalten</h5>
-                        <a href="/admin/users" class="btn btn-primary">Öffnen</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-tasks fa-3x text-success mb-3"></i>
-                        <h5>Aufgaben verwalten</h5>
-                        <a href="/admin/tasks" class="btn btn-success">Öffnen</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-gift fa-3x text-danger mb-3"></i>
-                        <h5>Belohnungen verwalten</h5>
-                        <a href="/admin/rewards" class="btn btn-danger">Öffnen</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-star fa-3x text-warning mb-3"></i>
-                        <h5>Verhalten verwalten</h5>
-                        <a href="/admin/behaviors" class="btn btn-warning">Öffnen</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pending Approvals -->
-        <div class="row mt-4" th:if="${pendingApprovals.size() > 0}">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-warning">
-                        <h5 class="mb-0"><i class="fas fa-clock"></i> Aufgaben warten auf Genehmigung</h5>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-users"></i> Benutzerverwaltung</h5>
                     </div>
                     <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <p class="mb-0">Verwalten Sie alle Benutzerkonten des Systems</p>
+                            <a href="/admin/user/create" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Neuer Benutzer
+                            </a>
+                        </div>
+                        
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Kind</th>
-                                        <th>Aufgabe</th>
-                                        <th>Punkte</th>
-                                        <th>Abgeschlossen am</th>
+                                        <th>Benutzername</th>
+                                        <th>Rolle</th>
+                                        <th>Erstellt am</th>
+                                        <th>Aktionen</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="task : ${pendingApprovals}">
-                                        <td th:text="${task.assignedChild.firstName}">Kind</td>
-                                        <td th:text="${task.title}">Aufgabe</td>
-                                        <td th:text="${task.basePoints}">0</td>
-                                        <td th:text="${#temporals.format(task.completedAt, 'dd.MM.yyyy HH:mm')}">Datum</td>
+                                    <tr th:each="user : ${users}">
+                                        <td>
+                                            <i class="fas fa-user-circle"></i>
+                                            <span th:text="${user.username}">username</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge" 
+                                                  th:classappend="${user.role == 'ADMIN'} ? 'bg-danger' : (${user.role == 'PARENT'} ? 'bg-primary' : 'bg-info')"
+                                                  th:text="${user.role}">ROLE</span>
+                                        </td>
+                                        <td th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy')}">Datum</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -104,41 +65,13 @@
             </div>
         </div>
 
-        <!-- Children Overview -->
+        <!-- Info Box -->
         <div class="row mt-4">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-users"></i> Kinder-Übersicht</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 mb-3" th:each="child : ${children}">
-                                <div class="card">
-                                    <div class="card-body text-center">
-                                        <img th:if="${child.avatarPath}" 
-                                             th:src="@{${child.avatarPath}}" 
-                                             class="rounded-circle mb-2" 
-                                             style="width: 80px; height: 80px;"
-                                             alt="Avatar">
-                                        <div th:unless="${child.avatarPath}" 
-                                             class="rounded-circle bg-secondary mx-auto mb-2" 
-                                             style="width: 80px; height: 80px; line-height: 80px; font-size: 2rem;">
-                                            👤
-                                        </div>
-                                        <h5 th:text="${child.firstName}">Kind</h5>
-                                        <p class="mb-2">
-                                            <span class="badge bg-success" style="font-size: 1.2rem;">
-                                                ⭐ <span th:text="${child.totalPoints}">0</span> Punkte
-                                            </span>
-                                        </p>
-                                        <a th:href="@{/admin/children/{id}(id=${child.id})}" 
-                                           class="btn btn-sm btn-outline-primary">Details</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Hinweis:</strong> Als Administrator verwalten Sie ausschließlich Benutzerkonten. 
+                    Die Verwaltung von Aufgaben, Belohnungen und Verhalten erfolgt durch Benutzer mit der Rolle "Eltern".
                 </div>
             </div>
         </div>
