@@ -1,25 +1,33 @@
 package com.family.kidschores.model;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.io.Serial;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User implements UserDetails, Serializable {
+public class User implements UserDetails {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -32,7 +40,7 @@ public class User implements UserDetails, Serializable {
     private String username;
 
     @Column(nullable = false)
-    private String pin;  // Verschlüsselter PIN-Code
+    private String pin; // Verschlüsselter PIN-Code
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -42,7 +50,7 @@ public class User implements UserDetails, Serializable {
     private boolean active = true;
 
     @Column(name = "theme", length = 10)
-    private String theme = "LIGHT";  // LIGHT or DARK
+    private String theme = "LIGHT"; // LIGHT or DARK
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

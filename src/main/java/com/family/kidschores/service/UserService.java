@@ -1,9 +1,8 @@
 package com.family.kidschores.service;
 
-import com.family.kidschores.model.User;
-import com.family.kidschores.model.UserRole;
-import com.family.kidschores.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,9 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import com.family.kidschores.model.User;
+import com.family.kidschores.model.UserRole;
+import com.family.kidschores.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +49,7 @@ public class UserService implements UserDetailsService {
     public User updatePin(@NonNull Long userId, @NonNull String newPin) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
+
         user.setPin(passwordEncoder.encode(newPin));
         return userRepository.save(user);
     }
@@ -57,7 +58,7 @@ public class UserService implements UserDetailsService {
     public void deactivateUser(@NonNull Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
+
         user.setActive(false);
         userRepository.save(user);
     }
