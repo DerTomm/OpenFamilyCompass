@@ -5,10 +5,12 @@ import com.family.kidschores.model.Behavior;
 import com.family.kidschores.model.User;
 import com.family.kidschores.repository.BehaviorRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +20,7 @@ public class BehaviorService {
     private final PointService pointService;
 
     @Transactional
-    public Behavior createBehavior(String title, String guideline, int points, Child child) {
+    public Behavior createBehavior(@NonNull String title, @NonNull String guideline, int points, Child child) {
         Behavior behavior = new Behavior();
         behavior.setTitle(title);
         behavior.setGuideline(guideline);
@@ -30,7 +32,7 @@ public class BehaviorService {
     }
 
     @Transactional
-    public void recordBehavior(Long behaviorId, Child child, User recordedBy) {
+    public void recordBehavior(@NonNull Long behaviorId, @NonNull Child child, @NonNull User recordedBy) {
         Behavior behavior = behaviorRepository.findById(behaviorId)
                 .orElseThrow(() -> new IllegalArgumentException("Behavior not found"));
 
@@ -38,14 +40,15 @@ public class BehaviorService {
             throw new IllegalStateException("Behavior is not active");
         }
 
-        // Punkte gutschreiben
+        // Punkte gutschreiben - ID darf nicht null sein nach dem Laden aus der DB
+        Long id = Objects.requireNonNull(behavior.getId(), "Behavior ID must not be null");
         pointService.addPoints(child, behavior.getPoints(), "BEHAVIOR", 
                               "Positives Verhalten: " + behavior.getTitle(), 
-                              behavior.getId(), recordedBy);
+                              id, recordedBy);
     }
 
     @Transactional
-    public void deactivateBehavior(Long behaviorId) {
+    public void deactivateBehavior(@NonNull Long behaviorId) {
         Behavior behavior = behaviorRepository.findById(behaviorId)
                 .orElseThrow(() -> new IllegalArgumentException("Behavior not found"));
         
@@ -57,7 +60,7 @@ public class BehaviorService {
         return behaviorRepository.findByActiveTrue();
     }
 
-    public List<Behavior> findByChild(Child child) {
+    public List<Behavior> findByChild(@NonNull Child child) {
         return behaviorRepository.findByChild(child);
     }
 

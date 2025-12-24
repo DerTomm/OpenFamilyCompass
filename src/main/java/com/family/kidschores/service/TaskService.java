@@ -4,6 +4,7 @@ import com.family.kidschores.model.*;
 import com.family.kidschores.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +23,8 @@ public class TaskService {
     private final PointService pointService;
 
     @Transactional
-    public Task createTask(String title, String description, int basePoints, 
-                          Child assignedChild, RecurrenceType recurrenceType, 
+    public Task createTask(@NonNull String title, String description, int basePoints, 
+                          Child assignedChild, @NonNull RecurrenceType recurrenceType, 
                           LocalDate dueDate, boolean isTemplate) {
         Task task = new Task();
         task.setTitle(title);
@@ -38,7 +40,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task markAsCompleted(Long taskId, User child) {
+    public Task markAsCompleted(@NonNull Long taskId, @NonNull User child) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
@@ -53,7 +55,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task approveTask(Long taskId, User approver, int awardedPoints, String notes) {
+    public Task approveTask(@NonNull Long taskId, @NonNull User approver, int awardedPoints, String notes) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
@@ -70,9 +72,10 @@ public class TaskService {
         Task savedTask = taskRepository.save(task);
 
         // Punkte gutschreiben
+        Long taskId2 = Objects.requireNonNull(task.getId(), "Task ID must not be null");
         pointService.addPoints(task.getAssignedChild(), awardedPoints, 
                               "TASK", "Aufgabe erledigt: " + task.getTitle(), 
-                              task.getId(), approver);
+                              taskId2, approver);
 
         // Wenn wiederkehrende Aufgabe, nächste Instanz erstellen
         if (task.getRecurrenceType() != RecurrenceType.ONCE) {
@@ -83,7 +86,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task rejectTask(Long taskId, User rejector, String notes) {
+    public Task rejectTask(@NonNull Long taskId, @NonNull User rejector, String notes) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
@@ -172,15 +175,15 @@ public class TaskService {
         log.info("Created task from template: {}", template.getTitle());
     }
 
-    public List<Task> findByChild(Child child) {
+    public List<Task> findByChild(@NonNull Child child) {
         return taskRepository.findByAssignedChild(child);
     }
 
-    public List<Task> findByChildAndStatus(Child child, TaskStatus status) {
+    public List<Task> findByChildAndStatus(@NonNull Child child, @NonNull TaskStatus status) {
         return taskRepository.findByAssignedChildAndStatus(child, status);
     }
 
-    public List<Task> findPendingForChild(Child child) {
+    public List<Task> findPendingForChild(@NonNull Child child) {
         return taskRepository.findByAssignedChildAndStatusIn(child, 
                 List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS));
     }

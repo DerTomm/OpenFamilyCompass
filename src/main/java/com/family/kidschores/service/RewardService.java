@@ -3,6 +3,7 @@ package com.family.kidschores.service;
 import com.family.kidschores.model.Reward;
 import com.family.kidschores.repository.RewardRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +17,7 @@ public class RewardService {
     private final RewardRepository rewardRepository;
 
     @Transactional
-    public Reward createReward(String title, String description, int pointsCost, String imagePath) {
+    public Reward createReward(@NonNull String title, String description, int pointsCost, String imagePath) {
         Reward reward = new Reward();
         reward.setTitle(title);
         reward.setDescription(description);
@@ -28,7 +29,7 @@ public class RewardService {
     }
 
     @Transactional
-    public Reward updateReward(Long id, String title, String description, 
+    public Reward updateReward(@NonNull Long id, @NonNull String title, String description, 
                               int pointsCost, String imagePath) {
         Reward reward = rewardRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reward not found"));
@@ -44,7 +45,7 @@ public class RewardService {
     }
 
     @Transactional
-    public void deactivateReward(Long id) {
+    public void deactivateReward(@NonNull Long id) {
         Reward reward = rewardRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reward not found"));
         
@@ -52,7 +53,7 @@ public class RewardService {
         rewardRepository.save(reward);
     }
 
-    public Optional<Reward> findById(Long id) {
+    public Optional<Reward> findById(@NonNull Long id) {
         return rewardRepository.findById(id);
     }
 

@@ -5,10 +5,12 @@ import com.family.kidschores.model.PointTransaction;
 import com.family.kidschores.model.User;
 import com.family.kidschores.repository.PointTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +20,8 @@ public class PointService {
     private final ChildService childService;
 
     @Transactional
-    public PointTransaction addPoints(Child child, int points, String type, 
-                                     String description, Long referenceId, User createdBy) {
+    public PointTransaction addPoints(@NonNull Child child, int points, @NonNull String type, 
+                                     @NonNull String description, Long referenceId, User createdBy) {
         PointTransaction transaction = new PointTransaction();
         transaction.setChild(child);
         transaction.setPoints(points);
@@ -37,25 +39,26 @@ public class PointService {
     }
 
     @Transactional
-    public PointTransaction deductPoints(Child child, int points, String type, 
-                                        String description, Long referenceId, User createdBy) {
+    public PointTransaction deductPoints(@NonNull Child child, int points, @NonNull String type, 
+                                        @NonNull String description, Long referenceId, User createdBy) {
         return addPoints(child, -points, type, description, referenceId, createdBy);
     }
 
     @Transactional
-    public void updateChildPoints(Child child) {
+    public void updateChildPoints(@NonNull Child child) {
+        Long childId = Objects.requireNonNull(child.getId(), "Child ID must not be null");
         Integer totalPoints = pointTransactionRepository.sumPointsByChild(child);
         if (totalPoints == null) {
             totalPoints = 0;
         }
-        childService.updatePoints(child.getId(), totalPoints);
+        childService.updatePoints(childId, totalPoints);
     }
 
-    public List<PointTransaction> getTransactionHistory(Child child) {
+    public List<PointTransaction> getTransactionHistory(@NonNull Child child) {
         return pointTransactionRepository.findByChildOrderByCreatedAtDesc(child);
     }
 
-    public int calculateTotalPoints(Child child) {
+    public int calculateTotalPoints(@NonNull Child child) {
         Integer total = pointTransactionRepository.sumPointsByChild(child);
         return total != null ? total : 0;
     }

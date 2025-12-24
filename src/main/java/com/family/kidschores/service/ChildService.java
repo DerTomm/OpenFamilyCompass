@@ -4,6 +4,7 @@ import com.family.kidschores.model.Child;
 import com.family.kidschores.model.User;
 import com.family.kidschores.repository.ChildRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,7 @@ public class ChildService {
     private final ChildRepository childRepository;
 
     @Transactional
-    public Child createChild(User user, String firstName, String avatarPath) {
+    public Child createChild(@NonNull User user, @NonNull String firstName, String avatarPath) {
         Child child = new Child();
         child.setUser(user);
         child.setFirstName(firstName);
@@ -28,7 +29,7 @@ public class ChildService {
     }
 
     @Transactional
-    public Child updateAvatar(Long childId, String avatarPath) {
+    public Child updateAvatar(@NonNull Long childId, String avatarPath) {
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new IllegalArgumentException("Child not found"));
         
@@ -37,7 +38,7 @@ public class ChildService {
     }
 
     @Transactional
-    public Child updatePoints(Long childId, int points) {
+    public Child updatePoints(@NonNull Long childId, int points) {
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new IllegalArgumentException("Child not found"));
         
@@ -45,15 +46,15 @@ public class ChildService {
         return childRepository.save(child);
     }
 
-    public Optional<Child> findById(Long id) {
+    public Optional<Child> findById(@NonNull Long id) {
         return childRepository.findById(id);
     }
 
-    public Optional<Child> findByUser(User user) {
+    public Optional<Child> findByUser(@NonNull User user) {
         return childRepository.findByUser(user);
     }
 
-    public Optional<Child> findByUserId(Long userId) {
+    public Optional<Child> findByUserId(@NonNull Long userId) {
         return childRepository.findByUserId(userId);
     }
 

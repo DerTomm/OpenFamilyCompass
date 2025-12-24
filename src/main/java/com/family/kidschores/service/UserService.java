@@ -4,6 +4,7 @@ import com.family.kidschores.model.User;
 import com.family.kidschores.model.UserRole;
 import com.family.kidschores.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -28,7 +30,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User createUser(String username, String pin, UserRole role) {
+    public User createUser(@NonNull String username, @NonNull String pin, @NonNull UserRole role) {
         if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists: " + username);
         }
@@ -43,7 +45,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User updatePin(Long userId, String newPin) {
+    public User updatePin(@NonNull Long userId, @NonNull String newPin) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
@@ -52,7 +54,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void deactivateUser(Long userId) {
+    public void deactivateUser(@NonNull Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
@@ -60,15 +62,15 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    public Optional<User> findById(Long id) {
+    public Optional<User> findById(@NonNull Long id) {
         return userRepository.findById(id);
     }
 
-    public Optional<User> findByUsername(String username) {
+    public Optional<User> findByUsername(@NonNull String username) {
         return userRepository.findByUsername(username);
     }
 
-    public List<User> findAllByRole(UserRole role) {
+    public List<User> findAllByRole(@NonNull UserRole role) {
         return userRepository.findByRole(role);
     }
 
@@ -77,7 +79,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User save(User user) {
+    public User save(@NonNull User user) {
         return userRepository.save(user);
     }
 }

@@ -3,11 +3,13 @@ package com.family.kidschores.service;
 import com.family.kidschores.model.*;
 import com.family.kidschores.repository.RewardRedemptionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +19,7 @@ public class RewardRedemptionService {
     private final PointService pointService;
 
     @Transactional
-    public RewardRedemption requestReward(Child child, Reward reward) {
+    public RewardRedemption requestReward(@NonNull Child child, @NonNull Reward reward) {
         // Prüfen ob genug Punkte vorhanden
         if (child.getTotalPoints() < reward.getPointsCost()) {
             throw new IllegalStateException("Not enough points");
@@ -32,15 +34,16 @@ public class RewardRedemptionService {
         RewardRedemption saved = redemptionRepository.save(redemption);
 
         // Punkte vorläufig abziehen
+        Long redemptionId = Objects.requireNonNull(saved.getId(), "Redemption ID must not be null");
         pointService.deductPoints(child, reward.getPointsCost(), "REWARD", 
                                  "Belohnung angefordert: " + reward.getTitle(), 
-                                 saved.getId(), null);
+                                 redemptionId, null);
 
         return saved;
     }
 
     @Transactional
-    public RewardRedemption approveRedemption(Long redemptionId, User approver, String notes) {
+    public RewardRedemption approveRedemption(@NonNull Long redemptionId, @NonNull User approver, String notes) {
         RewardRedemption redemption = redemptionRepository.findById(redemptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Redemption not found"));
 
@@ -57,7 +60,7 @@ public class RewardRedemptionService {
     }
 
     @Transactional
-    public RewardRedemption markAsDelivered(Long redemptionId) {
+    public RewardRedemption markAsDelivered(@NonNull Long redemptionId) {
         RewardRedemption redemption = redemptionRepository.findById(redemptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Redemption not found"));
 
@@ -68,7 +71,7 @@ public class RewardRedemptionService {
     }
 
     @Transactional
-    public RewardRedemption cancelRedemption(Long redemptionId, User cancelledBy) {
+    public RewardRedemption cancelRedemption(@NonNull Long redemptionId, @NonNull User cancelledBy) {
         RewardRedemption redemption = redemptionRepository.findById(redemptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Redemption not found"));
 
@@ -77,14 +80,15 @@ public class RewardRedemptionService {
         RewardRedemption saved = redemptionRepository.save(redemption);
 
         // Punkte zurückgeben
+        Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
         pointService.addPoints(redemption.getChild(), redemption.getPointsSpent(), 
                               "REWARD", "Belohnung storniert: " + redemption.getReward().getTitle(), 
-                              redemption.getId(), cancelledBy);
+                              redemptionId2, cancelledBy);
 
         return saved;
     }
 
-    public List<RewardRedemption> findByChild(Child child) {
+    public List<RewardRedemption> findByChild(@NonNull Child child) {
         return redemptionRepository.findByChildOrderByRequestedAtDesc(child);
     }
 
