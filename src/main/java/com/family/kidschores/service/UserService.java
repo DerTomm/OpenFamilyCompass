@@ -75,4 +75,9 @@ public class UserService implements UserDetailsService {
     public List<User> findAllActive() {
         return userRepository.findByActiveTrue();
     }
+
+    @Transactional
+    public User save(User user) {
+        return userRepository.save(user);
+    }
 }

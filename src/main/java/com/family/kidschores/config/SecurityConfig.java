@@ -43,6 +43,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/avatars/**").permitAll()
                 .requestMatchers("/login", "/error").permitAll()
+                .requestMatchers("/profile/**").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/parent/**").hasAnyRole("ADMIN", "PARENT")
                 .requestMatchers("/child/**").hasRole("CHILD")
