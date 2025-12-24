@@ -20,7 +20,7 @@ public class AdminController {
     private final ChildService childService;
     private final TaskService taskService;
     private final RewardService rewardService;
-    private final HabitService habitService;
+    private final BehaviorService behaviorService;
     private final PenaltyService penaltyService;
 
     @GetMapping("/dashboard")
@@ -115,24 +115,39 @@ public class AdminController {
         return "redirect:/admin/rewards";
     }
 
-    // Habit Management
-    @GetMapping("/habits")
-    public String listHabits(Model model) {
-        List<Habit> habits = habitService.findAllActive();
-        model.addAttribute("habits", habits);
-        return "admin/habits";
+    // Behavior Management
+    @GetMapping("/behaviors")
+    public String listBehaviors(Model model) {
+        List<Behavior> behaviors = behaviorService.findAllActive();
+        List<Child> children = childService.findAll();
+        model.addAttribute("behaviors", behaviors);
+        model.addAttribute("children", children);
+        return "admin/behaviors";
     }
 
-    @PostMapping("/habits/create")
-    public String createHabit(@RequestParam String title,
-                             @RequestParam String description,
-                             @RequestParam int points,
-                             @RequestParam(required = false) Long childId) {
+    @GetMapping("/behaviors/create")
+    public String createBehaviorForm(Model model) {
+        List<Child> children = childService.findAll();
+        model.addAttribute("children", children);
+        return "admin/behavior-create";
+    }
+
+    @PostMapping("/behaviors/create")
+    public String createBehavior(@RequestParam String title,
+                                @RequestParam String guideline,
+                                @RequestParam int points,
+                                @RequestParam(required = false) Long childId) {
         Child child = childId != null ? 
                      childService.findById(childId).orElse(null) : null;
         
-        habitService.createHabit(title, description, points, child);
-        return "redirect:/admin/habits";
+        behaviorService.createBehavior(title, guideline, points, child);
+        return "redirect:/admin/behaviors";
+    }
+
+    @PostMapping("/behaviors/{id}/deactivate")
+    public String deactivateBehavior(@PathVariable Long id) {
+        behaviorService.deactivateBehavior(id);
+        return "redirect:/admin/behaviors";
     }
 
     // Penalty Management

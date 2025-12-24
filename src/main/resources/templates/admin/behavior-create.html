@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neues Verhalten erstellen - Kids Chores & Rewards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard">🛡️ Admin Dashboard</a>
+            <div class="navbar-nav ms-auto">
+                <a href="/admin/behaviors" class="btn btn-outline-light me-2">Zurück</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light">Abmelden</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h4 class="mb-0"><i class="fas fa-star"></i> Neues Verhalten erstellen</h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/behaviors/create}" method="post">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Titel <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       placeholder="z.B. Kein sinnloses Herumdiskutieren!" required>
+                                <div class="form-text">Ein kurzer, prägnanter Titel für das Verhalten</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="guideline" class="form-label">Leitsatz <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="guideline" name="guideline" rows="3"
+                                          placeholder="z.B. Ich diskutiere nicht unnötig mit meinen Eltern, wenn es keinen Grund hierfür gibt" required></textarea>
+                                <div class="form-text">Ein Leitsatz, der das gewünschte Verhalten beschreibt</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="points" class="form-label">Punkte <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="points" name="points" 
+                                       min="1" value="10" required>
+                                <div class="form-text">Wie viele Punkte gibt es für das Einhalten dieses Verhaltens?</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="childId" class="form-label">Kind (optional)</label>
+                                <select class="form-select" id="childId" name="childId">
+                                    <option value="">Für alle Kinder</option>
+                                    <option th:each="child : ${children}" 
+                                            th:value="${child.id}" 
+                                            th:text="${child.firstName}">Kind</option>
+                                </select>
+                                <div class="form-text">Leer lassen, wenn das Verhalten für alle Kinder gelten soll</div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 
+                                <strong>Hinweis:</strong> Die Auswertung des Verhaltens erfolgt durch die Eltern, 
+                                üblicherweise am Ende der Woche. Kinder müssen hier kein Check-in vornehmen.
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/admin/behaviors" class="btn btn-secondary">Abbrechen</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Verhalten erstellen
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

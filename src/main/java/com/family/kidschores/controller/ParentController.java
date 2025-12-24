@@ -18,7 +18,7 @@ public class ParentController {
     private final ChildService childService;
     private final TaskService taskService;
     private final RewardRedemptionService redemptionService;
-    private final HabitService habitService;
+    private final BehaviorService behaviorService;
     private final PenaltyService penaltyService;
 
     @GetMapping("/dashboard")
@@ -88,26 +88,35 @@ public class ParentController {
                 .orElseThrow(() -> new IllegalArgumentException("Child not found"));
         
         List<Task> tasks = taskService.findByChild(child);
-        List<Habit> habits = habitService.findAllActive();
+        List<Behavior> behaviors = behaviorService.findAllActive();
         
         model.addAttribute("child", child);
         model.addAttribute("tasks", tasks);
-        model.addAttribute("habits", habits);
+        model.addAttribute("behaviors", behaviors);
         
         return "parent/child-details";
     }
 
-    @PostMapping("/habits/{habitId}/record")
-    public String recordHabit(@PathVariable Long habitId,
-                             @RequestParam Long childId,
-                             Authentication authentication) {
+    @GetMapping("/behaviors")
+    public String listBehaviors(Model model) {
+        List<Behavior> behaviors = behaviorService.findAllActive();
+        List<Child> children = childService.findAll();
+        model.addAttribute("behaviors", behaviors);
+        model.addAttribute("children", children);
+        return "parent/behaviors";
+    }
+
+    @PostMapping("/behaviors/{behaviorId}/record")
+    public String recordBehavior(@PathVariable Long behaviorId,
+                                @RequestParam Long childId,
+                                Authentication authentication) {
         Child child = childService.findById(childId)
                 .orElseThrow(() -> new IllegalArgumentException("Child not found"));
         
         User currentUser = (User) authentication.getPrincipal();
-        habitService.recordHabit(habitId, child, currentUser);
+        behaviorService.recordBehavior(behaviorId, child, currentUser);
         
-        return "redirect:/parent/children/" + childId;
+        return "redirect:/parent/behaviors";
     }
 
     @PostMapping("/penalties/create")

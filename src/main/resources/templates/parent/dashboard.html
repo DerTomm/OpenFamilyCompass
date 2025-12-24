@@ -22,7 +22,7 @@
     <div class="container my-4">
         <!-- Quick Actions -->
         <div class="row mb-4">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                 <div class="card border-warning">
                     <div class="card-header bg-warning text-white">
                         <h5 class="mb-0"><i class="fas fa-check-circle"></i> Aufgaben genehmigen</h5>
@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
                 <div class="card border-info">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0"><i class="fas fa-gift"></i> Belohnungen genehmigen</h5>
@@ -42,6 +42,18 @@
                     <div class="card-body">
                         <p class="mb-2">Warten auf Genehmigung: <strong th:text="${pendingRedemptions.size()}">0</strong></p>
                         <a href="/parent/redemptions/pending" class="btn btn-info text-white">Belohnungen prüfen</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-star"></i> Verhalten bewerten</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">Belohne positives Verhalten deiner Kinder</p>
+                        <a href="/parent/behaviors" class="btn btn-success">Verhalten bewerten</a>
                     </div>
                 </div>
             </div>
