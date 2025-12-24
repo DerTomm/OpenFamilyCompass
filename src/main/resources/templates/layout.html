@@ -20,18 +20,33 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <span class="navbar-text text-white me-3">
-                            <i class="fas fa-user"></i>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
                             <span sec:authentication="name">User</span>
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-outline-light btn-sm">
-                                <i class="fas fa-sign-out-alt"></i> Abmelden
-                            </button>
-                        </form>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            <li>
+                                <h6 class="dropdown-header">
+                                    <i class="fas fa-user"></i> 
+                                    <span sec:authentication="name">User</span>
+                                </h6>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/profile/settings">
+                                    <i class="fas fa-cog"></i> Profileinstellungen
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="d-inline w-100">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt"></i> Abmelden
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,16 +28,45 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark" style="background: rgba(0,0,0,0.2);">
+    <nav class="navbar navbar-dark navbar-expand-lg" style="background: rgba(0,0,0,0.2);">
         <div class="container-fluid">
             <a class="navbar-brand text-white" href="/child/dashboard">
                 <span style="font-size: 1.5rem;">📊</span> Meine Historie
             </a>
-            <div class="navbar-nav ms-auto">
-                <a href="/child/dashboard" class="btn btn-outline-light me-2">Zurück</a>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-light">Abmelden</button>
-                </form>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle fa-lg"></i>
+                            <span sec:authentication="name">User</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            <li>
+                                <h6 class="dropdown-header">
+                                    <i class="fas fa-user"></i> 
+                                    <span sec:authentication="name">User</span>
+                                </h6>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/profile/settings">
+                                    <i class="fas fa-cog"></i> Profileinstellungen
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="d-inline w-100">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt"></i> Abmelden
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
