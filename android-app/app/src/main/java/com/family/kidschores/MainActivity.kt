@@ -33,7 +33,9 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
 
-        // Setup ActionBar
+        // Setup Toolbar as ActionBar
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
         supportActionBar?.apply {
             title = getString(R.string.app_name)
             setDisplayHomeAsUpEnabled(false)
