@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackground">
+    
+    <ImageView
+        android:id="@+id/profile_avatar"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@android:drawable/ic_menu_myplaces"
+        android:contentDescription="Profil" />
+    
+    <TextView
+        android:id="@+id/profile_username"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Profil"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="14sp" />
+    
+    <TextView
+        android:id="@+id/profile_dropdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:text="⋮"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="24sp"
+        android:contentDescription="Menü" />
+    
+</LinearLayout>

@@ -2,21 +2,47 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     
-    <item
-        android:id="@+id/action_refresh"
-        android:title="@string/menu_refresh"
-        android:icon="@android:drawable/ic_menu_rotate"
-        app:showAsAction="ifRoom" />
+    <!-- Admin Items -->
+    <group android:id="@+id/menu_group_admin"
+        android:visible="false">
+        <item
+            android:id="@+id/action_admin_users"
+            android:title="Benutzerverwaltung" />
+        <item
+            android:id="@+id/action_admin_families"
+            android:title="Familienverwaltung" />
+    </group>
     
-    <item
-        android:id="@+id/action_settings"
-        android:title="@string/menu_settings"
-        android:icon="@android:drawable/ic_menu_preferences"
-        app:showAsAction="never" />
+    <!-- Parent Items -->
+    <group android:id="@+id/menu_group_parent"
+        android:visible="false">
+        <item
+            android:id="@+id/action_parent_chores"
+            android:title="Aufgaben verwalten" />
+        <item
+            android:id="@+id/action_parent_rewards"
+            android:title="Belohnungen" />
+        <item
+            android:id="@+id/action_parent_children"
+            android:title="Kinder" />
+    </group>
     
+    <!-- Child Items -->
+    <group android:id="@+id/menu_group_child"
+        android:visible="false">
+        <item
+            android:id="@+id/action_child_chores"
+            android:title="Meine Aufgaben" />
+        <item
+            android:id="@+id/action_child_history"
+            android:title="Verlauf" />
+    </group>
+    
+    <!-- Profil Avatar (rechts oben) -->
     <item
-        android:id="@+id/action_logout"
-        android:title="@string/menu_logout"
-        app:showAsAction="never" />
+        android:id="@+id/action_profile_menu"
+        android:title="Profil"
+        app:actionLayout="@layout/menu_profile_item"
+        app:showAsAction="always" />
     
 </menu>

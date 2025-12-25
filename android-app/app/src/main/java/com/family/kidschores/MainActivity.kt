@@ -9,6 +9,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.*
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var sessionManager: SessionManager
+    private var sessionAlreadyDetected = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +42,9 @@ class MainActivity : AppCompatActivity() {
             title = getString(R.string.app_name)
             setDisplayHomeAsUpEnabled(false)
         }
+        
+        // Zeige Username wenn Session existiert
+        updateToolbarWithUsername()
 
         // Configure WebView
         setupWebView()
@@ -102,12 +107,19 @@ class MainActivity : AppCompatActivity() {
                 progressBar.visibility = View.GONE
                 swipeRefreshLayout.isRefreshing = false
 
+                // Verstecke Web-Navbar in der App
+                hideWebNavbar()
+
                 // Nach erfolgreichem Login: Session speichern
                 if (url?.contains("/dashboard") == true || url?.contains("/perform_login") == true) {
-                    // Warte kurz, damit Cookies gesetzt werden
-                    webView.postDelayed({
-                        detectAndSaveSession()
-                    }, 500)
+                    // Nur einmal pro App-Start Session detektieren
+                    if (!sessionAlreadyDetected) {
+                        sessionAlreadyDetected = true
+                        // Warte kurz, damit Cookies gesetzt werden
+                        webView.postDelayed({
+                            detectAndSaveSession()
+                        }, 500)
+                    }
                 }
             }
 
@@ -144,21 +156,121 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun detectAndSaveSession() {
-        // Versuche Benutzernamen aus der Seite zu extrahieren
+        // Extrahiere Access Token aus LocalStorage
         webView.evaluateJavascript(
-            "(function() { " +
-            "  var authElement = document.querySelector('[sec\\\\:authentication=\"name\"]');" +
-            "  return authElement ? authElement.textContent.trim() : null;" +
-            "})();"
-        ) { result ->
-            val username = result?.trim('"')
-            if (!username.isNullOrEmpty() && username != "null") {
-                sessionManager.saveSession(username)
-                runOnUiThread {
-                    Toast.makeText(this, "Angemeldet als $username", Toast.LENGTH_SHORT).show()
+            """
+            (function() {
+                return localStorage.getItem('app_access_token');
+            })();
+            """.trimIndent()
+        ) { tokenResult ->
+            val token = tokenResult?.trim('"')
+            
+            if (!token.isNullOrEmpty() && token != "null") {
+                // Dekodiere Token und extrahiere Rolle & Username
+                val username = JwtDecoder.extractUsername(token)
+                val role = JwtDecoder.extractRole(token)
+                
+                if (!username.isNullOrEmpty()) {
+                    sessionManager.saveSession(username, role)
+                    runOnUiThread {
+                        Toast.makeText(
+                            this, 
+                            "Angemeldet als $username${if (role != null) " ($role)" else ""}", 
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        // Menü aktualisieren nach Login
+                        invalidateOptionsMenu()
+                        // Username in Toolbar anzeigen
+                        updateToolbarWithUsername()
+                    }
+                }
+            } else {
+                // Fallback: Versuche Username aus DOM zu extrahieren
+                webView.evaluateJavascript(
+                    "(function() { " +
+                    "  var authElement = document.querySelector('[sec\\\\:authentication=\"name\"]');" +
+                    "  return authElement ? authElement.textContent.trim() : null;" +
+                    "})();"
+                ) { result ->
+                    val username = result?.trim('"')
+                    if (!username.isNullOrEmpty() && username != "null") {
+                        sessionManager.saveSession(username, null)
+                        runOnUiThread {
+                            Toast.makeText(this, "Angemeldet als $username", Toast.LENGTH_SHORT).show()
+                            invalidateOptionsMenu()
+                            updateToolbarWithUsername()
+                        }
+                    }
                 }
             }
         }
+    }
+
+    private fun updateToolbarWithUsername() {
+        val username = sessionManager.getUsername()
+        // Update Menu Item Title mit Username
+        invalidateOptionsMenu()
+    }
+
+    private fun showProfilePopupMenu(item: MenuItem) {
+        // Verwende Toolbar als Anchor für das Popup
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        val popup = PopupMenu(this, toolbar)
+        popup.menuInflater.inflate(R.menu.menu_profile_popup, popup.menu)
+        
+        // Verstecke "Benutzereinstellungen" und "Abmelden" wenn nicht eingeloggt
+        val hasSession = sessionManager.hasValidSession()
+        popup.menu.findItem(R.id.popup_profile_settings)?.isVisible = hasSession
+        popup.menu.findItem(R.id.popup_logout)?.isVisible = hasSession
+        
+        popup.setOnMenuItemClickListener { menuItem ->
+            val serverUrl = sessionManager.getServerUrl()
+            when (menuItem.itemId) {
+                R.id.popup_profile_settings -> {
+                    val profileUrl = "$serverUrl/profile/settings"
+                    android.util.Log.d("MainActivity", "Loading profile: $profileUrl")
+                    webView.loadUrl(profileUrl)
+                    true
+                }
+                R.id.popup_app_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                    true
+                }
+                R.id.popup_logout -> {
+                    showLogoutConfirmation()
+                    true
+                }
+                else -> false
+            }
+        }
+        
+        popup.show()
+    }
+
+    private fun hideWebNavbar() {
+        webView.evaluateJavascript(
+            """
+            (function() {
+                // Verstecke Bootstrap Navbar
+                var navbar = document.querySelector('.navbar');
+                if (navbar) {
+                    navbar.style.display = 'none';
+                }
+                
+                // Verstecke alle nav-Elemente
+                var navElements = document.querySelectorAll('nav');
+                navElements.forEach(function(nav) {
+                    nav.style.display = 'none';
+                });
+                
+                // Adjustiere Body Padding (falls Navbar fixed war)
+                document.body.style.paddingTop = '0';
+                
+                return 'navbar hidden';
+            })();
+            """.trimIndent(), null
+        )
     }
 
     private fun showServerConfigDialog() {
@@ -178,21 +290,100 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+        updateMenuForRole(menu)
+        
+        // Setup Custom Profile View mit Username
+        val profileItem = menu?.findItem(R.id.action_profile_menu)
+        val actionView = profileItem?.actionView
+        
+        if (actionView != null) {
+            val avatarImageView = actionView.findViewById<android.widget.ImageView>(R.id.profile_avatar)
+            val usernameTextView = actionView.findViewById<android.widget.TextView>(R.id.profile_username)
+            val username = sessionManager.getUsername()
+            val hasSession = sessionManager.hasValidSession()
+            
+            // Avatar und Username nur anzeigen wenn eingeloggt
+            if (hasSession && !username.isNullOrEmpty()) {
+                avatarImageView?.visibility = View.VISIBLE
+                usernameTextView?.visibility = View.VISIBLE
+                usernameTextView?.text = username
+            } else {
+                avatarImageView?.visibility = View.GONE
+                usernameTextView?.visibility = View.GONE
+            }
+            
+            // Click Listener für Custom View
+            actionView.setOnClickListener {
+                onOptionsItemSelected(profileItem)
+            }
+        }
+        
         return true
     }
 
+    private fun updateMenuForRole(menu: Menu?) {
+        if (menu == null) return
+        
+        val role = sessionManager.getUserRole()
+        
+        // Verstecke alle Gruppen zuerst
+        menu.setGroupVisible(R.id.menu_group_admin, false)
+        menu.setGroupVisible(R.id.menu_group_parent, false)
+        menu.setGroupVisible(R.id.menu_group_child, false)
+        
+        // Zeige Gruppen basierend auf Rolle
+        when (role) {
+            "ROLE_ADMIN" -> {
+                menu.setGroupVisible(R.id.menu_group_admin, true)
+                menu.setGroupVisible(R.id.menu_group_parent, true) // Admin kann alles
+            }
+            "ROLE_PARENT" -> {
+                menu.setGroupVisible(R.id.menu_group_parent, true)
+            }
+            "ROLE_CHILD" -> {
+                menu.setGroupVisible(R.id.menu_group_child, true)
+            }
+        }
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val serverUrl = sessionManager.getServerUrl()
+        
         return when (item.itemId) {
-            R.id.action_settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
+            // Profil Avatar - Zeige Popup Menü
+            R.id.action_profile_menu -> {
+                showProfilePopupMenu(item)
                 true
             }
-            R.id.action_refresh -> {
-                webView.reload()
+            // Admin Items
+            R.id.action_admin_users -> {
+                webView.loadUrl("$serverUrl/admin/users")
                 true
             }
-            R.id.action_logout -> {
-                showLogoutConfirmation()
+            R.id.action_admin_families -> {
+                webView.loadUrl("$serverUrl/admin/families")
+                true
+            }
+            // Parent Items
+            R.id.action_parent_chores -> {
+                webView.loadUrl("$serverUrl/parent/chores")
+                true
+            }
+            R.id.action_parent_rewards -> {
+                webView.loadUrl("$serverUrl/parent/rewards")
+                true
+            }
+            R.id.action_parent_children -> {
+                webView.loadUrl("$serverUrl/parent/children")
+                true
+            }
+            // Child Items
+            R.id.action_child_chores -> {
+                webView.loadUrl("$serverUrl/child/dashboard")
+                true
+            }
+            R.id.action_child_history -> {
+                webView.loadUrl("$serverUrl/child/history")
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -232,6 +423,14 @@ class MainActivity : AppCompatActivity() {
                 
                 // 4. Zurück zur Login-Seite
                 loadWebApp()
+                
+                // 5. Reset session detection flag
+                sessionAlreadyDetected = false
+                
+                // 6. Update Toolbar
+                updateToolbarWithUsername()
+                invalidateOptionsMenu()
+                
                 Toast.makeText(this, getString(R.string.toast_logged_out), Toast.LENGTH_SHORT).show()
             }, 500)
         }

@@ -13,6 +13,7 @@ class SessionManager(context: Context) {
         private const val PREFS_NAME = "KidsChoresPrefs"
         private const val KEY_SERVER_URL = "server_url"
         private const val KEY_USERNAME = "username"
+        private const val KEY_USER_ROLE = "user_role"
         private const val KEY_SESSION_COOKIE = "session_cookie"
         private const val KEY_LAST_LOGIN = "last_login"
         const val DEFAULT_SERVER_URL = "http://192.168.178.100:8080"
@@ -35,9 +36,12 @@ class SessionManager(context: Context) {
     /**
      * Speichert Session-Informationen nach erfolgreichem Login
      */
-    fun saveSession(username: String) {
+    fun saveSession(username: String, role: String? = null) {
         prefs.edit().apply {
             putString(KEY_USERNAME, username)
+            if (role != null) {
+                putString(KEY_USER_ROLE, role)
+            }
             putLong(KEY_LAST_LOGIN, System.currentTimeMillis())
             apply()
         }
@@ -93,6 +97,13 @@ class SessionManager(context: Context) {
     }
     
     /**
+     * Gibt die gespeicherte Benutzer-Rolle zurück
+     */
+    fun getUserRole(): String? {
+        return prefs.getString(KEY_USER_ROLE, null)
+    }
+    
+    /**
      * Aktualisiert die Session (für Refresh)
      */
     fun refreshSession() {
@@ -114,6 +125,7 @@ class SessionManager(context: Context) {
     fun clearSession() {
         prefs.edit().apply {
             remove(KEY_USERNAME)
+            remove(KEY_USER_ROLE)
             remove(KEY_SESSION_COOKIE)
             remove(KEY_LAST_LOGIN)
             apply()
