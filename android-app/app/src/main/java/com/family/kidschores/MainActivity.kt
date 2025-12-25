@@ -211,11 +211,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun performLogout() {
-        sessionManager.clearSession()
-        webView.clearCache(true)
-        webView.clearHistory()
-        loadWebApp()
-        Toast.makeText(this, getString(R.string.toast_logged_out), Toast.LENGTH_SHORT).show()
+        // 1. Lösche LocalStorage in WebView (dort sind die JWT Tokens)
+        webView.evaluateJavascript(
+            """
+            (function() {
+                localStorage.clear();
+                sessionStorage.clear();
+                return 'cleared';
+            })();
+            """.trimIndent()
+        ) { result ->
+            // 2. Rufe Server-Logout auf
+            webView.loadUrl("${sessionManager.getServerUrl()}/logout")
+            
+            // 3. Warte kurz, dann lokale Session löschen
+            webView.postDelayed({
+                sessionManager.clearSession()
+                webView.clearCache(true)
+                webView.clearHistory()
+                
+                // 4. Zurück zur Login-Seite
+                loadWebApp()
+                Toast.makeText(this, getString(R.string.toast_logged_out), Toast.LENGTH_SHORT).show()
+            }, 500)
+        }
     }
 
     override fun onBackPressed() {

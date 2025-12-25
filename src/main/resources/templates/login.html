@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" data-bs-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
+
 <body class="login-page">
     <div class="container">
         <div class="row justify-content-center align-items-center min-vh-100">
@@ -26,19 +28,26 @@
                             ✅ Du wurdest erfolgreich abgemeldet.
                         </div>
 
-                        <form th:action="@{/perform_login}" method="post">
+                        <form th:action="@{/perform_login}" method="post" id="loginForm">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Benutzername</label>
-                                <input type="text" class="form-control form-control-lg" 
-                                       id="username" name="username" required autofocus>
+                                <input type="text" class="form-control form-control-lg" id="username" name="username"
+                                    required autofocus>
                             </div>
 
                             <div class="mb-4">
                                 <label for="password" class="form-label">PIN</label>
-                                <input type="password" class="form-control form-control-lg" 
-                                       id="password" name="password" 
-                                       pattern="[0-9]*" inputmode="numeric" required>
+                                <input type="password" class="form-control form-control-lg" id="password"
+                                    name="password" pattern="[0-9]*" inputmode="numeric" required>
                                 <div class="form-text">Gib deine PIN ein</div>
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="stayLoggedIn" checked>
+                                <label class="form-check-label" for="stayLoggedIn">
+                                    Angemeldet bleiben
+                                </label>
+                                <div class="form-text">Bei erneutem Öffnen des Browsers automatisch anmelden</div>
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-lg w-100">
@@ -52,5 +61,204 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Token-Management für automatische Wiederanmeldung
+        (function () {
+            const REFRESH_TOKEN_KEY = 'app_refresh_token';
+            const ACCESS_TOKEN_KEY = 'app_access_token';
+            const TOKEN_EXPIRY_KEY = 'app_token_expiry';
+            const USERNAME_KEY = 'app_username';
+            const STAY_LOGGED_IN_KEY = 'app_stay_logged_in';
+
+            // Prüfe beim Laden, ob ein Refresh Token vorhanden ist
+            window.addEventListener('DOMContentLoaded', async function () {
+                console.log('=== Login-Seite geladen, prüfe LocalStorage ===');
+                const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+                const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+                const tokenExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+                const username = localStorage.getItem(USERNAME_KEY);
+
+                console.log('LocalStorage-Inhalte:', {
+                    hasRefreshToken: !!refreshToken,
+                    hasAccessToken: !!accessToken,
+                    tokenExpiry: tokenExpiry ? new Date(parseInt(tokenExpiry)) : null,
+                    username: username
+                });
+
+                // Wenn kein Token vorhanden ist, normal anzeigen
+                if (!refreshToken) {
+                    console.log('Kein Refresh-Token gefunden, zeige Login-Formular');
+                    return;
+                }
+
+                // Prüfe ob Access Token noch gültig ist
+                const now = Date.now();
+                const expiryTime = parseInt(tokenExpiry) || 0;
+
+                console.log('Token-Gültigkeitsprüfung:', {
+                    now: new Date(now),
+                    expiryTime: new Date(expiryTime),
+                    isValid: expiryTime > now + 60000
+                });
+
+                // Wenn Access Token noch gültig (mit 1 Minute Puffer)
+                if (accessToken && expiryTime > now + 60000) {
+                    console.log('✅ Access Token noch gültig, führe Auto-Login durch...');
+                    await performAutoLogin(username);
+                    return;
+                }
+
+                // Access Token abgelaufen, versuche Refresh
+                console.log('⚠️ Access Token abgelaufen, versuche Refresh...');
+
+                try {
+                    const response = await fetch('/api/auth/refresh', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ refreshToken: refreshToken })
+                    });
+
+                    console.log('Refresh-Response Status:', response.status);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('✅ Token-Refresh erfolgreich');
+
+                        // Speichere neue Tokens
+                        localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+                        localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+                        localStorage.setItem(TOKEN_EXPIRY_KEY, Date.now() + (data.expiresIn * 1000));
+                        localStorage.setItem(USERNAME_KEY, data.username);
+
+                        console.log('Tokens erfolgreich erneuert, führe Auto-Login durch');
+                        await performAutoLogin(data.username);
+                    } else {
+                        const errorText = await response.text();
+                        console.log('❌ Refresh Token ungültig:', response.status, errorText);
+                        clearTokens();
+                        showAutoLoginMessage('Session abgelaufen. Bitte melde dich erneut an.', 'danger');
+                    }
+                } catch (error) {
+                    console.error('❌ Fehler beim Token-Refresh:', error);
+                    showAutoLoginMessage('Fehler bei der Wiederanmeldung.', 'danger');
+                }
+            });
+
+            // Auto-Login durchführen mit Refresh Token via Backend
+            async function performAutoLogin(username) {
+                const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+                if (!refreshToken) {
+                    console.log('⚠️ Kein Refresh Token vorhanden');
+                    showAutoLoginMessage('Bitte melde dich erneut an.', 'warning');
+                    return;
+                }
+
+                console.log('🔄 Führe Auto-Login durch für:', username);
+                showAutoLoginMessage('Session wird wiederhergestellt...', 'info');
+
+                // Redirect zu /login mit Refresh Token als Query Parameter
+                window.location.href = '/login?refreshToken=' + encodeURIComponent(refreshToken);
+            }
+
+            // Fange Form-Submit ab, um Token zu speichern nach erfolgreichem Login
+            const loginForm = document.getElementById('loginForm');
+            const formSubmitHandler = async function (e) {
+                e.preventDefault();
+
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const stayLoggedIn = document.getElementById('stayLoggedIn').checked;
+
+                console.log('Login-Versuch für:', username, 'StayLoggedIn:', stayLoggedIn);
+
+                try {
+                    // Hole Token via API
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username: username, password: password })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('✅ API-Login erfolgreich, speichere Tokens');
+
+                        // Speichere IMMER alle Tokens
+                        localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+                        localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+                        localStorage.setItem(TOKEN_EXPIRY_KEY, Date.now() + (data.expiresIn * 1000));
+                        localStorage.setItem(USERNAME_KEY, data.username);
+
+                        // Speichere "Angemeldet bleiben" Präferenz
+                        localStorage.setItem(STAY_LOGGED_IN_KEY, stayLoggedIn ? 'true' : 'false');
+
+                        console.log('Tokens und Präferenz gespeichert:', {
+                            stayLoggedIn: stayLoggedIn,
+                            username: data.username
+                        });
+
+                        // Nun das normale Form-Login durchführen
+                        loginForm.removeEventListener('submit', formSubmitHandler);
+                        loginForm.submit();
+                    } else {
+                        console.log('❌ API-Login fehlgeschlagen:', response.status);
+                        // Bei Fehler das normale Form-Login durchführen (zeigt Fehler an)
+                        loginForm.removeEventListener('submit', formSubmitHandler);
+                        loginForm.submit();
+                    }
+                } catch (error) {
+                    console.error('❌ Fehler beim API-Login:', error);
+                    // Bei Fehler das normale Form-Login durchführen
+                    loginForm.removeEventListener('submit', formSubmitHandler);
+                    loginForm.submit();
+                }
+            };
+
+            // Registriere Event Listener
+            loginForm.addEventListener('submit', formSubmitHandler);
+
+            // Lösche Tokens beim Logout (wird von token-manager aufgerufen)
+            window.clearAuthTokens = function (keepRefreshToken = false) {
+                console.log('clearAuthTokens aufgerufen, keepRefreshToken:', keepRefreshToken);
+
+                localStorage.removeItem(ACCESS_TOKEN_KEY);
+                localStorage.removeItem(TOKEN_EXPIRY_KEY);
+
+                if (!keepRefreshToken) {
+                    console.log('Lösche auch Refresh-Token und alle Präferenzen');
+                    localStorage.removeItem(REFRESH_TOKEN_KEY);
+                    localStorage.removeItem(USERNAME_KEY);
+                    localStorage.removeItem(STAY_LOGGED_IN_KEY);
+                } else {
+                    console.log('Behalte Refresh-Token für nächsten Auto-Login');
+                }
+            };
+
+            function clearTokens() {
+                localStorage.removeItem(ACCESS_TOKEN_KEY);
+                localStorage.removeItem(REFRESH_TOKEN_KEY);
+                localStorage.removeItem(TOKEN_EXPIRY_KEY);
+                localStorage.removeItem(USERNAME_KEY);
+                localStorage.removeItem(STAY_LOGGED_IN_KEY);
+            }
+
+            function showAutoLoginMessage(message, type = 'info') {
+                const container = document.querySelector('.card-body');
+                const existingAlerts = container.querySelectorAll('.alert-auto-login');
+                existingAlerts.forEach(alert => alert.remove());
+
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${type} alert-auto-login`;
+                alert.textContent = message;
+                container.insertBefore(alert, container.firstChild);
+            }
+        })();
+    </script>
 </body>
+
 </html>
