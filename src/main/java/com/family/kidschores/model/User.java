@@ -52,6 +52,15 @@ public class User implements UserDetails {
     @Column(name = "theme", length = 10)
     private String theme = "LIGHT"; // LIGHT or DARK
 
+    @Column(name = "avatar_type", length = 20)
+    private String avatarType = "DEFAULT"; // DEFAULT, ICON, PHOTO
+
+    @Column(name = "avatar_icon_name", length = 50)
+    private String avatarIconName; // Name des gewählten Icons (z.B. "lion", "panda")
+
+    @Column(name = "avatar_data", columnDefinition = "BYTEA")
+    private byte[] avatarData; // Foto-Upload als Blob
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

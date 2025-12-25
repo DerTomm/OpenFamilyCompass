@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:attr="data-bs-theme=${userTheme}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
 <head th:replace="~{fragments/navbar :: head}">
 </head>
+
 <body>
     <!-- Dynamische Navigation basierend auf Rolle -->
     <nav sec:authorize="hasRole('ADMIN')" th:replace="~{fragments/navbar :: adminNav}"></nav>
@@ -23,7 +24,7 @@
                     <span th:text="${success}">Erfolgreich gespeichert!</span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                
+
                 <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-circle"></i>
                     <span th:text="${error}">Ein Fehler ist aufgetreten!</span>
@@ -41,18 +42,85 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <p class="mb-2">
-                                    <strong>Benutzername:</strong> 
+                                    <strong>Benutzername:</strong>
                                     <span th:text="${user.username}">username</span>
                                 </p>
                             </div>
                             <div class="col-md-6">
                                 <p class="mb-2">
-                                    <strong>Rolle:</strong> 
-                                    <span class="badge" 
-                                          th:classappend="${user.role.name() == 'ADMIN'} ? 'bg-danger' : (${user.role.name() == 'PARENT'} ? 'bg-success' : 'bg-info')"
-                                          th:text="${user.role.name()}">ROLE</span>
+                                    <strong>Rolle:</strong>
+                                    <span class="badge"
+                                        th:classappend="${user.role.name() == 'ADMIN'} ? 'bg-danger' : (${user.role.name() == 'PARENT'} ? 'bg-success' : 'bg-info')"
+                                        th:text="${user.role.name()}">ROLE</span>
                                 </p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Avatar Settings Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-circle"></i> Avatar-Einstellungen
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Current Avatar Display -->
+                        <div class="text-center mb-4">
+                            <h6 class="mb-3">Aktueller Avatar:</h6>
+                            <div id="currentAvatarDisplay" class="d-inline-block">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Avatar Options Tabs -->
+                        <ul class="nav nav-tabs mb-3" id="avatarTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="icons-tab" data-bs-toggle="tab"
+                                    data-bs-target="#icons" type="button" role="tab">
+                                    <i class="fas fa-icons"></i> Icon auswählen
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload"
+                                    type="button" role="tab">
+                                    <i class="fas fa-upload"></i> Foto hochladen
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="avatarTabContent">
+                            <!-- Icon Selection Tab -->
+                            <div class="tab-pane fade show active" id="icons" role="tabpanel">
+                                <p class="text-muted small mb-3">
+                                    Wähle ein Icon als deinen Avatar:
+                                </p>
+                                <div id="iconGrid" class="row g-2">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Photo Upload Tab -->
+                            <div class="tab-pane fade" id="upload" role="tabpanel">
+                                <p class="text-muted small mb-3">
+                                    Lade ein eigenes Foto hoch (max. 5 MB, nur Bilder):
+                                </p>
+                                <div class="mb-3">
+                                    <input type="file" class="form-control" id="avatarPhotoInput" accept="image/*">
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="uploadAvatarPhoto()">
+                                    <i class="fas fa-upload"></i> Foto hochladen
+                                </button>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetAvatar()">
+                                <i class="fas fa-undo"></i> Avatar zurücksetzen
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -76,16 +144,12 @@
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <div class="card theme-option" 
-                                             th:classappend="${currentTheme == 'LIGHT'} ? 'border-primary border-3' : ''"
-                                             style="cursor: pointer;">
+                                        <div class="card theme-option"
+                                            th:classappend="${currentTheme == 'LIGHT'} ? 'border-primary border-3' : ''"
+                                            style="cursor: pointer;">
                                             <div class="card-body text-center">
-                                                <input type="radio" 
-                                                       class="btn-check" 
-                                                       name="theme" 
-                                                       id="lightMode" 
-                                                       value="LIGHT" 
-                                                       th:checked="${currentTheme == 'LIGHT'}">
+                                                <input type="radio" class="btn-check" name="theme" id="lightMode"
+                                                    value="LIGHT" th:checked="${currentTheme == 'LIGHT'}">
                                                 <label class="w-100" for="lightMode" style="cursor: pointer;">
                                                     <i class="fas fa-sun fa-3x mb-2" style="color: #ffc107;"></i>
                                                     <h5>Light Mode</h5>
@@ -98,16 +162,12 @@
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-                                        <div class="card theme-option" 
-                                             th:classappend="${currentTheme == 'DARK'} ? 'border-primary border-3' : ''"
-                                             style="cursor: pointer;">
+                                        <div class="card theme-option"
+                                            th:classappend="${currentTheme == 'DARK'} ? 'border-primary border-3' : ''"
+                                            style="cursor: pointer;">
                                             <div class="card-body text-center">
-                                                <input type="radio" 
-                                                       class="btn-check" 
-                                                       name="theme" 
-                                                       id="darkMode" 
-                                                       value="DARK" 
-                                                       th:checked="${currentTheme == 'DARK'}">
+                                                <input type="radio" class="btn-check" name="theme" id="darkMode"
+                                                    value="DARK" th:checked="${currentTheme == 'DARK'}">
                                                 <label class="w-100" for="darkMode" style="cursor: pointer;">
                                                     <i class="fas fa-moon fa-3x mb-2" style="color: #6c757d;"></i>
                                                     <h5>Dark Mode</h5>
@@ -143,14 +203,259 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
+        // Avatar Management
+        let currentAvatarType = '[[${avatarType}]]' || 'DEFAULT';
+        let currentIconName = '[[${avatarIconName}]]' || null;
+
+        // Get CSRF token from meta tags
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        // Load available icons and current avatar on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            loadAvailableIcons();
+            loadCurrentAvatar();
+        });
+
+        // Load available icons from server
+        async function loadAvailableIcons() {
+            try {
+                const response = await fetch('/api/avatar/icons');
+                const data = await response.json();
+
+                const iconGrid = document.getElementById('iconGrid');
+                iconGrid.innerHTML = '';
+
+                data.icons.forEach(iconName => {
+                    const col = document.createElement('div');
+                    col.className = 'col-6 col-sm-4 col-md-3 col-lg-2';
+
+                    const iconCard = document.createElement('div');
+                    iconCard.className = 'avatar-icon-option card h-100 text-center';
+                    iconCard.style.cursor = 'pointer';
+
+                    // Highlight if this is the current icon
+                    if (currentAvatarType === 'ICON' && currentIconName === iconName) {
+                        iconCard.classList.add('border-primary', 'border-3');
+                    }
+
+                    iconCard.onclick = () => selectIcon(iconName);
+
+                    iconCard.innerHTML = `
+                        <div class="card-body p-2">
+                            <img src="/images/avatars/${iconName}.svg" 
+                                 alt="${iconName}" 
+                                 class="img-fluid mb-1" 
+                                 style="max-height: 60px;">
+                            <small class="d-block text-capitalize">${iconName}</small>
+                        </div>
+                    `;
+
+                    col.appendChild(iconCard);
+                    iconGrid.appendChild(col);
+                });
+            } catch (error) {
+                console.error('Error loading icons:', error);
+                showAlert('Fehler beim Laden der Icons', 'danger');
+            }
+        }
+
+        // Load current avatar
+        async function loadCurrentAvatar() {
+            const display = document.getElementById('currentAvatarDisplay');
+
+            if (currentAvatarType === 'ICON' && currentIconName) {
+                // Show icon avatar
+                display.innerHTML = `
+                    <img src="/images/avatars/${currentIconName}.svg" 
+                         alt="${currentIconName}" 
+                         class="rounded-circle" 
+                         style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #0d6efd; padding: 10px; background: white;">
+                `;
+            } else if (currentAvatarType === 'PHOTO') {
+                // Try to fetch photo
+                try {
+                    const response = await fetch('/avatar/current');
+                    if (response.ok && response.status === 200) {
+                        const blob = await response.blob();
+                        const imageUrl = URL.createObjectURL(blob);
+                        display.innerHTML = `
+                            <img src="${imageUrl}" 
+                                 alt="Avatar" 
+                                 class="rounded-circle" 
+                                 style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #0d6efd;">
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error loading photo:', error);
+                    showDefaultAvatar(display);
+                }
+            } else {
+                // Show default
+                showDefaultAvatar(display);
+            }
+        }
+
+        function showDefaultAvatar(display) {
+            display.innerHTML = `
+                <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" 
+                     style="width: 120px; height: 120px; border: 3px solid #6c757d;">
+                    <i class="fas fa-user fa-4x text-white"></i>
+                </div>
+            `;
+        }
+
+        // Select an icon as avatar
+        async function selectIcon(iconName) {
+            try {
+                const headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                };
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+
+                const response = await fetch('/profile/avatar/select-icon', {
+                    method: 'POST',
+                    headers: headers,
+                    body: `iconName=${iconName}`
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('Avatar erfolgreich aktualisiert!', 'success');
+                    currentIconName = iconName;
+                    currentAvatarType = 'ICON';
+
+                    // Update display
+                    const display = document.getElementById('currentAvatarDisplay');
+                    display.innerHTML = `
+                        <img src="/images/avatars/${iconName}.svg" 
+                             alt="${iconName}" 
+                             class="rounded-circle" 
+                             style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #0d6efd; padding: 10px; background: white;">
+                    `;
+
+                    // Reload page after short delay to update navbar
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(data.error || 'Fehler beim Speichern', 'danger');
+                }
+            } catch (error) {
+                console.error('Error selecting icon:', error);
+                showAlert('Fehler beim Auswählen des Icons', 'danger');
+            }
+        }
+
+        // Upload photo as avatar
+        async function uploadAvatarPhoto() {
+            const fileInput = document.getElementById('avatarPhotoInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showAlert('Bitte wähle eine Datei aus', 'warning');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('Datei zu groß (max. 5 MB)', 'danger');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const headers = {};
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+
+                const response = await fetch('/profile/avatar/upload', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('Avatar erfolgreich hochgeladen!', 'success');
+                    currentAvatarType = 'PHOTO';
+                    loadCurrentAvatar();
+
+                    // Reload page after short delay to update navbar
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert(data.error || 'Fehler beim Hochladen', 'danger');
+                }
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                showAlert('Fehler beim Hochladen des Fotos', 'danger');
+            }
+        }
+
+        // Reset avatar to default
+        async function resetAvatar() {
+            if (!confirm('Möchtest du deinen Avatar wirklich zurücksetzen?')) {
+                return;
+            }
+
+            try {
+                const headers = {};
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+
+                const response = await fetch('/profile/avatar', {
+                    method: 'DELETE',
+                    headers: headers
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('Avatar zurückgesetzt', 'success');
+                    currentAvatarType = 'DEFAULT';
+                    currentIconName = null;
+                    loadCurrentAvatar();
+
+                    // Reload page after short delay to update navbar
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert('Fehler beim Zurücksetzen', 'danger');
+                }
+            } catch (error) {
+                console.error('Error resetting avatar:', error);
+                showAlert('Fehler beim Zurücksetzen', 'danger');
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
         // Make entire card clickable for theme selection
         document.querySelectorAll('.theme-option').forEach(card => {
-            card.addEventListener('click', function() {
+            card.addEventListener('click', function () {
                 const radio = this.querySelector('input[type="radio"]');
                 radio.checked = true;
-                
+
                 // Update visual selection
                 document.querySelectorAll('.theme-option').forEach(c => {
                     c.classList.remove('border-primary', 'border-3');
@@ -159,5 +464,9 @@
             });
         });
     </script>
+
+    <!-- Token Manager for Logout -->
+    <div th:replace="~{fragments/token-manager :: token-manager}"></div>
 </body>
+
 </html>

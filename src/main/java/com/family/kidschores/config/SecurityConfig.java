@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/**").permitAll()
+                                                .requestMatchers("/api/avatar/icons").permitAll()
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -57,7 +58,7 @@ public class SecurityConfig {
                                 .securityMatcher("/**")
                                 .userDetailsService(userService)
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/css/**", "/js/**", "/images/**", "/avatars/**")
+                                                .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**")
                                                 .permitAll()
                                                 .requestMatchers("/login", "/error").permitAll()
                                                 .requestMatchers("/profile/**").authenticated()

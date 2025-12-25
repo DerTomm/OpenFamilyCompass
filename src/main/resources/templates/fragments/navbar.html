@@ -4,6 +4,8 @@
 <head th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <title th:text="${pageTitle} ?: 'Kids Chores & Rewards'">Kids Chores & Rewards</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -21,9 +23,12 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle fa-lg"></i>
+                        <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#"
+                            id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navbarAvatar" src="/avatar/current" alt="Avatar" class="rounded-circle me-2"
+                                style="width: 32px; height: 32px; object-fit: cover; border: 2px solid white;"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                            <i class="fas fa-user-circle fa-lg me-1" style="display:none;"></i>
                             <span sec:authentication="name">User</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
@@ -93,9 +98,12 @@
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle fa-lg"></i>
+                        <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#"
+                            id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navbarAvatar" src="/avatar/current" alt="Avatar" class="rounded-circle me-2"
+                                style="width: 32px; height: 32px; object-fit: cover; border: 2px solid white;"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                            <i class="fas fa-user-circle fa-lg me-1" style="display:none;"></i>
                             <span sec:authentication="name">User</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
@@ -140,9 +148,12 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle fa-lg"></i>
+                        <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#"
+                            id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navbarAvatar" src="/avatar/current" alt="Avatar" class="rounded-circle me-2"
+                                style="width: 32px; height: 32px; object-fit: cover; border: 2px solid white;"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                            <i class="fas fa-user-circle fa-lg me-1" style="display:none;"></i>
                             <span sec:authentication="name">User</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">

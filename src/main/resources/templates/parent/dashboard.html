@@ -68,15 +68,30 @@
                             <div class="col-md-4 mb-3" th:each="child : ${children}">
                                 <div class="card border-success">
                                     <div class="card-body text-center">
-                                        <div th:if="${child.avatarPath}">
-                                            <img th:src="@{${child.avatarPath}}" class="rounded-circle mb-2"
-                                                style="width: 100px; height: 100px;" alt="Avatar">
+                                        <!-- Avatar Display -->
+                                        <div class="mb-2">
+                                            <!-- Photo Avatar -->
+                                            <img th:if="${child.user != null and child.user.avatarType == 'PHOTO'}"
+                                                th:src="@{/avatar/{userId}(userId=${child.user.id})}"
+                                                class="rounded-circle"
+                                                style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #28a745;"
+                                                alt="Avatar">
+
+                                            <!-- Icon Avatar -->
+                                            <img th:if="${child.user != null and child.user.avatarType == 'ICON' and child.user.avatarIconName != null}"
+                                                th:src="@{/images/avatars/{icon}.svg(icon=${child.user.avatarIconName})}"
+                                                class="rounded-circle"
+                                                style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #28a745; padding: 10px; background: white;"
+                                                alt="Avatar">
+
+                                            <!-- Default Avatar -->
+                                            <div th:if="${child.user == null or child.user.avatarType == 'DEFAULT' or (child.user.avatarType == 'ICON' and child.user.avatarIconName == null)}"
+                                                class="rounded-circle bg-secondary mx-auto d-inline-flex align-items-center justify-content-center"
+                                                style="width: 100px; height: 100px; border: 3px solid #28a745;">
+                                                <i class="fas fa-user fa-3x text-white"></i>
+                                            </div>
                                         </div>
-                                        <div th:unless="${child.avatarPath}"
-                                            class="rounded-circle bg-secondary mx-auto mb-2"
-                                            style="width: 100px; height: 100px; line-height: 100px; font-size: 3rem;">
-                                            👤
-                                        </div>
+
                                         <h4 th:text="${child.firstName}">Kind</h4>
                                         <p class="mb-3">
                                             <span class="badge bg-success" style="font-size: 1.5rem;">
