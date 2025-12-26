@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
+<head th:replace="~{fragments/navbar :: head}">
+    <title>Verhalten bewerten</title>
+    <style>
+        .behavior-table {
+            margin-bottom: 2rem;
+        }
+
+        .behavior-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .behavior-row:hover {
+            background-color: var(--bs-light);
+        }
+
+        .points-badge {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .weekly-total {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
+
+    <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="fas fa-star"></i> Verhalten bewerten - <span
+                                th:text="${child.firstName}">Kind</span></h2>
+                        <p class="text-muted">Bewerte das Verhalten der aktuellen Woche</p>
+                    </div>
+                    <a th:href="@{/parent/behaviors}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Zurück
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Verhaltensregeln</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover behavior-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Verhalten</th>
+                                <th>Leitsatz</th>
+                                <th class="text-center">Max. Punkte</th>
+                                <th class="text-center">Aktuelle Punkte</th>
+                                <th class="text-center">Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="behavior : ${behaviors}" th:id="'behavior-row-' + ${behavior.id}"
+                                class="behavior-row">
+                                <td>
+                                    <strong th:text="${behavior.title}">Verhalten</strong>
+                                    <br>
+                                    <small class="text-muted" th:if="${behavior.child == null}">
+                                        <i class="fas fa-users"></i> Für alle Kinder
+                                    </small>
+                                </td>
+                                <td th:text="${behavior.guideline}">Leitsatz</td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary" th:text="${behavior.points}">0</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success points-badge"
+                                        th:id="'current-points-' + ${behavior.id}"
+                                        th:attr="data-behavior-id=${behavior.id}"
+                                        th:text="${evaluationMap.containsKey(behavior.id) ? evaluationMap.get(behavior.id).currentPoints : 0}">0</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-primary btn-sm"
+                                        th:attr="data-behavior-id=${behavior.id},data-behavior-title=${behavior.title},data-max-points=${behavior.points}"
+                                        onclick="openEvaluationDialog(this.dataset.behaviorId, this.dataset.behaviorTitle, this.dataset.maxPoints)">
+                                        <i class="fas fa-edit"></i> Bewerten
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end"><strong>Wochensumme:</strong></td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary weekly-total" id="weekly-total"
+                                        th:text="${weeklyTotal}">0</span>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5><i class="fas fa-check-circle"></i> Wochenbewertung abschließen</h5>
+                        <p class="text-muted mb-0">
+                            Buche die Punkte der aktuellen Woche auf das Konto von <strong
+                                th:text="${child.firstName}">Kind</strong> ein.
+                        </p>
+                    </div>
+                    <form th:action="@{/parent/behaviors/evaluate/{childId}/commit(childId=${child.id})}" method="post"
+                        onsubmit="return confirm('Möchtest du die Wochenbewertung wirklich abschließen? Die Punkte werden dann dem Konto gutgeschrieben.');">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-save"></i> Punkte gutschreiben
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bewertungsdialog Modal -->
+    <div class="modal fade" id="evaluationModal" tabindex="-1" aria-labelledby="evaluationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="evaluationModalLabel">
+                        <i class="fas fa-star"></i> Verhalten bewerten
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="modal-behavior-title" class="mb-3">Verhaltensregel</h6>
+
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <strong>Punktwert:</strong>
+                            <span id="slider-value" class="text-primary fs-4">0</span> /
+                            <span id="slider-max">0</span> Punkte
+                        </label>
+                        <input type="range" class="form-range" id="points-slider" min="0" max="100" value="0"
+                            oninput="updateSliderValue()">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label"><strong>Bemerkungen:</strong></label>
+                        <textarea class="form-control" id="remarks" rows="5"
+                            placeholder="Notizen zum Verhalten dieser Woche..."></textarea>
+                        <small class="text-muted">
+                            Diese Bemerkungen dienen als Historie und können später eingesehen werden.
+                        </small>
+                    </div>
+
+                    <input type="hidden" id="current-behavior-id">
+                    <input type="hidden" id="current-child-id" th:value="${child.id}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Abbrechen
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveEvaluation()">
+                        <i class="fas fa-save"></i> Speichern
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const evaluations = /*[[${evaluations}]]*/[];
+
+        function openEvaluationDialog(behaviorId, behaviorTitle, maxPoints) {
+            // Konvertiere behaviorId zu Number für Vergleich
+            behaviorId = parseInt(behaviorId);
+
+            document.getElementById('current-behavior-id').value = behaviorId;
+            document.getElementById('modal-behavior-title').textContent = behaviorTitle;
+            document.getElementById('points-slider').max = maxPoints;
+            document.getElementById('slider-max').textContent = maxPoints;
+
+            // Lade bestehende Bewertung, falls vorhanden
+            const existingEval = evaluations.find(e => e.behavior.id === behaviorId);
+            if (existingEval) {
+                document.getElementById('points-slider').value = existingEval.currentPoints;
+                document.getElementById('remarks').value = existingEval.remarks || '';
+            } else {
+                document.getElementById('points-slider').value = 0;
+                document.getElementById('remarks').value = '';
+            }
+
+            updateSliderValue();
+
+            const modal = new bootstrap.Modal(document.getElementById('evaluationModal'));
+            modal.show();
+        }
+
+        function updateSliderValue() {
+            const value = document.getElementById('points-slider').value;
+            document.getElementById('slider-value').textContent = value;
+        }
+
+        async function saveEvaluation() {
+            const behaviorId = document.getElementById('current-behavior-id').value;
+            const childId = document.getElementById('current-child-id').value;
+            const currentPoints = document.getElementById('points-slider').value;
+            const remarks = document.getElementById('remarks').value;
+
+            const formData = new FormData();
+            formData.append('behaviorId', behaviorId);
+            formData.append('childId', childId);
+            formData.append('currentPoints', currentPoints);
+            formData.append('remarks', remarks);
+
+            // CSRF-Token hinzufügen
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+            try {
+                const headers = {};
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+
+                const response = await fetch('/parent/behaviors/evaluate/update', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const evaluation = await response.json();
+
+                    // Aktualisiere die Tabelle
+                    const pointsBadge = document.getElementById('current-points-' + behaviorId);
+                    if (pointsBadge) {
+                        pointsBadge.textContent = currentPoints;
+                    }
+
+                    // Aktualisiere die Wochensumme
+                    updateWeeklyTotal();
+
+                    // Schließe den Dialog
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('evaluationModal'));
+                    modal.hide();
+
+                    // Aktualisiere die evaluations-Liste
+                    const existingIndex = evaluations.findIndex(e => e.behavior.id === evaluation.behavior.id);
+                    if (existingIndex >= 0) {
+                        evaluations[existingIndex] = evaluation;
+                    } else {
+                        evaluations.push(evaluation);
+                    }
+                } else {
+                    alert('Fehler beim Speichern der Bewertung');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Fehler beim Speichern der Bewertung');
+            }
+        }
+
+        function updateWeeklyTotal() {
+            let total = 0;
+            document.querySelectorAll('.points-badge').forEach(badge => {
+                const points = parseInt(badge.textContent) || 0;
+                total += points;
+            });
+            document.getElementById('weekly-total').textContent = total;
+        }
+        /*]]>*/
+    </script>
+</body>
+
+</html>

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:attr="data-bs-theme=${userTheme}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
 <head th:replace="~{fragments/navbar :: head}">
 </head>
+
 <body>
     <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
 
@@ -11,51 +12,34 @@
         <div class="row mb-4">
             <div class="col-12">
                 <h2><i class="fas fa-star"></i> Verhalten bewerten</h2>
-                <p class="text-muted">Belohne deine Kinder für positives Verhalten durch Vergabe von Punkten.</p>
+                <p class="text-muted">Wähle ein Kind aus, um das Verhalten der aktuellen Woche zu bewerten.</p>
             </div>
         </div>
 
         <div class="row">
-            <div th:each="behavior : ${behaviors}" class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-warning">
-                        <h5 class="mb-0" th:text="${behavior.title}">Verhalten</h5>
-                        <small class="text-muted" th:if="${behavior.child != null}">
-                            Nur für: <span th:text="${behavior.child.firstName}">Kind</span>
-                        </small>
-                        <small class="text-muted" th:if="${behavior.child == null}">
-                            Für alle Kinder
-                        </small>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text" th:text="${behavior.guideline}">Leitsatz</p>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="badge bg-success fs-6" th:text="${behavior.points} + ' Punkte'">Punkte</span>
+            <div th:each="child : ${children}" class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle fa-4x text-primary"></i>
                         </div>
-                        
-                        <hr>
-                        
-                        <h6>Kind auswählen:</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            <form th:each="child : ${children}" 
-                                  th:if="${behavior.child == null || behavior.child.id == child.id}"
-                                  th:action="@{/parent/behaviors/{behaviorId}/record(behaviorId=${behavior.id})}" 
-                                  method="post" class="d-inline">
-                                <input type="hidden" name="childId" th:value="${child.id}">
-                                <button type="submit" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-user"></i> <span th:text="${child.firstName}">Kind</span>
-                                </button>
-                            </form>
-                        </div>
+                        <h5 class="card-title" th:text="${child.firstName}">Kind</h5>
+                        <p class="text-muted mb-3">
+                            <small>Aktueller Kontostand: <strong th:text="${child.totalPoints}">0</strong>
+                                Punkte</small>
+                        </p>
+                        <a th:href="@{/parent/behaviors/evaluate/{childId}(childId=${child.id})}"
+                            class="btn btn-primary">
+                            <i class="fas fa-clipboard-check"></i> Verhalten bewerten
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div th:if="${behaviors.isEmpty()}" class="col-12">
+            <div th:if="${children.isEmpty()}" class="col-12">
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> 
-                    Es wurden noch keine Verhaltensregeln definiert. 
-                    Ein Administrator kann diese unter "Verhalten verwalten" anlegen.
+                    <i class="fas fa-info-circle"></i>
+                    Es wurden noch keine Kinder angelegt.
                 </div>
             </div>
         </div>
@@ -63,4 +47,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

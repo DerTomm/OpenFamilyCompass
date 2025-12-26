@@ -1,11 +1,19 @@
 package com.family.kidschores.model;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "point_transactions")
@@ -23,16 +31,19 @@ public class PointTransaction {
     private Child child;
 
     @Column(nullable = false)
-    private int points;  // Positiv für Gutschrift, negativ für Abzug
+    private int points; // Positiv für Gutschrift, negativ für Abzug
 
     @Column(nullable = false)
-    private String type;  // "TASK", "REWARD", "HABIT", "PENALTY", "ADJUSTMENT"
+    private String type; // "TASK", "REWARD", "HABIT", "PENALTY", "ADJUSTMENT"
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "reference_id")
-    private Long referenceId;  // ID der zugehörigen Task, Reward, etc.
+    private Long referenceId; // ID der zugehörigen Task, Reward, etc.
+
+    @Column(columnDefinition = "TEXT")
+    private String remarks; // Zusätzliche Bemerkungen (z.B. für Verhaltensregeln)
 
     @ManyToOne
     @JoinColumn(name = "created_by")
