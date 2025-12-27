@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
+<head th:replace="~{fragments/navbar :: head}">
+</head>
+
+<body>
+    <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
+
+    <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fas fa-coins"></i> Bonus- und Minuspunkte</h2>
+                <p class="text-muted">Vergebe Bonus- oder Strafpunkte an deine Kinder</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div th:each="child : ${children}" class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div th:if="${child.avatarPath}">
+                                <img th:src="@{${child.avatarPath}}" class="rounded-circle mb-2"
+                                    style="width: 80px; height: 80px; object-fit: cover;" alt="Avatar">
+                            </div>
+                            <div th:unless="${child.avatarPath}" class="rounded-circle bg-secondary mx-auto mb-2"
+                                style="width: 80px; height: 80px; line-height: 80px; font-size: 2.5rem; display: inline-block;">
+                                👤
+                            </div>
+                            <h5 class="card-title mb-1" th:text="${child.firstName}">Kind</h5>
+                            <small class="text-muted">
+                                Aktuell: <strong th:text="${child.totalPoints}">0</strong> Punkte
+                            </small>
+                        </div>
+
+                        <hr>
+
+                        <!-- Bonuspunkte -->
+                        <div class="mb-3">
+                            <h6 class="text-success"><i class="fas fa-plus-circle"></i> Bonuspunkte vergeben</h6>
+                            <form th:action="@{/parent/points/bonus}" method="post">
+                                <input type="hidden" name="childId" th:value="${child.id}">
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm" name="reason"
+                                        placeholder="Grund für Bonuspunkte" required>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="number" class="form-control form-control-sm" name="points"
+                                        placeholder="Punkte" min="1" required>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="fas fa-plus"></i> Bonuspunkte gutschreiben
+                                </button>
+                            </form>
+                        </div>
+
+                        <hr>
+
+                        <!-- Strafpunkte -->
+                        <div>
+                            <h6 class="text-danger"><i class="fas fa-minus-circle"></i> Strafpunkte vergeben</h6>
+                            <form th:action="@{/parent/points/penalty}" method="post">
+                                <input type="hidden" name="childId" th:value="${child.id}">
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm" name="reason"
+                                        placeholder="Grund für Strafpunkte" required>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="number" class="form-control form-control-sm" name="points"
+                                        placeholder="Punkte" min="1" required>
+                                </div>
+                                <button type="submit" class="btn btn-danger btn-sm w-100">
+                                    <i class="fas fa-minus"></i> Strafpunkte abziehen
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${children.isEmpty()}" class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Es wurden noch keine Kinder angelegt.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

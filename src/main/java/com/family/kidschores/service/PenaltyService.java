@@ -1,16 +1,18 @@
 package com.family.kidschores.service;
 
-import com.family.kidschores.model.Child;
-import com.family.kidschores.model.Penalty;
-import com.family.kidschores.model.User;
-import com.family.kidschores.repository.PenaltyRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Objects;
+
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
+import com.family.kidschores.model.Child;
+import com.family.kidschores.model.Penalty;
+import com.family.kidschores.model.User;
+import com.family.kidschores.repository.PenaltyRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +22,8 @@ public class PenaltyService {
     private final PointService pointService;
 
     @Transactional
-    public Penalty createPenalty(@NonNull Child child, @NonNull String reason, int pointsDeducted, @NonNull User createdBy) {
+    public Penalty createPenalty(@NonNull Child child, @NonNull String reason, int pointsDeducted,
+            @NonNull User createdBy) {
         Penalty penalty = new Penalty();
         penalty.setChild(child);
         penalty.setReason(reason);
@@ -31,13 +34,20 @@ public class PenaltyService {
 
         // Punkte abziehen
         Long penaltyId = Objects.requireNonNull(saved.getId(), "Penalty ID must not be null");
-        pointService.deductPoints(child, pointsDeducted, "PENALTY", 
-                                 "Strafe: " + reason, penaltyId, createdBy);
+        pointService.deductPoints(child, pointsDeducted, "PENALTY",
+                "Strafe: " + reason, penaltyId, createdBy);
 
         return saved;
     }
 
     public List<Penalty> findByChild(@NonNull Child child) {
         return penaltyRepository.findByChildOrderByCreatedAtDesc(child);
+    }
+
+    @Transactional
+    public void addBonusPoints(@NonNull Child child, @NonNull String reason, int points, @NonNull User createdBy) {
+        // Bonuspunkte direkt als ADJUSTMENT gutschreiben
+        pointService.addPoints(child, points, "ADJUSTMENT",
+                "Bonuspunkte: " + reason, null, createdBy);
     }
 }

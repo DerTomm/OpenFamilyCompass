@@ -279,6 +279,41 @@ public class ParentController {
         return "redirect:/parent/behaviors";
     }
 
+    @GetMapping("/points")
+    public String pointsManagement(Model model) {
+        List<Child> children = childService.findAll();
+        model.addAttribute("children", children);
+        return "parent/points";
+    }
+
+    @PostMapping("/points/bonus")
+    public String addBonusPoints(@RequestParam Long childId,
+            @RequestParam String reason,
+            @RequestParam int points,
+            Authentication authentication) {
+        Child child = childService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+
+        User currentUser = (User) authentication.getPrincipal();
+        penaltyService.addBonusPoints(child, reason, points, currentUser);
+
+        return "redirect:/parent/dashboard";
+    }
+
+    @PostMapping("/points/penalty")
+    public String addPenaltyPoints(@RequestParam Long childId,
+            @RequestParam String reason,
+            @RequestParam int points,
+            Authentication authentication) {
+        Child child = childService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+
+        User currentUser = (User) authentication.getPrincipal();
+        penaltyService.createPenalty(child, reason, points, currentUser);
+
+        return "redirect:/parent/dashboard";
+    }
+
     @PostMapping("/penalties/create")
     public String createPenalty(@RequestParam Long childId,
             @RequestParam String reason,

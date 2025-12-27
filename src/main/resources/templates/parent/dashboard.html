@@ -65,41 +65,84 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4 mb-3" th:each="child : ${children}">
-                                <div class="card border-success">
-                                    <div class="card-body text-center">
+                            <div class="col-md-6 col-lg-4 mb-3" th:each="child : ${children}">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
                                         <!-- Avatar Display -->
-                                        <div class="mb-2">
+                                        <div class="text-center mb-2">
                                             <!-- Photo Avatar -->
                                             <img th:if="${child.user != null and child.user.avatarType == 'PHOTO'}"
                                                 th:src="@{/avatar/{userId}(userId=${child.user.id})}"
                                                 class="rounded-circle"
-                                                style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #28a745;"
+                                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745;"
                                                 alt="Avatar">
 
                                             <!-- Icon Avatar -->
                                             <img th:if="${child.user != null and child.user.avatarType == 'ICON' and child.user.avatarIconName != null}"
                                                 th:src="@{/images/avatars/{icon}.svg(icon=${child.user.avatarIconName})}"
                                                 class="rounded-circle"
-                                                style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #28a745; padding: 10px; background: white;"
+                                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745; padding: 10px; background: white;"
                                                 alt="Avatar">
 
                                             <!-- Default Avatar -->
                                             <div th:if="${child.user == null or child.user.avatarType == 'DEFAULT' or (child.user.avatarType == 'ICON' and child.user.avatarIconName == null)}"
                                                 class="rounded-circle bg-secondary mx-auto d-inline-flex align-items-center justify-content-center"
-                                                style="width: 100px; height: 100px; border: 3px solid #28a745;">
-                                                <i class="fas fa-user fa-3x text-white"></i>
+                                                style="width: 80px; height: 80px; border: 3px solid #28a745;">
+                                                <i class="fas fa-user fa-2x text-white"></i>
                                             </div>
                                         </div>
 
-                                        <h4 th:text="${child.firstName}">Kind</h4>
-                                        <p class="mb-3">
-                                            <span class="badge bg-success" style="font-size: 1.5rem;">
+                                        <h5 class="text-center mb-1" th:text="${child.firstName}">Kind</h5>
+                                        <p class="text-center mb-3">
+                                            <span class="badge bg-success">
                                                 ⭐ <span th:text="${child.totalPoints}">0</span> Punkte
                                             </span>
                                         </p>
+
+                                        <hr>
+
+                                        <!-- Bonuspunkte -->
+                                        <div class="mb-3">
+                                            <h6 class="text-success mb-2">
+                                                <i class="fas fa-plus-circle"></i> Bonuspunkte
+                                            </h6>
+                                            <form th:action="@{/parent/points/bonus}" method="post">
+                                                <input type="hidden" name="childId" th:value="${child.id}">
+                                                <div class="input-group input-group-sm mb-2">
+                                                    <input type="text" class="form-control" name="reason"
+                                                        placeholder="Grund" required>
+                                                    <input type="number" class="form-control" name="points"
+                                                        placeholder="Punkte" min="1" style="max-width: 80px;" required>
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <!-- Strafpunkte -->
+                                        <div class="mb-3">
+                                            <h6 class="text-danger mb-2">
+                                                <i class="fas fa-minus-circle"></i> Strafpunkte
+                                            </h6>
+                                            <form th:action="@{/parent/points/penalty}" method="post">
+                                                <input type="hidden" name="childId" th:value="${child.id}">
+                                                <div class="input-group input-group-sm mb-2">
+                                                    <input type="text" class="form-control" name="reason"
+                                                        placeholder="Grund" required>
+                                                    <input type="number" class="form-control" name="points"
+                                                        placeholder="Punkte" min="1" style="max-width: 80px;" required>
+                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+
                                         <a th:href="@{/parent/children/{id}(id=${child.id})}"
-                                            class="btn btn-success">Details anzeigen</a>
+                                            class="btn btn-outline-success btn-sm w-100">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
                                     </div>
                                 </div>
                             </div>

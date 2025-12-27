@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:attr="data-bs-theme=${userTheme}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
 <head th:replace="~{fragments/navbar :: head}">
 </head>
+
 <body>
     <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
 
@@ -13,14 +14,11 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <div th:if="${child.avatarPath}">
-                            <img th:src="@{${child.avatarPath}}" 
-                                 class="rounded-circle mb-3" 
-                                 style="width: 150px; height: 150px;"
-                                 alt="Avatar">
+                            <img th:src="@{${child.avatarPath}}" class="rounded-circle mb-3"
+                                style="width: 150px; height: 150px;" alt="Avatar">
                         </div>
-                        <div th:unless="${child.avatarPath}" 
-                             class="rounded-circle bg-secondary mx-auto mb-3" 
-                             style="width: 150px; height: 150px; line-height: 150px; font-size: 5rem; display: inline-block;">
+                        <div th:unless="${child.avatarPath}" class="rounded-circle bg-secondary mx-auto mb-3"
+                            style="width: 150px; height: 150px; line-height: 150px; font-size: 5rem; display: inline-block;">
                             👤
                         </div>
                         <h2 th:text="${child.firstName}">Kind</h2>
@@ -29,46 +27,6 @@
                                 ⭐ <span th:text="${child.totalPoints}">0</span> Punkte
                             </span>
                         </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-warning">
-                        <h5 class="mb-0"><i class="fas fa-heart"></i> Positive Gewohnheit erfassen</h5>
-                    </div>
-                    <div class="card-body">
-                        <form th:action="@{/parent/habits/{habitId}/record(habitId=1)}" method="post">
-                            <input type="hidden" name="childId" th:value="${child.id}">
-                            <p class="text-muted">Gewohnheiten-Feature wird bald verfügbar sein.</p>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Strafpunkte vergeben</h5>
-                    </div>
-                    <div class="card-body">
-                        <form th:action="@{/parent/penalties/create}" method="post">
-                            <input type="hidden" name="childId" th:value="${child.id}">
-                            <div class="mb-2">
-                                <input type="text" class="form-control" name="reason" 
-                                       placeholder="Grund" required>
-                            </div>
-                            <div class="mb-2">
-                                <input type="number" class="form-control" name="points" 
-                                       placeholder="Punkte" min="1" required>
-                            </div>
-                            <button type="submit" class="btn btn-danger w-100">
-                                <i class="fas fa-minus-circle"></i> Strafpunkte abziehen
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -95,13 +53,15 @@
                                     <tr th:each="task : ${tasks}">
                                         <td th:text="${task.title}">Aufgabe</td>
                                         <td>
-                                            <span class="badge" 
-                                                  th:classappend="${task.status.name() == 'PENDING'} ? 'bg-warning' : 
+                                            <span class="badge"
+                                                th:classappend="${task.status.name() == 'PENDING'} ? 'bg-warning' : 
                                                                   (${task.status.name() == 'APPROVED'} ? 'bg-success' : 'bg-info')"
-                                                  th:text="${task.status}">Status</span>
+                                                th:text="${task.status}">Status</span>
                                         </td>
                                         <td th:text="${task.basePoints}">0</td>
-                                        <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : '-'}">Datum</td>
+                                        <td
+                                            th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : '-'}">
+                                            Datum</td>
                                     </tr>
                                     <tr th:if="${tasks.isEmpty()}">
                                         <td colspan="4" class="text-center text-muted">Keine Aufgaben vorhanden</td>
@@ -117,4 +77,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
