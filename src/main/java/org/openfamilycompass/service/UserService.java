@@ -3,6 +3,9 @@ package org.openfamilycompass.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.openfamilycompass.model.User;
+import org.openfamilycompass.model.UserRole;
+import org.openfamilycompass.repository.UserRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,10 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.openfamilycompass.model.User;
-import org.openfamilycompass.model.UserRole;
-import org.openfamilycompass.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,14 +30,14 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User createUser(@NonNull String username, @NonNull String pin, @NonNull UserRole role) {
+    public User createUser(@NonNull String username, @NonNull String password, @NonNull UserRole role) {
         if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists: " + username);
         }
 
         User user = new User();
         user.setUsername(username.toLowerCase());
-        user.setPin(passwordEncoder.encode(pin));
+        user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
         user.setActive(true);
 
@@ -46,11 +45,11 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User updatePin(@NonNull Long userId, @NonNull String newPin) {
+    public User updatePassword(@NonNull Long userId, @NonNull String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        user.setPin(passwordEncoder.encode(newPin));
+        user.setPassword(passwordEncoder.encode(newPassword));
         return userRepository.save(user);
     }
 

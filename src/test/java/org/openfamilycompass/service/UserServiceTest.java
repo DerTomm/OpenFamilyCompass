@@ -40,7 +40,7 @@ class UserServiceTest {
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("testuser");
-        testUser.setPin("encodedPin");
+        testUser.setPassword("encodedPassword");
         testUser.setRole(UserRole.PARENT);
     }
 
@@ -55,7 +55,7 @@ class UserServiceTest {
         // Then
         assertThat(userDetails).isNotNull();
         assertThat(userDetails.getUsername()).isEqualTo("testuser");
-        assertThat(userDetails.getPassword()).isEqualTo("encodedPin");
+        assertThat(userDetails.getPassword()).isEqualTo("encodedPassword");
         assertThat(userDetails.getAuthorities()).hasSize(1);
         verify(userRepository).findByUsername("testuser");
     }
@@ -102,18 +102,18 @@ class UserServiceTest {
     }
 
     @Test
-    void updatePin_ShouldUpdateUserPin() {
+    void updatePassword_ShouldUpdateUserPassword() {
         // Given
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.encode("newPin")).thenReturn("newEncodedPin");
+        when(passwordEncoder.encode("newPassword")).thenReturn("newEncodedPassword");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        User result = userService.updatePin(1L, "newPin");
+        User result = userService.updatePassword(1L, "newPassword");
 
         // Then
-        assertThat(result.getPin()).isEqualTo("newEncodedPin");
-        verify(passwordEncoder).encode("newPin");
+        assertThat(result.getPassword()).isEqualTo("newEncodedPassword");
+        verify(passwordEncoder).encode("newPassword");
         verify(userRepository).save(any(User.class));
     }
 

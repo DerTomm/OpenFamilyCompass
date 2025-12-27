@@ -27,11 +27,11 @@ class JwtTokenServiceTest {
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("testuser");
-        testUser.setPin("encodedPin");
+        testUser.setPassword("encodedPassword");
         testUser.setRole(UserRole.PARENT);
 
         userDetails = withUsername("testuser")
-                .password("encodedPin")
+                .password("encodedPassword")
                 .roles("PARENT")
                 .build();
     }

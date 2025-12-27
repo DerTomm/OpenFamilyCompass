@@ -1,13 +1,12 @@
 package org.openfamilycompass.init;
 
+import org.openfamilycompass.model.User;
+import org.openfamilycompass.model.UserRole;
+import org.openfamilycompass.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
-import org.openfamilycompass.model.User;
-import org.openfamilycompass.model.UserRole;
-import org.openfamilycompass.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +22,8 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.admin.default-username}")
     private String adminUsername;
 
-    @Value("${app.admin.default-pin}")
-    private String adminPin;
+    @Value("${app.admin.default-password}")
+    private String adminPassword;
 
     @Override
     public void run(String... args) throws Exception {
@@ -36,12 +35,12 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.findByUsername(adminUsername).isEmpty()) {
             User admin = new User();
             admin.setUsername(adminUsername.toLowerCase());
-            admin.setPin(passwordEncoder.encode(adminPin));
+            admin.setPassword(passwordEncoder.encode(adminPassword));
             admin.setRole(UserRole.ADMIN);
             admin.setActive(true);
 
             userRepository.save(admin);
-            log.info("Admin user created: username='{}', PIN='{}'", adminUsername, adminPin);
+            log.info("Admin user created: username='{}', password='{}'", adminUsername, adminPassword);
             log.warn("IMPORTANT: Please change the admin password after the first login!");
         } else {
             log.info("Admin user already exists.");

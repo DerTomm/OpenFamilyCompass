@@ -40,7 +40,7 @@ public class User implements UserDetails {
     private String username;
 
     @Column(nullable = false)
-    private String pin; // Encrypted PIN code
+    private String password; // Encrypted password
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -77,7 +77,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return pin;
+        return password;
     }
 
     @Override
