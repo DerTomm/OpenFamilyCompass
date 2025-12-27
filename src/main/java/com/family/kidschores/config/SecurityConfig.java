@@ -58,7 +58,8 @@ public class SecurityConfig {
                                 .securityMatcher("/**")
                                 .userDetailsService(userService)
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**", "/favicon.png", "/favicon.ico")
+                                                .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**",
+                                                                "/favicon.png", "/favicon.ico")
                                                 .permitAll()
                                                 .requestMatchers("/login", "/error").permitAll()
                                                 .requestMatchers("/profile/**").authenticated()
