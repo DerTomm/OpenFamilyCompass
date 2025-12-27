@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:attr="data-bs-theme=${userTheme}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meine Aufgaben - Kids Chores & Rewards</title>
+    <title>Meine Aufgaben - OpenFamilyCompass</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,13 +13,15 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
+
         .child-card {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-dark navbar-expand-lg" style="background: rgba(0,0,0,0.2);">
         <div class="container-fluid">
@@ -32,24 +34,29 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user-circle fa-lg"></i>
                             <span sec:authentication="name">User</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                             <li>
                                 <h6 class="dropdown-header">
-                                    <i class="fas fa-user"></i> 
+                                    <i class="fas fa-user"></i>
                                     <span sec:authentication="name">User</span>
                                 </h6>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li>
                                 <a class="dropdown-item" href="/profile/settings">
                                     <i class="fas fa-cog"></i> Profileinstellungen
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li>
                                 <form th:action="@{/logout}" method="post" class="d-inline w-100">
                                     <button type="submit" class="dropdown-item text-danger">
@@ -69,7 +76,7 @@
             <div class="col-12">
                 <div class="child-card p-4">
                     <h3 class="mb-4"><i class="fas fa-tasks"></i> Meine Aufgaben</h3>
-                    
+
                     <div th:each="task : ${tasks}" class="card mb-3 border-start border-primary border-5">
                         <div class="card-body">
                             <div class="row align-items-center">
@@ -77,7 +84,8 @@
                                     <h5 class="card-title" th:text="${task.title}">Aufgabe</h5>
                                     <p class="card-text text-muted" th:text="${task.description}">Beschreibung</p>
                                     <small class="text-muted" th:if="${task.dueDate}">
-                                        📅 Fällig: <span th:text="${#temporals.format(task.dueDate, 'dd.MM.yyyy')}">Datum</span>
+                                        📅 Fällig: <span
+                                            th:text="${#temporals.format(task.dueDate, 'dd.MM.yyyy')}">Datum</span>
                                     </small>
                                 </div>
                                 <div class="col-md-4 text-end">
@@ -95,7 +103,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div th:if="${tasks.isEmpty()}" class="alert alert-info">
                         <i class="fas fa-star"></i> Super! Du hast alle Aufgaben erledigt! 🎉
                     </div>
@@ -106,4 +114,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

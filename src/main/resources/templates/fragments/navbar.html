@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
-    <title th:text="${pageTitle} ?: 'Kids Chores & Rewards'">Kids Chores & Rewards</title>
+    <title th:text="${pageTitle} ?: 'OpenFamilyCompass'">OpenFamilyCompass</title>
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/images/logo.png}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
@@ -16,7 +18,11 @@
     <!-- Admin Navigation -->
     <nav th:fragment="adminNav" class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/admin/dashboard">🛡️ Admin Dashboard</a>
+            <a class="navbar-brand d-flex align-items-center" href="/admin/dashboard">
+                <img th:src="@{/images/logo.png}" alt="OpenFamilyCompass"
+                    style="width: 32px; height: 32px; margin-right: 0.5rem;">
+                Admin Dashboard
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -66,7 +72,11 @@
     <!-- Parent Navigation -->
     <nav th:fragment="parentNav" class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/parent/dashboard">👪 Eltern Dashboard</a>
+            <a class="navbar-brand d-flex align-items-center" href="/parent/dashboard">
+                <img th:src="@{/images/logo.png}" alt="OpenFamilyCompass"
+                    style="width: 32px; height: 32px; margin-right: 0.5rem;">
+                Eltern Dashboard
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -141,7 +151,11 @@
     <!-- Child Navigation -->
     <nav th:fragment="childNav" class="navbar navbar-expand-lg navbar-dark bg-info">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/child/dashboard">🎈 Kinder Dashboard</a>
+            <a class="navbar-brand d-flex align-items-center" href="/child/dashboard">
+                <img th:src="@{/images/logo.png}" alt="OpenFamilyCompass"
+                    style="width: 32px; height: 32px; margin-right: 0.5rem;">
+                Kinder Dashboard
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -190,7 +204,7 @@
 
     <footer th:fragment="footer" class="footer mt-auto py-3 bg-light">
         <div class="container text-center">
-            <span class="text-muted">© 2025 Kids Chores & Rewards</span>
+            <span class="text-muted">© 2025 OpenFamilyCompass</span>
         </div>
     </footer>
 

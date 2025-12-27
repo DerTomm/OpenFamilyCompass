@@ -1,6 +1,6 @@
-# Kids Chores & Rewards 🌟
+# OpenFamilyCompass 🧭
 
-Eine webbasierte Anwendung zur Motivation von Kindern durch Aufgaben und Belohnungen.
+Eine Open-Source-Webanwendung zur Organisation von Familien-Aufgaben, Verhaltensregeln und Belohnungen.
 
 ## 📋 Übersicht
 

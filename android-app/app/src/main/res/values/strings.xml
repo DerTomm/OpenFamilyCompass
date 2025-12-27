@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App Name -->
-    <string name="app_name">Kids Chores &amp; Rewards</string>
+    <string name="app_name">OpenFamilyCompass</string>
 
     <!-- Menu -->
     <string name="menu_settings">Einstellungen</string>

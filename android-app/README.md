@@ -1,8 +1,8 @@
-# Kids Chores & Rewards - README
+# OpenFamilyCompass - Android App
 
 ## Überblick
 
-Dies ist eine Android-App, die als WebView-Wrapper für die Kids Chores & Rewards Web-Anwendung dient.
+Dies ist eine Android-App, die als WebView-Wrapper für die OpenFamilyCompass Web-Anwendung dient.
 
 ## Features
 
