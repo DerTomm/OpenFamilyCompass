@@ -1,179 +1,183 @@
 # OpenFamilyCompass 🧭
 
-Eine Open-Source-Webanwendung zur Organisation von Familien-Aufgaben, Verhaltensregeln und Belohnungen.
+**Guiding children's behavior and family routines — together.**
 
-## 📋 Übersicht
+An open-source web application for organizing family tasks, behavior rules, and rewards.
 
-Diese Anwendung ermöglicht es Eltern, Aufgaben für ihre Kinder zu definieren und sie mit einem Punktesystem zu belohnen. Kinder können ihre Punkte gegen vordefinierte Belohnungen eintauschen.
+## 📋 Overview
 
-### Hauptfunktionen
+This application enables parents to define tasks for their children and reward them with a points system. Children can redeem their points for predefined rewards.
 
-- 👨‍👩‍👧‍👦 **Multi-User System** mit drei Rollen: Admin, Eltern, Kinder
-- 📝 **Aufgabenverwaltung** mit einmaligen und wiederkehrenden Aufgaben (täglich, wöchentlich, monatlich)
-- ⭐ **Punktesystem** mit flexibler Punktevergabe durch Eltern
-- 🛍️ **Belohnungs-Shop** für Kinder zum Einlösen ihrer Punkte
-- 💚 **Gewohnheiten-Tracking** für positive Verhaltensweisen
-- ⚠️ **Strafpunkte** für negatives Verhalten
-- 📊 **Punkte-Historie** zur Nachvollziehbarkeit
-- 👤 **Avatar-System** (vordefiniert + Upload-Möglichkeit)
+OpenFamilyCompass is an open-source tool designed for families to promote cooperation and transparency. It combines task management, behavior points, and a plus/minus system in a child-friendly, intuitive interface. The development is transparent and community-driven.
 
-## 🛠️ Technologie-Stack
+### Key Features
+
+- 👨‍👩‍👧‍👦 **Multi-User System** with three roles: Admin, Parents, Children
+- 📝 **Task Management** with one-time and recurring tasks (daily, weekly, monthly)
+- ⭐ **Points System** with flexible point allocation by parents
+- 🛍️ **Reward Shop** for children to redeem their points
+- 💚 **Habit Tracking** for positive behaviors
+- ⚠️ **Penalty Points** for negative behavior
+- 📊 **Points History** for accountability
+- 👤 **Avatar System** (predefined + upload option)
+
+## 🛠️ Technology Stack
 
 - **Backend:** Java 21 (LTS), Spring Boot 3.5.9
 - **Frontend:** Thymeleaf, Bootstrap 5, Font Awesome
-- **Security:** Spring Security mit PIN-basierter Authentifizierung
-- **Datenbank:** PostgreSQL 16
-- **Build-Tool:** Maven
-- **Containerisierung:** Docker (PostgreSQL)
+- **Security:** Spring Security with PIN-based authentication
+- **Database:** PostgreSQL 16
+- **Build Tool:** Maven
+- **Containerization:** Docker (PostgreSQL)
 
-## 📦 Voraussetzungen
+## 📦 Prerequisites
 
-- Java 21 oder höher (LTS)
+- Java 21 or higher (LTS)
 - Maven 3.6+
 - Docker & Docker Compose
 - Optional: IDE (IntelliJ IDEA, Eclipse, VS Code)
 
-## 🚀 Installation & Start
+## 🚀 Installation & Startup
 
-### 1. Repository klonen (falls vorhanden)
+### 1. Clone Repository (if available)
 
 ```bash
-cd C:\Development\KidsChoresAndRewards
+cd C:\Development\OpenFamilyCompass
 ```
 
-### 2. Datenbank starten
+### 2. Start Database
 
 ```bash
 docker-compose up -d
 ```
 
-Dies startet eine PostgreSQL-Instanz auf Port 5432.
+This starts a PostgreSQL instance on port 5432.
 
-### 3. Anwendung kompilieren
+### 3. Compile Application
 
 ```bash
 mvn clean install
 ```
 
-### 4. Anwendung starten
+### 4. Start Application
 
 ```bash
 mvn spring-boot:run
 ```
 
-Die Anwendung ist dann verfügbar unter: **http://localhost:8080**
+The application will be available at: **http://localhost:8080**
 
-## 🔐 Standard-Login
+## 🔐 Default Login
 
-Nach dem ersten Start wird automatisch ein Admin-Account erstellt:
+After the first startup, an admin account is automatically created:
 
-- **Benutzername:** `admin`
+- **Username:** `admin`
 - **PIN:** `0000`
 
-⚠️ **Wichtig:** Bitte ändern Sie das Admin-Passwort nach der ersten Anmeldung!
+⚠️ **Important:** Please change the admin password after the first login!
 
-## 👥 Benutzer-Rollen
+## 👥 User Roles
 
 ### Admin
-- Vollständiger Zugriff auf alle Funktionen
-- Benutzer- und Kinderverwaltung
-- Aufgaben-, Belohnungs- und Gewohnheitsverwaltung
-- Zugriff: `/admin/dashboard`
+- Full access to all features
+- User and child management
+- Task, reward, and habit management
+- Access: `/admin/dashboard`
 
-### Eltern
-- Aufgaben genehmigen/ablehnen
-- Belohnungsanfragen genehmigen
-- Positive Gewohnheiten erfassen
-- Strafpunkte vergeben
-- Zugriff: `/parent/dashboard`
+### Parents
+- Approve/reject tasks
+- Approve reward requests
+- Record positive habits
+- Assign penalty points
+- Access: `/parent/dashboard`
 
-### Kinder
-- Aufgaben ansehen und als erledigt markieren
-- Punkte-Stand einsehen
-- Belohnungen im Shop eintauschen
-- Punkte-Historie anzeigen
-- Zugriff: `/child/dashboard`
+### Children
+- View tasks and mark as completed
+- View points balance
+- Redeem rewards in shop
+- View points history
+- Access: `/child/dashboard`
 
-## 📁 Projektstruktur
+## 📁 Project Structure
 
 ```
-KidsChoresAndRewards/
+OpenFamilyCompass/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/family/kidschores/
-│   │   │   ├── config/              # Konfiguration (Security, Web)
-│   │   │   ├── controller/          # Web-Controller
-│   │   │   ├── init/                # Daten-Initialisierung
-│   │   │   ├── model/               # Domain-Modelle
+│   │   │   ├── config/              # Configuration (Security, Web)
+│   │   │   ├── controller/          # Web Controllers
+│   │   │   ├── init/                # Data Initialization
+│   │   │   ├── model/               # Domain Models
 │   │   │   ├── repository/          # JPA Repositories
-│   │   │   ├── service/             # Business-Logik
+│   │   │   ├── service/             # Business Logic
 │   │   │   └── KidsChoresApplication.java
 │   │   └── resources/
-│   │       ├── static/              # CSS, JS, Bilder
+│   │       ├── static/              # CSS, JS, Images
 │   │       ├── templates/           # Thymeleaf Templates
-│   │       └── application.yml      # Konfiguration
+│   │       └── application.yml      # Configuration
 │   └── test/                        # Tests
 ├── docker-compose.yml               # PostgreSQL Setup
 ├── pom.xml                          # Maven Dependencies
 └── README.md
 ```
 
-## 💾 Datenbank-Schema
+## 💾 Database Schema
 
-### Hauptentitäten
+### Main Entities
 
-- **User:** Benutzer-Accounts (Admin, Parent, Child)
-- **Child:** Kinder-Profile mit Avatar und Punktestand
-- **Task:** Aufgaben (einmalig oder wiederkehrend)
-- **Reward:** Belohnungen im Shop
-- **RewardRedemption:** Eingelöste Belohnungen
-- **Habit:** Positive Gewohnheiten
-- **Penalty:** Strafpunkte
-- **PointTransaction:** Historie aller Punktebewegungen
+- **User:** User accounts (Admin, Parent, Child)
+- **Child:** Child profiles with avatar and points balance
+- **Task:** Tasks (one-time or recurring)
+- **Reward:** Rewards in shop
+- **RewardRedemption:** Redeemed rewards
+- **Habit:** Positive habits
+- **Penalty:** Penalty points
+- **PointTransaction:** History of all point movements
 
-## 🎯 Typischer Workflow
+## 🎯 Typical Workflow
 
-### Für Eltern/Admin:
+### For Parents/Admin:
 
-1. Neue Kinder anlegen (Admin)
-2. Aufgaben definieren (einmalig oder wiederkehrend)
-3. Belohnungen im Shop hinterlegen
-4. Positive Gewohnheiten definieren
-5. Aufgaben von Kindern genehmigen/ablehnen
-6. Belohnungsanfragen bearbeiten
-7. Bei Bedarf Strafpunkte vergeben
+1. Create new children (Admin)
+2. Define tasks (one-time or recurring)
+3. Set up rewards in shop
+4. Define positive habits
+5. Approve/reject tasks from children
+6. Process reward requests
+7. Assign penalty points when needed
 
-### Für Kinder:
+### For Children:
 
-1. Anmelden mit Vorname und PIN
-2. Aufgaben-Übersicht ansehen
-3. Aufgaben als erledigt markieren
-4. Auf Genehmigung der Eltern warten
-5. Punkte im Shop gegen Belohnungen eintauschen
-6. Historie der Punktebewegungen einsehen
+1. Log in with first name and PIN
+2. View task overview
+3. Mark tasks as completed
+4. Wait for parental approval
+5. Redeem points for rewards in shop
+6. View points history
 
-## 🔄 Wiederkehrende Aufgaben
+## 🔄 Recurring Tasks
 
-Das System erstellt automatisch wiederkehrende Aufgaben:
+The system automatically creates recurring tasks:
 
-- **Täglich:** Jeden Tag um Mitternacht
-- **Wöchentlich:** Wöchentlich am gleichen Wochentag
-- **Monatlich:** Monatlich am gleichen Tag
+- **Daily:** Every day at midnight
+- **Weekly:** Weekly on the same day of the week
+- **Monthly:** Monthly on the same day
 
-Ein Scheduler-Job läuft täglich um 0:00 Uhr und erstellt die fälligen Aufgaben.
+A scheduler job runs daily at 0:00 and creates due tasks.
 
-## 🎨 Avatar-System
+## 🎨 Avatar System
 
-Kinder können einen Avatar wählen aus:
+Children can choose an avatar from:
 
-- **Vordefinierte Avatare:** cat, dog, bear, lion, elephant, giraffe, panda, unicorn
-- **Eigene Uploads:** Bilder können hochgeladen werden (max. 5MB)
+- **Predefined Avatars:** cat, dog, bear, lion, elephant, giraffe, panda, unicorn
+- **Custom Uploads:** Images can be uploaded (max. 5MB)
 
-Avatare werden gespeichert unter: `uploads/avatars/`
+Avatars are stored under: `uploads/avatars/`
 
-## 🔧 Konfiguration
+## 🔧 Configuration
 
-Die wichtigsten Einstellungen in `application.yml`:
+The most important settings in `application.yml`:
 
 ```yaml
 spring:
@@ -193,48 +197,48 @@ app:
     upload-dir: uploads/avatars
 ```
 
-## 🧪 Tests ausführen
+## 🧪 Running Tests
 
 ```bash
 mvn test
 ```
 
-## 📝 Nächste Schritte / Erweiterungen
+## 📝 Next Steps / Extensions
 
-Mögliche zukünftige Features:
+Possible future features:
 
 - [ ] Mobile App (React Native / Flutter)
-- [ ] Kalenderansicht für Aufgaben
-- [ ] Push-Benachrichtigungen
-- [ ] Statistiken und Reports
-- [ ] Familien-Rangliste
-- [ ] Aufgaben-Templates
-- [ ] Export von Punktehistorie (PDF/Excel)
-- [ ] Multi-Tenancy (mehrere Familien)
+- [ ] Calendar view for tasks
+- [ ] Push notifications
+- [ ] Statistics and reports
+- [ ] Family leaderboard
+- [ ] Task templates
+- [ ] Export points history (PDF/Excel)
+- [ ] Multi-tenancy (multiple families)
 - [ ] Gamification (Badges, Achievements)
 
-## 🐛 Bekannte Einschränkungen
+## 🐛 Known Limitations
 
-- Bild-Upload für Belohnungen noch nicht implementiert
-- Keine E-Mail-Benachrichtigungen
-- Keine API-Endpunkte (nur Web-UI)
+- Image upload for rewards not yet implemented
+- No email notifications
+- No API endpoints (web UI only)
 
-## 📄 Lizenz
+## 📄 License
 
-Dieses Projekt ist für den privaten Gebrauch bestimmt.
+This project is intended for private use.
 
-## 👨‍💻 Entwickler
+## 👨‍💻 Developer
 
-Erstellt mit GitHub Copilot für eine bessere Familien-Organisation! 🏠
+Created with GitHub Copilot for better family organization! 🏠
 
 ## 🆘 Support
 
-Bei Problemen oder Fragen:
+For problems or questions:
 
-1. Datenbank-Logs prüfen: `docker-compose logs postgres`
-2. Anwendungs-Logs prüfen: Console-Output
-3. Datenbank zurücksetzen: `docker-compose down -v && docker-compose up -d`
+1. Check database logs: `docker-compose logs postgres`
+2. Check application logs: Console output
+3. Reset database: `docker-compose down -v && docker-compose up -d`
 
 ---
 
-**Viel Erfolg bei der Motivation Ihrer Kinder! 🌟**
+**Good luck motivating your children! 🌟**

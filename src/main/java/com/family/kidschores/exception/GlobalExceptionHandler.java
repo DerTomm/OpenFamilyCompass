@@ -1,10 +1,11 @@
 package com.family.kidschores.exception;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice
 @Slf4j
@@ -27,14 +28,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NullPointerException.class)
     public String handleNullPointerException(NullPointerException ex, RedirectAttributes redirectAttributes) {
         log.error("NullPointerException: {}", ex.getMessage(), ex);
-        redirectAttributes.addFlashAttribute("error", "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
+        redirectAttributes.addFlashAttribute("error", "An unexpected error occurred. Please try again.");
         return "redirect:/dashboard";
     }
 
     @ExceptionHandler(Exception.class)
     public String handleGenericException(Exception ex, Model model, RedirectAttributes redirectAttributes) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
-        redirectAttributes.addFlashAttribute("error", "Ein unerwarteter Fehler ist aufgetreten. Bitte wenden Sie sich an den Administrator.");
+        redirectAttributes.addFlashAttribute("error",
+                "An unexpected error occurred. Please contact the administrator.");
         return "redirect:/dashboard";
     }
 }

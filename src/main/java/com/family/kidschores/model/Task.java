@@ -1,12 +1,22 @@
 package com.family.kidschores.model;
 
-import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tasks")
@@ -26,11 +36,11 @@ public class Task {
     private String description;
 
     @Column(nullable = false)
-    private int basePoints;  // Basis-Belohnungspunkte
+    private int basePoints; // Base reward points
 
     @ManyToOne
     @JoinColumn(name = "assigned_child_id")
-    private Child assignedChild;  // Kann null sein, wenn für alle Kinder
+    private Child assignedChild; // Can be null if for all children
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -41,30 +51,30 @@ public class Task {
     private RecurrenceType recurrenceType = RecurrenceType.ONCE;
 
     @Column(name = "due_date")
-    private LocalDate dueDate;  // Fälligkeitsdatum
+    private LocalDate dueDate; // Due date
 
     @Column(name = "completed_at")
-    private LocalDateTime completedAt;  // Von Kind als erledigt markiert
+    private LocalDateTime completedAt; // Marked as completed by child
 
     @Column(name = "approved_at")
-    private LocalDateTime approvedAt;  // Von Eltern genehmigt
+    private LocalDateTime approvedAt; // Approved by parents
 
     @Column(name = "awarded_points")
-    private Integer awardedPoints;  // Tatsächlich vergebene Punkte (kann abweichen)
+    private Integer awardedPoints; // Actually awarded points (can differ)
 
     @ManyToOne
     @JoinColumn(name = "approved_by")
-    private User approvedBy;  // Welcher Elternteil hat genehmigt
+    private User approvedBy; // Which parent approved
 
     @Column(name = "parent_notes", columnDefinition = "TEXT")
-    private String parentNotes;  // Notizen der Eltern
+    private String parentNotes; // Notes from parents
 
     @Column(name = "is_template")
-    private boolean isTemplate = false;  // Für wiederkehrende Aufgaben
+    private boolean isTemplate = false; // For recurring tasks
 
     @ManyToOne
     @JoinColumn(name = "template_id")
-    private Task templateTask;  // Referenz zur ursprünglichen Vorlage
+    private Task templateTask; // Reference to original template
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

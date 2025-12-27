@@ -1,14 +1,16 @@
 package com.family.kidschores.init;
 
-import com.family.kidschores.model.User;
-import com.family.kidschores.model.UserRole;
-import com.family.kidschores.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import com.family.kidschores.model.User;
+import com.family.kidschores.model.UserRole;
+import com.family.kidschores.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -40,14 +42,14 @@ public class DataInitializer implements CommandLineRunner {
 
             userRepository.save(admin);
             log.info("Admin user created: username='{}', PIN='{}'", adminUsername, adminPin);
-            log.warn("WICHTIG: Bitte ändere das Admin-Passwort nach der ersten Anmeldung!");
+            log.warn("IMPORTANT: Please change the admin password after the first login!");
         } else {
             log.info("Admin user already exists.");
         }
     }
 
     private void initializeAvatarDirectory() {
-        // Avatar-Verzeichnis wird automatisch erstellt, wenn benötigt
+        // Avatar directory will be created automatically when needed
         log.info("Avatar directory will be created on first upload");
     }
 }

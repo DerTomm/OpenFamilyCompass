@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mein Dashboard - OpenFamilyCompass</title>
+    <title th:text="#{child.dashboard.title} + ' - OpenFamilyCompass'">My Dashboard - OpenFamilyCompass</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -44,7 +44,8 @@
     <nav class="navbar navbar-dark navbar-expand-lg" style="background: rgba(0,0,0,0.2);">
         <div class="container-fluid">
             <a class="navbar-brand text-white" href="/child/dashboard">
-                <span style="font-size: 1.5rem;">🌟</span> Hallo, <span th:text="${child.firstName}">Kind</span>!
+                <span style="font-size: 1.5rem;">🌟</span> <span
+                    th:text="#{child.dashboard.hello(${child.firstName})}">Hello, Child!</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -69,7 +70,7 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="/profile/settings">
-                                    <i class="fas fa-cog"></i> Profileinstellungen
+                                    <i class="fas fa-cog"></i> <span th:text="#{nav.settings}">Settings</span>
                                 </a>
                             </li>
                             <li>
@@ -78,7 +79,7 @@
                             <li>
                                 <form th:action="@{/logout}" method="post" class="d-inline w-100">
                                     <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> Abmelden
+                                        <i class="fas fa-sign-out-alt"></i> <span th:text="#{nav.logout}">Logout</span>
                                     </button>
                                 </form>
                             </li>
@@ -102,9 +103,9 @@
                         style="width: 120px; height: 120px; line-height: 120px; font-size: 4rem; display: inline-block;">
                         👤
                     </div>
-                    <h2 class="mb-3">Deine Punkte</h2>
+                    <h2 class="mb-3" th:text="#{child.dashboard.points.badge}">Your Points</h2>
                     <div class="points-badge">
-                        ⭐ <span th:text="${totalPoints}">0</span> Punkte
+                        ⭐ <span th:text="${totalPoints}">0</span> <span th:text="#{tasks.points}">Points</span>
                     </div>
                 </div>
             </div>
@@ -116,9 +117,9 @@
                 <a href="/child/tasks" class="text-decoration-none">
                     <div class="child-card p-4 text-center">
                         <i class="fas fa-tasks fa-4x text-primary mb-3"></i>
-                        <h4>Meine Aufgaben</h4>
-                        <p class="mb-0 badge bg-warning text-dark" th:text="${pendingTasks.size()} + ' offen'">0 offen
-                        </p>
+                        <h4 th:text="#{tasks.my.title}">My Tasks</h4>
+                        <p class="mb-0 badge bg-warning text-dark"
+                            th:text="${pendingTasks.size()} + ' ' + #{tasks.available}">0 available</p>
                     </div>
                 </a>
             </div>
@@ -127,8 +128,8 @@
                 <a href="/child/shop" class="text-decoration-none">
                     <div class="child-card p-4 text-center">
                         <i class="fas fa-shopping-cart fa-4x text-success mb-3"></i>
-                        <h4>Belohnungs-Shop</h4>
-                        <p class="mb-0 text-muted">Punkte eintauschen</p>
+                        <h4 th:text="#{child.dashboard.shop.title}">Reward Shop</h4>
+                        <p class="mb-0 text-muted" th:text="#{child.dashboard.shop.subtitle}">Redeem points</p>
                     </div>
                 </a>
             </div>
@@ -137,7 +138,7 @@
                 <a href="/child/history" class="text-decoration-none">
                     <div class="child-card p-4 text-center">
                         <i class="fas fa-history fa-4x text-info mb-3"></i>
-                        <h4>Meine Historie</h4>
+                        <h4 th:text="#{history.title}">My History</h4>
                         <p class="mb-0 text-muted">Punkte-Verlauf</p>
                     </div>
                 </a>
@@ -148,27 +149,29 @@
         <div class="row" th:if="${pendingTasks.size() > 0}">
             <div class="col-12">
                 <div class="child-card p-4">
-                    <h3 class="mb-4"><i class="fas fa-list-check"></i> Deine nächsten Aufgaben</h3>
+                    <h3 class="mb-4"><i class="fas fa-list-check"></i> <span
+                            th:text="#{child.dashboard.tasks.available}">Available Tasks</span></h3>
                     <div class="task-card card mb-3" th:each="task : ${pendingTasks}">
                         <div class="card-body">
                             <div class="row align-items-center">
                                 <div class="col-md-8">
-                                    <h5 class="card-title" th:text="${task.title}">Aufgabe</h5>
-                                    <p class="card-text text-muted" th:text="${task.description}">Beschreibung</p>
+                                    <h5 class="card-title" th:text="${task.title}">Task</h5>
+                                    <p class="card-text" th:text="${task.description}">Description</p>
                                     <small class="text-muted" th:if="${task.dueDate}">
-                                        📅 Fällig: <span
-                                            th:text="${#temporals.format(task.dueDate, 'dd.MM.yyyy')}">Datum</span>
+                                        <span th:text="#{child.dashboard.due}">📅 Due:</span> <span
+                                            th:text="${#temporals.format(task.dueDate, 'dd.MM.yyyy')}">Date</span>
                                     </small>
                                 </div>
                                 <div class="col-md-4 text-end">
                                     <div class="mb-2">
-                                        <span class="badge bg-success" style="font-size: 1.2rem;">
-                                            ⭐ <span th:text="${task.basePoints}">0</span> Punkte
+                                        <span class="badge bg-success" style="font-size: 1.2rem;"
+                                            th:text="#{child.dashboard.tasks.points(${task.basePoints})}">
+                                            ⭐ 0 Points
                                         </span>
                                     </div>
                                     <form th:action="@{/child/tasks/{id}/complete(id=${task.id})}" method="post">
-                                        <button type="submit" class="btn btn-primary">
-                                            ✅ Als erledigt markieren
+                                        <button type="submit" class="btn btn-primary" th:text="#{tasks.complete}">
+                                            Complete
                                         </button>
                                     </form>
                                 </div>
@@ -183,13 +186,15 @@
         <div class="row mt-4" th:if="${completedTasks.size() > 0}">
             <div class="col-12">
                 <div class="child-card p-4">
-                    <h3 class="mb-4"><i class="fas fa-clock"></i> Warten auf Überprüfung</h3>
+                    <h3 class="mb-4"><i class="fas fa-clock"></i> <span
+                            th:text="#{child.dashboard.pending.review}">Waiting for Review</span></h3>
                     <div class="alert alert-info" th:each="task : ${completedTasks}">
-                        <strong th:text="${task.title}">Aufgabe</strong> -
-                        Erledigt am <span
-                            th:text="${#temporals.format(task.completedAt, 'dd.MM.yyyy HH:mm')}">Datum</span>
+                        <strong th:text="${task.title}">Task</strong> -
+                        <span th:text="#{child.dashboard.completed.on}">Completed on</span> <span
+                            th:text="${#temporals.format(task.completedAt, 'dd.MM.yyyy HH:mm')}">Date</span>
                         <br>
-                        <small>Deine Eltern überprüfen das noch! 🕐</small>
+                        <small th:text="#{child.dashboard.parents.reviewing}">Your parents are still checking this!
+                            🕐</small>
                     </div>
                 </div>
             </div>

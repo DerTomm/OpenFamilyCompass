@@ -28,6 +28,17 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <!-- Language Switcher -->
+                    <li class="nav-item dropdown me-2">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="languageDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-globe"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item" href="?lang=en">🇬🇧 English</a></li>
+                            <li><a class="dropdown-item" href="?lang=de">🇩🇪 Deutsch</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#"
                             id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -49,7 +60,7 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="/profile/settings">
-                                    <i class="fas fa-cog"></i> Benutzereinstellungen
+                                    <i class="fas fa-cog"></i> <span th:text="#{nav.settings}">Settings</span>
                                 </a>
                             </li>
                             <li>
@@ -58,7 +69,7 @@
                             <li>
                                 <form th:action="@{/logout}" method="post" class="d-inline w-100">
                                     <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> Abmelden
+                                        <i class="fas fa-sign-out-alt"></i> <span th:text="#{nav.logout}">Logout</span>
                                     </button>
                                 </form>
                             </li>
@@ -75,7 +86,7 @@
             <a class="navbar-brand d-flex align-items-center" href="/parent/dashboard">
                 <img th:src="@{/images/logo.png}" alt="OpenFamilyCompass"
                     style="width: 32px; height: 32px; margin-right: 0.5rem;">
-                Eltern Dashboard
+                <span th:text="#{nav.parent.dashboard}">Parent Dashboard</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -85,22 +96,24 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white" href="#" id="managementDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-wrench"></i> Verwaltung
+                            <i class="fas fa-wrench"></i> <span th:text="#{nav.admin.dashboard}">Management</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="managementDropdown">
                             <li>
                                 <a class="dropdown-item" href="/parent/tasks">
-                                    <i class="fas fa-tasks text-success"></i> Aufgaben
+                                    <i class="fas fa-tasks text-success"></i> <span th:text="#{nav.tasks}">Tasks</span>
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="/parent/rewards">
-                                    <i class="fas fa-gift text-danger"></i> Belohnungen
+                                    <i class="fas fa-gift text-danger"></i> <span
+                                        th:text="#{nav.rewards}">Rewards</span>
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="/parent/behaviors/manage">
-                                    <i class="fas fa-star text-warning"></i> Verhalten
+                                    <i class="fas fa-star text-warning"></i> <span
+                                        th:text="#{nav.behavior}">Behavior</span>
                                 </a>
                             </li>
                         </ul>
@@ -128,7 +141,7 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="/profile/settings">
-                                    <i class="fas fa-cog"></i> Benutzereinstellungen
+                                    <i class="fas fa-cog"></i> <span th:text="#{nav.settings}">Settings</span>
                                 </a>
                             </li>
                             <li>
@@ -137,7 +150,7 @@
                             <li>
                                 <form th:action="@{/logout}" method="post" class="d-inline w-100">
                                     <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> Abmelden
+                                        <i class="fas fa-sign-out-alt"></i> <span th:text="#{nav.logout}">Logout</span>
                                     </button>
                                 </form>
                             </li>
@@ -154,7 +167,7 @@
             <a class="navbar-brand d-flex align-items-center" href="/child/dashboard">
                 <img th:src="@{/images/logo.png}" alt="OpenFamilyCompass"
                     style="width: 32px; height: 32px; margin-right: 0.5rem;">
-                Kinder Dashboard
+                <span th:text="#{nav.child.dashboard}">Child Dashboard</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -182,7 +195,7 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="/profile/settings">
-                                    <i class="fas fa-cog"></i> Benutzereinstellungen
+                                    <i class="fas fa-cog"></i> <span th:text="#{nav.settings}">Settings</span>
                                 </a>
                             </li>
                             <li>
@@ -191,7 +204,7 @@
                             <li>
                                 <form th:action="@{/logout}" method="post" class="d-inline w-100">
                                     <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> Abmelden
+                                        <i class="fas fa-sign-out-alt"></i> <span th:text="#{nav.logout}">Logout</span>
                                     </button>
                                 </form>
                             </li>

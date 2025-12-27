@@ -70,9 +70,9 @@ public class ProfileController {
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     securityContext);
 
-            redirectAttributes.addFlashAttribute("success", "Design-Einstellungen erfolgreich gespeichert!");
+            redirectAttributes.addFlashAttribute("success", "Design settings successfully saved!");
         } else {
-            redirectAttributes.addFlashAttribute("error", "Ungültiges Theme ausgewählt!");
+            redirectAttributes.addFlashAttribute("error", "Invalid theme selected!");
         }
 
         return "redirect:/profile/settings";

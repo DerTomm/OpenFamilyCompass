@@ -32,10 +32,10 @@ public class PenaltyService {
 
         Penalty saved = penaltyRepository.save(penalty);
 
-        // Punkte abziehen
+        // Deduct points
         Long penaltyId = Objects.requireNonNull(saved.getId(), "Penalty ID must not be null");
         pointService.deductPoints(child, pointsDeducted, "PENALTY",
-                "Strafe: " + reason, penaltyId, createdBy);
+                "Penalty: " + reason, penaltyId, createdBy);
 
         return saved;
     }
@@ -46,8 +46,8 @@ public class PenaltyService {
 
     @Transactional
     public void addBonusPoints(@NonNull Child child, @NonNull String reason, int points, @NonNull User createdBy) {
-        // Bonuspunkte direkt als ADJUSTMENT gutschreiben
+        // Credit bonus points directly as ADJUSTMENT
         pointService.addPoints(child, points, "ADJUSTMENT",
-                "Bonuspunkte: " + reason, null, createdBy);
+                "Bonus points: " + reason, null, createdBy);
     }
 }

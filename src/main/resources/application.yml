@@ -1,11 +1,11 @@
 spring:
   application:
-    name: Kids Chores and Rewards
+    name: OpenFamilyCompass
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/kidschores
-    username: kidschores_user
-    password: kidschores_password
+    url: jdbc:postgresql://localhost:5432/openfamilycompass_db
+    username: openfamilycompass_user
+    password: openfamilycompass_password
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -23,6 +23,11 @@ spring:
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
+
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
 
   servlet:
     multipart:

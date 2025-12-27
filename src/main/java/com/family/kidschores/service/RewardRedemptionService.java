@@ -1,15 +1,21 @@
 package com.family.kidschores.service;
 
-import com.family.kidschores.model.*;
-import com.family.kidschores.repository.RewardRedemptionRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
+import com.family.kidschores.model.Child;
+import com.family.kidschores.model.Reward;
+import com.family.kidschores.model.RewardRedemption;
+import com.family.kidschores.model.RewardStatus;
+import com.family.kidschores.model.User;
+import com.family.kidschores.repository.RewardRedemptionRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +26,7 @@ public class RewardRedemptionService {
 
     @Transactional
     public RewardRedemption requestReward(@NonNull Child child, @NonNull Reward reward) {
-        // Prüfen ob genug Punkte vorhanden
+        // Check if enough points are available
         if (child.getTotalPoints() < reward.getPointsCost()) {
             throw new IllegalStateException("Not enough points");
         }
@@ -33,11 +39,11 @@ public class RewardRedemptionService {
 
         RewardRedemption saved = redemptionRepository.save(redemption);
 
-        // Punkte vorläufig abziehen
+        // Deduct points provisionally
         Long redemptionId = Objects.requireNonNull(saved.getId(), "Redemption ID must not be null");
-        pointService.deductPoints(child, reward.getPointsCost(), "REWARD", 
-                                 "Belohnung angefordert: " + reward.getTitle(), 
-                                 redemptionId, null);
+        pointService.deductPoints(child, reward.getPointsCost(), "REWARD",
+                "Reward requested: " + reward.getTitle(),
+                redemptionId, null);
 
         return saved;
     }
@@ -79,11 +85,11 @@ public class RewardRedemptionService {
 
         RewardRedemption saved = redemptionRepository.save(redemption);
 
-        // Punkte zurückgeben
+        // Return points
         Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
-        pointService.addPoints(redemption.getChild(), redemption.getPointsSpent(), 
-                              "REWARD", "Belohnung storniert: " + redemption.getReward().getTitle(), 
-                              redemptionId2, cancelledBy);
+        pointService.addPoints(redemption.getChild(), redemption.getPointsSpent(),
+                "REWARD", "Reward cancelled: " + redemption.getReward().getTitle(),
+                redemptionId2, cancelledBy);
 
         return saved;
     }

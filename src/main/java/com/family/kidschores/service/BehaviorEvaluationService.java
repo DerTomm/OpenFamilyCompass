@@ -28,7 +28,7 @@ public class BehaviorEvaluationService {
     private final PointService pointService;
 
     /**
-     * Ermittelt den Start der aktuellen Woche (Montag 00:00)
+     * Determines the start of the current week (Monday 00:00)
      */
     private LocalDateTime getCurrentWeekStart() {
         return LocalDateTime.now()
@@ -40,7 +40,7 @@ public class BehaviorEvaluationService {
     }
 
     /**
-     * Aktualisiert oder erstellt eine Bewertung für ein Verhalten
+     * Updates or creates an evaluation for a behavior
      */
     @Transactional
     public BehaviorEvaluation updateEvaluation(@NonNull Long behaviorId,
@@ -55,7 +55,7 @@ public class BehaviorEvaluationService {
             throw new IllegalStateException("Behavior is not active");
         }
 
-        // Punkte dürfen nicht negativ sein oder das Maximum überschreiten
+        // Points must not be negative or exceed the maximum
         if (currentPoints < 0 || currentPoints > behavior.getPoints()) {
             throw new IllegalArgumentException(
                     "Points must be between 0 and " + behavior.getPoints());
@@ -63,7 +63,7 @@ public class BehaviorEvaluationService {
 
         LocalDateTime weekStart = getCurrentWeekStart();
 
-        // Vorhandene Bewertung suchen oder neue erstellen
+        // Find existing evaluation or create new one
         BehaviorEvaluation evaluation = evaluationRepository
                 .findByChildAndBehaviorAndWeekStartDateAndCommittedFalse(child, behavior, weekStart)
                 .orElseGet(() -> {
@@ -82,7 +82,7 @@ public class BehaviorEvaluationService {
     }
 
     /**
-     * Lädt alle nicht eingecheckten Bewertungen für ein Kind der aktuellen Woche
+     * Loads all uncommitted evaluations for a child of the current week
      */
     @Transactional(readOnly = true)
     public List<BehaviorEvaluation> getCurrentWeekEvaluations(@NonNull Child child) {
@@ -91,7 +91,7 @@ public class BehaviorEvaluationService {
     }
 
     /**
-     * Lädt eine spezifische Bewertung
+     * Loads a specific evaluation
      */
     @Transactional(readOnly = true)
     public Optional<BehaviorEvaluation> getEvaluation(Long evaluationId) {
@@ -99,7 +99,7 @@ public class BehaviorEvaluationService {
     }
 
     /**
-     * Bucht alle Bewertungen eines Kindes der aktuellen Woche ein
+     * Commits all evaluations of a child for the current week
      */
     @Transactional
     public void commitWeeklyEvaluations(@NonNull Child child, @NonNull User committedBy) {
@@ -111,11 +111,11 @@ public class BehaviorEvaluationService {
             throw new IllegalStateException("No evaluations to commit for this week");
         }
 
-        // Für jede Bewertung eine separate Transaktion erstellen
+        // Create a separate transaction for each evaluation
         for (BehaviorEvaluation evaluation : evaluations) {
             if (evaluation.getCurrentPoints() > 0) {
-                // Punkte gutschreiben
-                String description = "Wochenverhalten: " + evaluation.getBehavior().getTitle();
+                // Credit points
+                String description = "Weekly behavior: " + evaluation.getBehavior().getTitle();
 
                 pointService.addPointsWithRemarks(
                         child,
@@ -127,14 +127,14 @@ public class BehaviorEvaluationService {
                         committedBy);
             }
 
-            // Bewertung als eingebucht markieren
+            // Mark evaluation as committed
             evaluation.setCommitted(true);
             evaluationRepository.save(evaluation);
         }
     }
 
     /**
-     * Lädt alle aktiven Verhaltensregeln für ein Kind (inkl. globale Regeln)
+     * Loads all active behavior rules for a child (including global rules)
      */
     @Transactional(readOnly = true)
     public List<Behavior> getActiveBehaviorsForChild(@NonNull Child child) {
@@ -146,7 +146,7 @@ public class BehaviorEvaluationService {
     }
 
     /**
-     * Berechnet die Gesamtpunktzahl der aktuellen Woche für ein Kind
+     * Calculates the total points of the current week for a child
      */
     @Transactional(readOnly = true)
     public int calculateWeeklyTotal(@NonNull Child child) {

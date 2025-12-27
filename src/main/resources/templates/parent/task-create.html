@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:attr="data-bs-theme=${userTheme}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
 <head th:replace="~{fragments/navbar :: head}">
 </head>
+
 <body>
     <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
 
@@ -12,62 +13,67 @@
             <div class="col-md-8 offset-md-2">
                 <div class="card">
                     <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-plus"></i> Neue Aufgabe erstellen</h5>
+                        <h5 class="mb-0"><i class="fas fa-plus"></i> <span th:text="#{task.create.title}">Create New
+                                Task</span></h5>
                     </div>
                     <div class="card-body">
                         <form th:action="@{/parent/tasks/create}" method="post">
                             <div class="mb-3">
-                                <label for="title" class="form-label">Titel</label>
+                                <label for="title" class="form-label" th:text="#{task.name}">Task Name</label>
                                 <input type="text" class="form-control" id="title" name="title" required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="description" class="form-label">Beschreibung</label>
+                                <label for="description" class="form-label"
+                                    th:text="#{task.description}">Description</label>
                                 <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                             </div>
 
                             <div class="mb-3">
-                                <label for="basePoints" class="form-label">Belohnungspunkte</label>
-                                <input type="number" class="form-control" id="basePoints" name="basePoints" 
-                                       min="1" value="1" required>
+                                <label for="basePoints" class="form-label" th:text="#{task.points.label}">Reward
+                                    Points</label>
+                                <input type="number" class="form-control" id="basePoints" name="basePoints" min="1"
+                                    value="1" required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="childId" class="form-label">Zugewiesen an</label>
+                                <label for="childId" class="form-label" th:text="#{task.assign.child}">Assign to
+                                    Child</label>
                                 <select class="form-select" id="childId" name="childId">
-                                    <option value="">Alle Kinder</option>
-                                    <option th:each="child : ${children}" 
-                                            th:value="${child.id}" 
-                                            th:text="${child.firstName}">Kind</option>
+                                    <option value="" th:text="#{children.all}">All Children</option>
+                                    <option th:each="child : ${children}" th:value="${child.id}"
+                                        th:text="${child.firstName}">Kind</option>
                                 </select>
                             </div>
 
                             <div class="mb-3">
                                 <label for="recurrenceType" class="form-label">Wiederholung</label>
                                 <select class="form-select" id="recurrenceType" name="recurrenceType" required>
-                                    <option th:each="type : ${recurrenceTypes}" 
-                                            th:value="${type}" 
-                                            th:text="${type}">Type</option>
+                                    <option th:each="type : ${recurrenceTypes}" th:value="${type}" th:text="${type}">
+                                        Type</option>
                                 </select>
                             </div>
 
                             <div class="mb-3" id="dueDateField">
-                                <label for="dueDate" class="form-label">Fälligkeitsdatum</label>
+                                <label for="dueDate" class="form-label" th:text="#{task.deadline}">Deadline
+                                    (optional)</label>
                                 <input type="date" class="form-control" id="dueDate" name="dueDate">
                             </div>
 
                             <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="template" name="template" value="true">
-                                <label class="form-check-label" for="template">
-                                    Als Vorlage speichern (für wiederkehrende Aufgaben)
+                                <input type="checkbox" class="form-check-input" id="template" name="template"
+                                    value="true">
+                                <label class="form-check-label" for="template" th:text="#{task.template.hint}">
+                                    Save as template
                                 </label>
                             </div>
 
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-success btn-lg">
-                                    <i class="fas fa-save"></i> Aufgabe erstellen
+                                    <i class="fas fa-save"></i> <span th:text="#{task.create.button}">Create Task</span>
                                 </button>
-                                <a href="/parent/tasks" class="btn btn-outline-secondary">Abbrechen</a>
+                                <a href="/parent/tasks" class="btn btn-outline-secondary"
+                                    th:text="#{button.cancel}">Cancel</a>
                             </div>
                         </form>
                     </div>
@@ -78,10 +84,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('recurrenceType').addEventListener('change', function() {
+        document.getElementById('recurrenceType').addEventListener('change', function () {
             const dueDateField = document.getElementById('dueDateField');
             const templateCheckbox = document.getElementById('template');
-            
+
             if (this.value === 'ONCE') {
                 dueDateField.style.display = 'block';
                 templateCheckbox.checked = false;
@@ -92,4 +98,5 @@
         });
     </script>
 </body>
+
 </html>

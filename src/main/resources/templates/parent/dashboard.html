@@ -9,23 +9,25 @@
     <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
 
     <div class="container my-4">
-        <h2 class="mb-4"><i class="fas fa-home"></i> Dashboard</h2>
+        <h2 class="mb-4"><i class="fas fa-home"></i> <span th:text="#{dashboard.title}">Dashboard</span></h2>
 
         <!-- Quick Actions -->
         <div class="row mb-4">
             <div class="col-12 mb-3">
-                <h4><i class="fas fa-bolt"></i> Schnellaktionen</h4>
+                <h4><i class="fas fa-bolt"></i> <span th:text="#{dashboard.quick.actions}">Quick Actions</span></h4>
             </div>
 
             <div class="col-md-4 mb-3">
                 <div class="card border-warning">
                     <div class="card-header bg-warning text-white">
-                        <h5 class="mb-0"><i class="fas fa-check-circle"></i> Aufgaben genehmigen</h5>
+                        <h5 class="mb-0"><i class="fas fa-check-circle"></i> <span
+                                th:text="#{dashboard.approve.tasks}">Approve Tasks</span></h5>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2">Warten auf Genehmigung: <strong th:text="${pendingApprovals.size()}">0</strong>
-                        </p>
-                        <a href="/parent/tasks/pending" class="btn btn-warning">Aufgaben prüfen</a>
+                        <p class="mb-2" th:text="#{dashboard.approve.tasks.pending(${pendingApprovals.size()})}">
+                            Awaiting approval: 0</p>
+                        <a href="/parent/tasks/pending" class="btn btn-warning"
+                            th:text="#{dashboard.approve.tasks.button}">Check Tasks</a>
                     </div>
                 </div>
             </div>
@@ -33,12 +35,14 @@
             <div class="col-md-4 mb-3">
                 <div class="card border-info">
                     <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-gift"></i> Belohnungen genehmigen</h5>
+                        <h5 class="mb-0"><i class="fas fa-gift"></i> <span
+                                th:text="#{dashboard.approve.rewards}">Approve Rewards</span></h5>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2">Warten auf Genehmigung: <strong
-                                th:text="${pendingRedemptions.size()}">0</strong></p>
-                        <a href="/parent/redemptions/pending" class="btn btn-info text-white">Belohnungen prüfen</a>
+                        <p class="mb-2" th:text="#{dashboard.approve.rewards.pending(${pendingRedemptions.size()})}">
+                            Awaiting approval: 0</p>
+                        <a href="/parent/redemptions/pending" class="btn btn-info text-white"
+                            th:text="#{dashboard.approve.rewards.button}">Check Rewards</a>
                     </div>
                 </div>
             </div>
@@ -46,11 +50,14 @@
             <div class="col-md-4 mb-3">
                 <div class="card border-success">
                     <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-star"></i> Verhalten bewerten</h5>
+                        <h5 class="mb-0"><i class="fas fa-star"></i> <span
+                                th:text="#{dashboard.evaluate.behavior}">Evaluate Behavior</span></h5>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2">Belohne positives Verhalten deiner Kinder</p>
-                        <a href="/parent/behaviors" class="btn btn-success">Verhalten bewerten</a>
+                        <p class="mb-2" th:text="#{dashboard.evaluate.behavior.desc}">Reward your children's positive
+                            behavior</p>
+                        <a href="/parent/behaviors" class="btn btn-success"
+                            th:text="#{dashboard.evaluate.behavior.button}">Evaluate Behavior</a>
                     </div>
                 </div>
             </div>
@@ -59,7 +66,8 @@
         <!-- Children Overview -->
         <div class="row mt-5">
             <div class="col-12 mb-3">
-                <h4><i class="fas fa-users"></i> Meine Kinder</h4>
+                <h4><i class="fas fa-users"></i> <span th:text="#{dashboard.children.overview}">Children Overview</span>
+                </h4>
             </div>
             <div class="col-12">
                 <div class="card">
@@ -104,15 +112,17 @@
                                         <!-- Bonuspunkte -->
                                         <div class="mb-3">
                                             <h6 class="text-success mb-2">
-                                                <i class="fas fa-plus-circle"></i> Bonuspunkte
+                                                <i class="fas fa-plus-circle"></i> <span
+                                                    th:text="#{dashboard.bonus.points}">Bonus Points</span>
                                             </h6>
                                             <form th:action="@{/parent/points/bonus}" method="post">
                                                 <input type="hidden" name="childId" th:value="${child.id}">
                                                 <div class="input-group input-group-sm mb-2">
                                                     <input type="text" class="form-control" name="reason"
-                                                        placeholder="Grund" required>
+                                                        th:placeholder="#{dashboard.bonus.points.reason}" required>
                                                     <input type="number" class="form-control" name="points"
-                                                        placeholder="Punkte" min="1" style="max-width: 80px;" required>
+                                                        th:placeholder="#{dashboard.bonus.points.amount}" min="1"
+                                                        style="max-width: 80px;" required>
                                                     <button type="submit" class="btn btn-success btn-sm">
                                                         <i class="fas fa-plus"></i>
                                                     </button>
@@ -123,15 +133,17 @@
                                         <!-- Strafpunkte -->
                                         <div class="mb-3">
                                             <h6 class="text-danger mb-2">
-                                                <i class="fas fa-minus-circle"></i> Strafpunkte
+                                                <i class="fas fa-minus-circle"></i> <span
+                                                    th:text="#{dashboard.penalty.points}">Penalty Points</span>
                                             </h6>
                                             <form th:action="@{/parent/points/penalty}" method="post">
                                                 <input type="hidden" name="childId" th:value="${child.id}">
                                                 <div class="input-group input-group-sm mb-2">
                                                     <input type="text" class="form-control" name="reason"
-                                                        placeholder="Grund" required>
+                                                        th:placeholder="#{dashboard.penalty.points.reason}" required>
                                                     <input type="number" class="form-control" name="points"
-                                                        placeholder="Punkte" min="1" style="max-width: 80px;" required>
+                                                        th:placeholder="#{dashboard.penalty.points.amount}" min="1"
+                                                        style="max-width: 80px;" required>
                                                     <button type="submit" class="btn btn-danger btn-sm">
                                                         <i class="fas fa-minus"></i>
                                                     </button>
@@ -141,7 +153,8 @@
 
                                         <a th:href="@{/parent/children/{id}(id=${child.id})}"
                                             class="btn btn-outline-success btn-sm w-100">
-                                            <i class="fas fa-info-circle"></i> Details
+                                            <i class="fas fa-info-circle"></i> <span
+                                                th:text="#{children.details}">Details</span>
                                         </a>
                                     </div>
                                 </div>

@@ -1,16 +1,18 @@
 package com.family.kidschores.service;
 
-import com.family.kidschores.model.Child;
-import com.family.kidschores.model.Behavior;
-import com.family.kidschores.model.User;
-import com.family.kidschores.repository.BehaviorRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Objects;
+
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
+import com.family.kidschores.model.Behavior;
+import com.family.kidschores.model.Child;
+import com.family.kidschores.model.User;
+import com.family.kidschores.repository.BehaviorRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -40,18 +42,18 @@ public class BehaviorService {
             throw new IllegalStateException("Behavior is not active");
         }
 
-        // Punkte gutschreiben - ID darf nicht null sein nach dem Laden aus der DB
+        // Credit points - ID must not be null after loading from DB
         Long id = Objects.requireNonNull(behavior.getId(), "Behavior ID must not be null");
-        pointService.addPoints(child, behavior.getPoints(), "BEHAVIOR", 
-                              "Positives Verhalten: " + behavior.getTitle(), 
-                              id, recordedBy);
+        pointService.addPoints(child, behavior.getPoints(), "BEHAVIOR",
+                "Positive behavior: " + behavior.getTitle(),
+                id, recordedBy);
     }
 
     @Transactional
     public void deactivateBehavior(@NonNull Long behaviorId) {
         Behavior behavior = behaviorRepository.findById(behaviorId)
                 .orElseThrow(() -> new IllegalArgumentException("Behavior not found"));
-        
+
         behavior.setActive(false);
         behaviorRepository.save(behavior);
     }

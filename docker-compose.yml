@@ -1,17 +1,17 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: kids-chores-postgres
+    container_name: ofc-postgres
     environment:
-      POSTGRES_DB: kidschores
-      POSTGRES_USER: kidschores_user
-      POSTGRES_PASSWORD: kidschores_password
+      POSTGRES_DB: openfamilycompass_db
+      POSTGRES_USER: openfamilycompass_user
+      POSTGRES_PASSWORD: openfamilycompass_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - kids-chores-network
+      - openfamilycompass-network
     restart: unless-stopped
 
 volumes:
@@ -19,5 +19,5 @@ volumes:
     driver: local
 
 networks:
-  kids-chores-network:
+  openfamilycompass-network:
     driver: bridge

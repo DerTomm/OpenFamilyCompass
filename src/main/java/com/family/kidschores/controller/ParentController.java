@@ -188,7 +188,7 @@ public class ParentController {
         List<BehaviorEvaluation> evaluations = behaviorEvaluationService.getCurrentWeekEvaluations(child);
         int weeklyTotal = behaviorEvaluationService.calculateWeeklyTotal(child);
 
-        // Erstelle eine Map für einfacheren Zugriff in Thymeleaf
+        // Create a map for easier access in Thymeleaf
         java.util.Map<Long, BehaviorEvaluation> evaluationMap = new java.util.HashMap<>();
         for (BehaviorEvaluation eval : evaluations) {
             evaluationMap.put(eval.getBehavior().getId(), eval);

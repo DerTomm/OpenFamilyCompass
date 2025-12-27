@@ -17,8 +17,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Repräsentiert die wöchentliche Bewertung eines Verhaltens für ein Kind.
- * Enthält den aktuellen Punktwert und Bemerkungen zur Historie.
+ * Represents the weekly evaluation of a behavior for a child.
+ * Contains the current point value and remarks for history.
  */
 @Entity
 @Table(name = "behavior_evaluations")
@@ -40,16 +40,16 @@ public class BehaviorEvaluation {
     private Child child;
 
     @Column(nullable = false)
-    private int currentPoints; // Aktuell zugewiesene Punkte (0 bis max. Punkte des Verhaltens)
+    private int currentPoints; // Currently assigned points (0 to max. points of the behavior)
 
     @Column(columnDefinition = "TEXT")
-    private String remarks; // Bemerkungen zur Historie der aktuellen Woche
+    private String remarks; // Remarks for the history of the current week
 
     @Column(name = "week_start_date", nullable = false)
-    private LocalDateTime weekStartDate; // Start der Bewertungswoche
+    private LocalDateTime weekStartDate; // Start of the evaluation week
 
     @Column(nullable = false)
-    private boolean committed = false; // Wurde die Bewertung bereits eingebucht?
+    private boolean committed = false; // Has the evaluation already been committed?
 
     @ManyToOne
     @JoinColumn(name = "created_by")

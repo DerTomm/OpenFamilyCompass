@@ -31,7 +31,7 @@ public class PointTransaction {
     private Child child;
 
     @Column(nullable = false)
-    private int points; // Positiv für Gutschrift, negativ für Abzug
+    private int points; // Positive for credit, negative for deduction
 
     @Column(nullable = false)
     private String type; // "TASK", "REWARD", "HABIT", "PENALTY", "ADJUSTMENT"
@@ -40,10 +40,10 @@ public class PointTransaction {
     private String description;
 
     @Column(name = "reference_id")
-    private Long referenceId; // ID der zugehörigen Task, Reward, etc.
+    private Long referenceId; // ID of the associated Task, Reward, etc.
 
     @Column(columnDefinition = "TEXT")
-    private String remarks; // Zusätzliche Bemerkungen (z.B. für Verhaltensregeln)
+    private String remarks; // Additional remarks (e.g. for behavior rules)
 
     @ManyToOne
     @JoinColumn(name = "created_by")

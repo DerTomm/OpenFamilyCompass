@@ -31,7 +31,7 @@ public class AvatarController {
 
     private final UserService userService;
 
-    // Liste der verfügbaren Avatar-Icons
+    // List of available avatar icons
     private static final List<String> AVAILABLE_ICONS = Arrays.asList(
             "lion", "panda", "dog", "cat", "elephant",
             "tiger", "rabbit", "bear", "fox", "owl",
@@ -39,7 +39,7 @@ public class AvatarController {
             "unicorn", "dragon", "robot", "astronaut", "superhero");
 
     /**
-     * GET /api/avatar/icons - Liste aller verfügbaren Icons
+     * GET /api/avatar/icons - List of all available icons
      */
     @GetMapping("/api/avatar/icons")
     public ResponseEntity<Map<String, Object>> getAvailableIcons() {
@@ -49,7 +49,7 @@ public class AvatarController {
     }
 
     /**
-     * POST /profile/avatar/select-icon - Icon als Avatar auswählen
+     * POST /profile/avatar/select-icon - Select icon as avatar
      */
     @PostMapping("/profile/avatar/select-icon")
     public ResponseEntity<Map<String, String>> selectIcon(
@@ -58,7 +58,7 @@ public class AvatarController {
 
         if (!AVAILABLE_ICONS.contains(iconName)) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Ungültiger Icon-Name");
+            error.put("error", "Invalid icon name");
             return ResponseEntity.badRequest().body(error);
         }
 
@@ -67,11 +67,11 @@ public class AvatarController {
 
         user.setAvatarType("ICON");
         user.setAvatarIconName(iconName);
-        user.setAvatarData(null); // Foto löschen falls vorhanden
+        user.setAvatarData(null); // Delete photo if present
         userService.save(user);
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Avatar erfolgreich aktualisiert");
+        response.put("message", "Avatar successfully updated");
         response.put("avatarType", "ICON");
         response.put("iconName", iconName);
 
@@ -80,32 +80,32 @@ public class AvatarController {
     }
 
     /**
-     * POST /profile/avatar/upload - Foto als Avatar hochladen
+     * POST /profile/avatar/upload - Upload photo as avatar
      */
     @PostMapping("/profile/avatar/upload")
     public ResponseEntity<Map<String, String>> uploadPhoto(
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal User currentUser) {
 
-        // Validierung
+        // Validation
         if (file.isEmpty()) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Keine Datei ausgewählt");
+            error.put("error", "No file selected");
             return ResponseEntity.badRequest().body(error);
         }
 
-        // Dateigröße prüfen (max 5MB)
+        // Check file size (max 5MB)
         if (file.getSize() > 5 * 1024 * 1024) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Datei zu groß (max. 5MB)");
+            error.put("error", "File too large (max. 5MB)");
             return ResponseEntity.badRequest().body(error);
         }
 
-        // Dateityp prüfen
+        // Check file type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Ungültiger Dateityp (nur Bilder erlaubt)");
+            error.put("error", "Invalid file type (only images allowed)");
             return ResponseEntity.badRequest().body(error);
         }
 
@@ -115,11 +115,11 @@ public class AvatarController {
 
             user.setAvatarType("PHOTO");
             user.setAvatarData(file.getBytes());
-            user.setAvatarIconName(null); // Icon-Name löschen
+            user.setAvatarIconName(null); // Delete icon name
             userService.save(user);
 
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Avatar erfolgreich hochgeladen");
+            response.put("message", "Avatar successfully uploaded");
             response.put("avatarType", "PHOTO");
 
             log.info("User {} uploaded photo avatar ({} bytes)", user.getUsername(), file.getSize());
@@ -128,13 +128,13 @@ public class AvatarController {
         } catch (IOException e) {
             log.error("Error uploading avatar", e);
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Fehler beim Hochladen");
+            error.put("error", "Error uploading file");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
     /**
-     * GET /avatar/current - Aktuelles Avatar-Bild abrufen
+     * GET /avatar/current - Get current avatar image
      */
     @GetMapping("/avatar/current")
     public ResponseEntity<byte[]> getCurrentAvatar(@AuthenticationPrincipal User currentUser) {
@@ -145,14 +145,14 @@ public class AvatarController {
         User user = userService.findById(currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Wenn Foto hochgeladen wurde
+        // If photo was uploaded
         if ("PHOTO".equals(user.getAvatarType()) && user.getAvatarData() != null) {
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_JPEG)
                     .body(user.getAvatarData());
         }
 
-        // Wenn Icon gewählt wurde, redirect zu SVG
+        // If icon was selected, redirect to SVG
         if ("ICON".equals(user.getAvatarType()) && user.getAvatarIconName() != null) {
             try {
                 return ResponseEntity.status(HttpStatus.FOUND)
@@ -163,12 +163,12 @@ public class AvatarController {
             }
         }
 
-        // Fallback: No Content (Client zeigt Default-Icon)
+        // Fallback: No Content (Client shows default icon)
         return ResponseEntity.noContent().build();
     }
 
     /**
-     * GET /avatar/{userId} - Avatar eines bestimmten Users abrufen (für
+     * GET /avatar/{userId} - Get avatar of a specific user (for
      * Admins/Parents)
      */
     @GetMapping("/avatar/{userId}")
@@ -186,7 +186,7 @@ public class AvatarController {
     }
 
     /**
-     * DELETE /profile/avatar - Avatar zurücksetzen auf DEFAULT
+     * DELETE /profile/avatar - Reset avatar to DEFAULT
      */
     @DeleteMapping("/profile/avatar")
     public ResponseEntity<Map<String, String>> resetAvatar(@AuthenticationPrincipal User currentUser) {
@@ -199,7 +199,7 @@ public class AvatarController {
         userService.save(user);
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Avatar zurückgesetzt");
+        response.put("message", "Avatar reset");
 
         log.info("User {} reset avatar to default", user.getUsername());
         return ResponseEntity.ok(response);

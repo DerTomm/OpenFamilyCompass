@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity() {
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) {
-                    showError("Fehler beim Laden der Seite: ${error?.description}")
+                    showError(getString(R.string.error_page_load, error?.description ?: ""))
                 }
             }
         }
@@ -164,11 +164,12 @@ class MainActivity : AppCompatActivity() {
                 if (!username.isNullOrEmpty()) {
                     sessionManager.saveSession(username, role)
                     runOnUiThread {
-                        Toast.makeText(
-                            this, 
-                            "Angemeldet als $username${if (role != null) " ($role)" else ""}", 
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val message = if (role != null) {
+                            getString(R.string.toast_logged_in_as_with_role, username, role)
+                        } else {
+                            getString(R.string.toast_logged_in_as, username)
+                        }
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     }
                 }
             } else {
@@ -183,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                     if (!username.isNullOrEmpty() && username != "null") {
                         sessionManager.saveSession(username, null)
                         runOnUiThread {
-                            Toast.makeText(this, "Angemeldet als $username", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, getString(R.string.toast_logged_in_as, username), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }

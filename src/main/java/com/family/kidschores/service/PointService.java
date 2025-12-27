@@ -34,7 +34,7 @@ public class PointService {
 
         PointTransaction saved = pointTransactionRepository.save(transaction);
 
-        // Punkte des Kindes aktualisieren
+        // Update child's points
         updateChildPoints(child);
 
         return saved;
@@ -61,7 +61,7 @@ public class PointService {
 
         PointTransaction saved = pointTransactionRepository.save(transaction);
 
-        // Punkte des Kindes aktualisieren
+        // Update child's points
         updateChildPoints(child);
 
         return saved;

@@ -22,7 +22,7 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtTokenService {
 
-    @Value("${jwt.secret:kids-chores-and-rewards-super-secret-key-change-in-production-min-64-chars}")
+    @Value("${jwt.secret:openfamilycompass-super-secret-key-change-in-production-min-64-chars}")
     private String secret;
 
     @Value("${jwt.access-token-validity:900}") // 15 minutes in seconds

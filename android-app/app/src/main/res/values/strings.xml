@@ -4,37 +4,40 @@
     <string name="app_name">OpenFamilyCompass</string>
 
     <!-- Menu -->
-    <string name="menu_settings">Einstellungen</string>
-    <string name="menu_refresh">Aktualisieren</string>
-    <string name="menu_logout">Abmelden</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_refresh">Refresh</string>
+    <string name="menu_logout">Logout</string>
 
     <!-- Settings -->
-    <string name="settings_title">Einstellungen</string>
-    <string name="settings_server_url_title">Server-Adresse</string>
-    <string name="settings_server_url_description">Gib die URL des Servers ein, auf dem die Kids Chores App läuft.</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_server_url_title">Server Address</string>
+    <string name="settings_server_url_description">Enter the URL of the server running the OpenFamilyCompass app.</string>
     <string name="settings_server_url_hint">http://192.168.178.100:8080</string>
-    <string name="settings_server_url_example">Beispiel: http://192.168.178.100:8080\noder https://meinserver.de</string>
-    <string name="settings_info_title">Hinweise</string>
-    <string name="settings_info_description">• Die App speichert deine Anmeldung automatisch\n• Cookies bleiben 30 Tage gültig\n• Bei Serveränderung musst du dich neu anmelden</string>
+    <string name="settings_server_url_example">Example: http://192.168.178.100:8080\nor https://myserver.com</string>
+    <string name="settings_info_title">Information</string>
+    <string name="settings_info_description">• The app automatically saves your login\n• Cookies remain valid for 30 days\n• You must log in again when changing servers</string>
 
     <!-- Buttons -->
-    <string name="button_save">Speichern</string>
-    <string name="button_reset_default">Standardwert wiederherstellen</string>
+    <string name="button_save">Save</string>
+    <string name="button_reset_default">Restore Default</string>
 
     <!-- Dialogs -->
-    <string name="dialog_server_config_title">Server konfigurieren</string>
-    <string name="dialog_server_config_message">Bitte konfiguriere zuerst die Server-Adresse in den Einstellungen.</string>
-    <string name="dialog_button_settings">Zu den Einstellungen</string>
-    <string name="dialog_logout_title">Abmelden</string>
-    <string name="dialog_logout_message">Möchtest du dich wirklich abmelden?</string>
-    <string name="dialog_button_logout">Abmelden</string>
-    <string name="dialog_button_cancel">Abbrechen</string>
+    <string name="dialog_server_config_title">Configure Server</string>
+    <string name="dialog_server_config_message">Please configure the server address in settings first.</string>
+    <string name="dialog_button_settings">Go to Settings</string>
+    <string name="dialog_logout_title">Logout</string>
+    <string name="dialog_logout_message">Do you really want to log out?</string>
+    <string name="dialog_button_logout">Logout</string>
+    <string name="dialog_button_cancel">Cancel</string>
 
     <!-- Error Messages -->
-    <string name="error_url_empty">Bitte gib eine Server-Adresse ein</string>
-    <string name="error_url_invalid">Die URL muss mit http:// oder https:// beginnen</string>
+    <string name="error_url_empty">Please enter a server address</string>
+    <string name="error_url_invalid">The URL must start with http:// or https://</string>
+    <string name="error_page_load">Error loading page: %s</string>
 
     <!-- Toast Messages -->
-    <string name="toast_settings_saved">Einstellungen gespeichert</string>
-    <string name="toast_logged_out">Du wurdest abgemeldet</string>
+    <string name="toast_settings_saved">Settings saved</string>
+    <string name="toast_logged_out">You have been logged out</string>
+    <string name="toast_logged_in_as">Logged in as %s</string>
+    <string name="toast_logged_in_as_with_role">Logged in as %s (%s)</string>
 </resources>

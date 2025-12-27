@@ -40,7 +40,7 @@ public class User implements UserDetails {
     private String username;
 
     @Column(nullable = false)
-    private String pin; // Verschlüsselter PIN-Code
+    private String pin; // Encrypted PIN code
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -56,10 +56,10 @@ public class User implements UserDetails {
     private String avatarType = "DEFAULT"; // DEFAULT, ICON, PHOTO
 
     @Column(name = "avatar_icon_name", length = 50)
-    private String avatarIconName; // Name des gewählten Icons (z.B. "lion", "panda")
+    private String avatarIconName; // Name of the selected icon (e.g. "lion", "panda")
 
     @Column(name = "avatar_data", columnDefinition = "BYTEA")
-    private byte[] avatarData; // Foto-Upload als Blob
+    private byte[] avatarData; // Photo upload as Blob
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

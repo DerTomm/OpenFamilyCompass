@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:attr="data-bs-theme=${userTheme}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
 <head th:replace="~{fragments/navbar :: head}">
 </head>
+
 <body>
     <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
 
     <div class="container my-4">
         <div class="row mb-4">
             <div class="col-12 d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-star"></i> Verhalten verwalten</h2>
+                <h2><i class="fas fa-star"></i> <span th:text="#{behavior.manage.title}">Manage Behavior</span></h2>
                 <a href="/parent/behaviors/create" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Neues Verhalten
+                    <i class="fas fa-plus"></i> <span th:text="#{behavior.create}">New Behavior</span>
                 </a>
             </div>
         </div>
@@ -21,43 +22,50 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-warning">
-                        <h5 class="mb-0">Alle Verhaltensregeln</h5>
+                        <h5 class="mb-0" th:text="#{behavior.all}">All Behavior Rules</h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Titel</th>
-                                        <th>Leitsatz</th>
-                                        <th>Punkte</th>
-                                        <th>Kind</th>
+                                        <th th:text="#{behavior.title.label}">Title</th>
+                                        <th th:text="#{behavior.mantra.label}">Mantra</th>
+                                        <th th:text="#{tasks.points}">Points</th>
+                                        <th th:text="#{behavior.child.specific}">Child</th>
                                         <th>Status</th>
-                                        <th>Aktionen</th>
+                                        <th th:text="#{tasks.actions}">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr th:each="behavior : ${behaviors}">
                                         <td><strong th:text="${behavior.title}">Titel</strong></td>
                                         <td th:text="${behavior.guideline}">Leitsatz</td>
-                                        <td><span class="badge bg-success" th:text="${behavior.points} + ' Punkte'">0</span></td>
-                                        <td th:text="${behavior.child != null ? behavior.child.firstName : 'Alle'}">Kind</td>
+                                        <td><span class="badge bg-success"
+                                                th:text="${behavior.points} + ' ' + #{tasks.points}">0</span></td>
+                                        <td
+                                            th:text="${behavior.child != null ? behavior.child.firstName : #messages.msg('children.all')}">
+                                            Kind</td>
                                         <td>
-                                            <span class="badge" 
-                                                  th:classappend="${behavior.active} ? 'bg-success' : 'bg-secondary'"
-                                                  th:text="${behavior.active} ? 'Aktiv' : 'Inaktiv'">Status</span>
+                                            <span class="badge"
+                                                th:classappend="${behavior.active} ? 'bg-success' : 'bg-secondary'"
+                                                th:text="${behavior.active} ? #{status.active} : #{status.inactive}">Status</span>
                                         </td>
                                         <td>
-                                            <form th:if="${behavior.active}" th:action="@{/parent/behaviors/{id}/deactivate(id=${behavior.id})}" method="post" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Verhalten deaktivieren?')">
-                                                    <i class="fas fa-ban"></i> Deaktivieren
+                                            <form th:if="${behavior.active}"
+                                                th:action="@{/parent/behaviors/{id}/deactivate(id=${behavior.id})}"
+                                                method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                    th:attr="onclick='return confirm(' + #{behavior.deactivate.confirm} + ');'">
+                                                    <i class="fas fa-ban"></i> <span
+                                                        th:text="#{behavior.deactivate}">Deactivate</span>
                                                 </button>
                                             </form>
                                         </td>
                                     </tr>
                                     <tr th:if="${behaviors.isEmpty()}">
-                                        <td colspan="6" class="text-center text-muted">
-                                            Keine Verhaltensregeln definiert. Klicke auf "Neues Verhalten" um eine zu erstellen.
+                                        <td colspan="6" class="text-center text-muted" th:text="#{behavior.none}">
+                                            No behavior rules
                                         </td>
                                     </tr>
                                 </tbody>
@@ -71,4 +79,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

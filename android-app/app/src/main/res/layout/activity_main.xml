@@ -33,14 +33,14 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- Floating Action Button für App-Einstellungen -->
+    <!-- Floating Action Button for App Settings -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabSettings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:contentDescription="App-Einstellungen"
+        android:contentDescription="App Settings"
         android:src="@android:drawable/ic_menu_preferences"
         app:tint="@android:color/white" />
 

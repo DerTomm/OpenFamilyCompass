@@ -28,12 +28,12 @@ public class LoginController {
     @GetMapping("/login")
     public String login(@RequestParam(value = "refreshToken", required = false) String refreshToken,
             HttpServletRequest request) {
-        // Wenn kein Refresh Token vorhanden, zeige Login-Seite
+        // If no refresh token available, show login page
         if (refreshToken == null || refreshToken.isEmpty()) {
             return "login";
         }
 
-        // Auto-Login mit Refresh Token durchführen
+        // Perform auto-login with refresh token
         try {
             // Validate it's a refresh token
             if (!jwtTokenService.isRefreshToken(refreshToken)) {

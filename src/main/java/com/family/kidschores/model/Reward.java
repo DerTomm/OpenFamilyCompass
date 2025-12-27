@@ -1,11 +1,17 @@
 package com.family.kidschores.model;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "rewards")
@@ -25,10 +31,10 @@ public class Reward {
     private String description;
 
     @Column(nullable = false)
-    private int pointsCost;  // Kosten in Punkten
+    private int pointsCost; // Cost in points
 
     @Column(name = "image_path")
-    private String imagePath;  // Optional: Bild der Belohnung
+    private String imagePath; // Optional: Image of the reward
 
     @Column(nullable = false)
     private boolean active = true;

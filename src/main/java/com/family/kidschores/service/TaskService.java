@@ -1,18 +1,24 @@
 package com.family.kidschores.service;
 
-import com.family.kidschores.model.*;
-import com.family.kidschores.repository.TaskRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
+import com.family.kidschores.model.Child;
+import com.family.kidschores.model.RecurrenceType;
+import com.family.kidschores.model.Task;
+import com.family.kidschores.model.TaskStatus;
+import com.family.kidschores.model.User;
+import com.family.kidschores.repository.TaskRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -23,9 +29,9 @@ public class TaskService {
     private final PointService pointService;
 
     @Transactional
-    public Task createTask(@NonNull String title, String description, int basePoints, 
-                          Child assignedChild, @NonNull RecurrenceType recurrenceType, 
-                          LocalDate dueDate, boolean isTemplate) {
+    public Task createTask(@NonNull String title, String description, int basePoints,
+            Child assignedChild, @NonNull RecurrenceType recurrenceType,
+            LocalDate dueDate, boolean isTemplate) {
         Task task = new Task();
         task.setTitle(title);
         task.setDescription(description);
@@ -71,13 +77,13 @@ public class TaskService {
 
         Task savedTask = taskRepository.save(task);
 
-        // Punkte gutschreiben
+        // Credit points
         Long taskId2 = Objects.requireNonNull(task.getId(), "Task ID must not be null");
-        pointService.addPoints(task.getAssignedChild(), awardedPoints, 
-                              "TASK", "Aufgabe erledigt: " + task.getTitle(), 
-                              taskId2, approver);
+        pointService.addPoints(task.getAssignedChild(), awardedPoints,
+                "TASK", "Task completed: " + task.getTitle(),
+                taskId2, approver);
 
-        // Wenn wiederkehrende Aufgabe, nächste Instanz erstellen
+        // If recurring task, create next instance
         if (task.getRecurrenceType() != RecurrenceType.ONCE) {
             createNextRecurrence(task);
         }
@@ -103,8 +109,8 @@ public class TaskService {
             return;
         }
 
-        LocalDate nextDueDate = calculateNextDueDate(originalTask.getDueDate(), 
-                                                     originalTask.getRecurrenceType());
+        LocalDate nextDueDate = calculateNextDueDate(originalTask.getDueDate(),
+                originalTask.getRecurrenceType());
 
         Task template = originalTask.isTemplate() ? originalTask : originalTask.getTemplateTask();
         if (template == null) {
@@ -134,22 +140,22 @@ public class TaskService {
         };
     }
 
-    // Jeden Tag um Mitternacht prüfen
+    // Check every day at midnight
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void generateRecurringTasks() {
         log.info("Checking for recurring tasks to generate...");
-        
+
         List<Task> templates = taskRepository.findByIsTemplateTrue();
         LocalDate today = LocalDate.now();
 
         for (Task template : templates) {
             if (template.getRecurrenceType() != RecurrenceType.ONCE) {
-                // Prüfen ob für heute bereits eine Aufgabe existiert
+                // Check if a task for today already exists
                 List<Task> todayTasks = taskRepository.findByDueDate(today);
                 boolean exists = todayTasks.stream()
-                        .anyMatch(t -> t.getTemplateTask() != null && 
-                                      t.getTemplateTask().getId().equals(template.getId()));
+                        .anyMatch(t -> t.getTemplateTask() != null &&
+                                t.getTemplateTask().getId().equals(template.getId()));
 
                 if (!exists) {
                     createTaskFromTemplate(template, today);
@@ -184,7 +190,7 @@ public class TaskService {
     }
 
     public List<Task> findPendingForChild(@NonNull Child child) {
-        return taskRepository.findByAssignedChildAndStatusIn(child, 
+        return taskRepository.findByAssignedChildAndStatusIn(child,
                 List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS));
     }
 

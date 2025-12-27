@@ -38,12 +38,14 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h2><i class="fas fa-star"></i> Verhalten bewerten - <span
-                                th:text="${child.firstName}">Kind</span></h2>
-                        <p class="text-muted">Bewerte das Verhalten der aktuellen Woche</p>
+                        <h2><i class="fas fa-star"></i> <span
+                                th:text="#{behavior.evaluate.title(${child.firstName})}">Evaluate Behavior -
+                                Child</span></h2>
+                        <p class="text-muted" th:text="#{behavior.evaluate.subtitle}">Evaluate the behavior of the
+                            current week</p>
                     </div>
                     <a th:href="@{/parent/behaviors}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Zurück
+                        <i class="fas fa-arrow-left"></i> <span th:text="#{button.back}">Back</span>
                     </a>
                 </div>
             </div>
@@ -51,17 +53,18 @@
 
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-list"></i> Verhaltensregeln</h5>
+                <h5 class="mb-0"><i class="fas fa-list"></i> <span th:text="#{behavior.rules}">Behavior Rules</span>
+                </h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover behavior-table mb-0">
                         <thead>
                             <tr>
-                                <th>Verhalten</th>
-                                <th>Leitsatz</th>
-                                <th class="text-center">Max. Punkte</th>
-                                <th class="text-center">Aktuelle Punkte</th>
+                                <th th:text="#{behavior.rule}">Behavior</th>
+                                <th th:text="#{behavior.mantra.label}">Mantra</th>
+                                <th class="text-center" th:text="#{behavior.max.points}">Max. Points</th>
+                                <th class="text-center" th:text="#{behavior.current.points}">Current Points</th>
                                 <th class="text-center">Aktion</th>
                             </tr>
                         </thead>
@@ -89,7 +92,8 @@
                                     <button class="btn btn-primary btn-sm"
                                         th:attr="data-behavior-id=${behavior.id},data-behavior-title=${behavior.title},data-max-points=${behavior.points}"
                                         onclick="openEvaluationDialog(this.dataset.behaviorId, this.dataset.behaviorTitle, this.dataset.maxPoints)">
-                                        <i class="fas fa-edit"></i> Bewerten
+                                        <i class="fas fa-edit"></i> <span
+                                            th:text="#{behavior.evaluate.rule}">Evaluate</span>
                                     </button>
                                 </td>
                             </tr>
@@ -113,16 +117,15 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h5><i class="fas fa-check-circle"></i> Wochenbewertung abschließen</h5>
-                        <p class="text-muted mb-0">
-                            Buche die Punkte der aktuellen Woche auf das Konto von <strong
-                                th:text="${child.firstName}">Kind</strong> ein.
-                        </p>
+                        <h5><i class="fas fa-check-circle"></i> <span th:text="#{behavior.finalize}">Credit
+                                Points</span></h5>
+                        <p class="text-muted mb-0" th:text="#{behavior.finalize.desc(${child.firstName})}">Credit this
+                            week's points to the account.</p>
                     </div>
                     <form th:action="@{/parent/behaviors/evaluate/{childId}/commit(childId=${child.id})}" method="post"
-                        onsubmit="return confirm('Möchtest du die Wochenbewertung wirklich abschließen? Die Punkte werden dann dem Konto gutgeschrieben.');">
+                        th:attr="onsubmit='return confirm(' + #{behavior.finalize.confirm} + ');'">
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save"></i> Punkte gutschreiben
+                            <i class="fas fa-save"></i> <span th:text="#{behavior.finalize.button}">Credit Points</span>
                         </button>
                     </form>
                 </div>
@@ -137,28 +140,29 @@
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="evaluationModalLabel">
-                        <i class="fas fa-star"></i> Verhalten bewerten
+                        <i class="fas fa-star"></i> <span th:text="#{behavior.modal.title}">Evaluate Behavior</span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <h6 id="modal-behavior-title" class="mb-3">Verhaltensregel</h6>
+                    <h6 id="modal-behavior-title" class="mb-3" th:text="#{behavior.modal.subtitle}">Behavior Rule</h6>
 
                     <div class="mb-4">
                         <label class="form-label">
-                            <strong>Punktwert:</strong>
+                            <strong th:text="#{behavior.modal.points.label(0)}">Points (0 to 0):</strong>
                             <span id="slider-value" class="text-primary fs-4">0</span> /
-                            <span id="slider-max">0</span> Punkte
+                            <span id="slider-max">0</span> <span th:text="#{tasks.points}">Points</span>
                         </label>
                         <input type="range" class="form-range" id="points-slider" min="0" max="100" value="0"
                             oninput="updateSliderValue()">
                     </div>
 
                     <div class="mb-3">
-                        <label for="remarks" class="form-label"><strong>Bemerkungen:</strong></label>
+                        <label for="remarks" class="form-label"><strong th:text="#{behavior.modal.notes}">Notes
+                                (optional)</strong></label>
                         <textarea class="form-control" id="remarks" rows="5"
-                            placeholder="Notizen zum Verhalten dieser Woche..."></textarea>
+                            th:placeholder="#{behavior.modal.notes.placeholder}"></textarea>
                         <small class="text-muted">
                             Diese Bemerkungen dienen als Historie und können später eingesehen werden.
                         </small>
@@ -169,10 +173,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times"></i> Abbrechen
+                        <i class="fas fa-times"></i> <span th:text="#{button.cancel}">Cancel</span>
                     </button>
                     <button type="button" class="btn btn-primary" onclick="saveEvaluation()">
-                        <i class="fas fa-save"></i> Speichern
+                        <i class="fas fa-save"></i> <span th:text="#{button.save}">Save</span>
                     </button>
                 </div>
             </div>

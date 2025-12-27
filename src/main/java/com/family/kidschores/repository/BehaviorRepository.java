@@ -17,5 +17,5 @@ public interface BehaviorRepository extends JpaRepository<Behavior, Long> {
 
     List<Behavior> findByChildAndActiveTrue(Child child);
 
-    List<Behavior> findByChildIsNullAndActiveTrue(); // Verhaltensregeln für alle Kinder
+    List<Behavior> findByChildIsNullAndActiveTrue(); // Behavior rules for all children
 }

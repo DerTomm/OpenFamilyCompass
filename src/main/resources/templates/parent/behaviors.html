@@ -11,8 +11,9 @@
     <div class="container my-4">
         <div class="row mb-4">
             <div class="col-12">
-                <h2><i class="fas fa-star"></i> Verhalten bewerten</h2>
-                <p class="text-muted">Wähle ein Kind aus, um das Verhalten der aktuellen Woche zu bewerten.</p>
+                <h2><i class="fas fa-star"></i> <span th:text="#{behavior.title}">Evaluate Behavior</span></h2>
+                <p class="text-muted" th:text="#{behavior.subtitle}">Select a child to evaluate their behavior for the
+                    current week.</p>
             </div>
         </div>
 
@@ -26,11 +27,12 @@
                         <h5 class="card-title" th:text="${child.firstName}">Kind</h5>
                         <p class="text-muted mb-3">
                             <small>Aktueller Kontostand: <strong th:text="${child.totalPoints}">0</strong>
-                                Punkte</small>
+                                <span th:text="#{tasks.points}">Points</span></small>
                         </p>
                         <a th:href="@{/parent/behaviors/evaluate/{childId}(childId=${child.id})}"
                             class="btn btn-primary">
-                            <i class="fas fa-clipboard-check"></i> Verhalten bewerten
+                            <i class="fas fa-clipboard-check"></i> <span th:text="#{behavior.evaluate.button}">Evaluate
+                                Behavior</span>
                         </a>
                     </div>
                 </div>

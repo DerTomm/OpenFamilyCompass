@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:attr="data-bs-theme=${userTheme}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:attr="data-bs-theme=${userTheme}">
+
 <head th:replace="~{fragments/navbar :: head}">
 </head>
+
 <body>
     <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
 
@@ -12,52 +13,56 @@
             <div class="col-md-8 mx-auto">
                 <div class="card">
                     <div class="card-header bg-warning">
-                        <h4 class="mb-0"><i class="fas fa-star"></i> Neues Verhalten erstellen</h4>
+                        <h4 class="mb-0"><i class="fas fa-star"></i> <span th:text="#{behavior.create.title}">Create New
+                                Behavior</span></h4>
                     </div>
                     <div class="card-body">
                         <form th:action="@{/parent/behaviors/create}" method="post">
                             <div class="mb-3">
-                                <label for="title" class="form-label">Titel <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="title" name="title" 
-                                       placeholder="z.B. Kein sinnloses Herumdiskutieren!" required>
-                                <div class="form-text">Ein kurzer, prägnanter Titel für das Verhalten</div>
+                                <label for="title" class="form-label"
+                                    th:text="#{behavior.title.label} + ' *'">Title</label>
+                                <input type="text" class="form-control" id="title" name="title"
+                                    th:placeholder="#{behavior.title.hint}" required>
+                                <div class="form-text" th:text="#{behavior.title.hint}">A short, concise title</div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="guideline" class="form-label">Leitsatz <span class="text-danger">*</span></label>
+                                <label for="guideline" class="form-label"
+                                    th:text="#{behavior.mantra.label} + ' *'">Mantra</label>
                                 <textarea class="form-control" id="guideline" name="guideline" rows="3"
-                                          placeholder="z.B. Ich diskutiere nicht unnötig mit meinen Eltern, wenn es keinen Grund hierfür gibt" required></textarea>
-                                <div class="form-text">Ein Leitsatz, der das gewünschte Verhalten beschreibt</div>
+                                    th:placeholder="#{behavior.mantra.hint}" required></textarea>
+                                <div class="form-text" th:text="#{behavior.mantra.hint}">A guiding principle</div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="points" class="form-label">Punkte <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="points" name="points" 
-                                       min="1" value="10" required>
-                                <div class="form-text">Wie viele Punkte gibt es für das Einhalten dieses Verhaltens?</div>
+                                <label for="points" class="form-label"
+                                    th:text="#{behavior.points.label} + ' *'">Points</label>
+                                <input type="number" class="form-control" id="points" name="points" min="1" value="10"
+                                    required>
+                                <div class="form-text" th:text="#{behavior.points.hint}">How many points</div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="childId" class="form-label">Kind (optional)</label>
+                                <label for="childId" class="form-label" th:text="#{behavior.child.label}">Child
+                                    (optional)</label>
                                 <select class="form-select" id="childId" name="childId">
-                                    <option value="">Für alle Kinder</option>
-                                    <option th:each="child : ${children}" 
-                                            th:value="${child.id}" 
-                                            th:text="${child.firstName}">Kind</option>
+                                    <option value="" th:text="#{children.all}">All Children</option>
+                                    <option th:each="child : ${children}" th:value="${child.id}"
+                                        th:text="${child.firstName}">Kind</option>
                                 </select>
-                                <div class="form-text">Leer lassen, wenn das Verhalten für alle Kinder gelten soll</div>
+                                <div class="form-text" th:text="#{behavior.child.hint}">Leave empty for all</div>
                             </div>
 
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> 
-                                <strong>Hinweis:</strong> Die Auswertung des Verhaltens erfolgt durch die Eltern, 
-                                üblicherweise am Ende der Woche. Kinder müssen hier kein Check-in vornehmen.
+                            <div class="alert alert-info" th:utext="#{behavior.note}">
+                                <i class="fas fa-info-circle"></i> Note
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <a href="/parent/behaviors/manage" class="btn btn-secondary">Abbrechen</a>
+                                <a href="/parent/behaviors/manage" class="btn btn-secondary"
+                                    th:text="#{button.cancel}">Cancel</a>
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Verhalten erstellen
+                                    <i class="fas fa-save"></i> <span th:text="#{behavior.create.button}">Create
+                                        Behavior</span>
                                 </button>
                             </div>
                         </form>
@@ -69,4 +74,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
