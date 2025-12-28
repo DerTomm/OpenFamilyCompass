@@ -77,7 +77,9 @@ class AuthenticationIntegrationTest {
 
         // Use refresh token to get new access token
         mockMvc.perform(post("/api/auth/refresh")
-                .header("Authorization", "Bearer " + refreshToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper
+                        .writeValueAsString(new org.openfamilycompass.dto.RefreshTokenRequest(refreshToken))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").exists())
                 .andExpect(jsonPath("$.refreshToken").exists());

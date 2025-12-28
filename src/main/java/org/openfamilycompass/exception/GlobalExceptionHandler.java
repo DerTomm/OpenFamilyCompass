@@ -7,7 +7,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import lombok.extern.slf4j.Slf4j;
 
-@ControllerAdvice
+@ControllerAdvice(basePackages = { "org.openfamilycompass.controller" })
 @Slf4j
 public class GlobalExceptionHandler {
 

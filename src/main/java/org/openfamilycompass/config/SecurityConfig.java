@@ -1,5 +1,7 @@
 package org.openfamilycompass.config;
 
+import org.openfamilycompass.security.JwtAuthenticationFilter;
+import org.openfamilycompass.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -11,9 +13,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import org.openfamilycompass.security.JwtAuthenticationFilter;
-import org.openfamilycompass.service.UserService;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,17 +46,20 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .csrf(csrf -> csrf.disable());
+                                .csrf(csrf -> csrf.disable())
+                                .exceptionHandling(handling -> handling.authenticationEntryPoint((req, res, ex) -> {
+                                        res.sendError(401, "Unauthorized");
+                                }));
 
                 return http.build();
         }
 
-        // Web UI Security: Stateful with form login
+        // Web UI Security: Stateful with form login - ONLY for non-API requests
         @Bean
         @Order(2)
         public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .securityMatcher("/**")
+                                .securityMatcher(new NegatedRequestMatcher(new AntPathRequestMatcher("/api/**")))
                                 .userDetailsService(userService)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**",
