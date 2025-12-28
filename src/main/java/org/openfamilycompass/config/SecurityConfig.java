@@ -13,8 +13,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import lombok.RequiredArgsConstructor;
 
@@ -57,9 +58,13 @@ public class SecurityConfig {
         // Web UI Security: Stateful with form login - ONLY for non-API requests
         @Bean
         @Order(2)
-        public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
+        public SecurityFilterChain webFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector)
+                        throws Exception {
+
                 http
-                                .securityMatcher(new NegatedRequestMatcher(new AntPathRequestMatcher("/api/**")))
+
+                                .securityMatcher(new NegatedRequestMatcher(
+                                                PathPatternRequestMatcher.withDefaults().matcher("/api/**")))
                                 .userDetailsService(userService)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**",
