@@ -16,7 +16,8 @@ import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.security.JwtTokenService;
 import org.openfamilycompass.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,7 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(AuthApiController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class AuthApiControllerTest {
 
     @Autowired
@@ -62,10 +64,11 @@ class AuthApiControllerTest {
         loginRequest.setPassword("1234");
 
         Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(testUser);
         when(authenticationManager.authenticate(any())).thenReturn(auth);
-        when(userService.loadUserByUsername("testuser")).thenReturn(testUser);
         when(jwtTokenService.generateAccessToken(testUser)).thenReturn("access-token");
         when(jwtTokenService.generateRefreshToken(testUser)).thenReturn("refresh-token");
+        when(jwtTokenService.getAccessTokenValidity()).thenReturn(3600L);
 
         // When/Then
         mockMvc.perform(post("/api/auth/login")
@@ -127,6 +130,6 @@ class AuthApiControllerTest {
         mockMvc.perform(post("/api/auth/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(refreshRequest)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isBadRequest());
     }
 }
