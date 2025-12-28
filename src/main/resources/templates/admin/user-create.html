@@ -25,10 +25,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="pin" class="form-label" th:text="#{user.pin}">PIN-Code</label>
-                                <input type="password" class="form-control" id="pin" name="pin" pattern="[0-9]{4,6}"
-                                    inputmode="numeric" required>
-                                <div class="form-text" th:text="#{user.pin.hint}">4-6 Ziffern</div>
+                                <label for="password" class="form-label" th:text="#{user.password}">Passwort</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="form-text" th:text="#{user.password.hint}">Mindestens 6 Zeichen</div>
                             </div>
 
                             <div class="mb-3">

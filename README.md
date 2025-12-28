@@ -25,7 +25,7 @@ OpenFamilyCompass is an open-source tool designed for families to promote cooper
 
 - **Backend:** Java 21 (LTS), Spring Boot 3.5.9
 - **Frontend:** Thymeleaf, Bootstrap 5, Font Awesome
-- **Security:** Spring Security with PIN-based authentication
+- **Security:** Spring Security with password-based authentication
 - **Database:** PostgreSQL 16
 - **Build Tool:** Maven
 - **Containerization:** Docker (PostgreSQL)
@@ -72,7 +72,7 @@ The application will be available at: **http://localhost:8080**
 After the first startup, an admin account is automatically created:
 
 - **Username:** `admin`
-- **PIN:** `0000`
+- **Password:** `admin123`
 
 ⚠️ **Important:** Please change the admin password after the first login!
 
@@ -149,7 +149,7 @@ OpenFamilyCompass/
 
 ### For Children:
 
-1. Log in with first name and PIN
+1. Log in with first name and password
 2. View task overview
 3. Mark tasks as completed
 4. Wait for parental approval
@@ -192,7 +192,7 @@ server:
 app:
   admin:
     default-username: admin
-    default-pin: "0000"
+    default-password: "admin123"
   avatars:
     upload-dir: uploads/avatars
 ```

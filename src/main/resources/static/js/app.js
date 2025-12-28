@@ -1,6 +1,6 @@
 // Global JavaScript functionality
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Auto-dismiss alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
     alerts.forEach(alert => {
@@ -13,18 +13,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Confirm deletion actions
     const deleteButtons = document.querySelectorAll('[data-confirm-delete]');
     deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function (e) {
             if (!confirm('Bist du sicher, dass du das löschen möchtest?')) {
                 e.preventDefault();
             }
-        });
-    });
-
-    // Number input validation for PIN fields
-    const pinInputs = document.querySelectorAll('input[type="password"][pattern="[0-9]*"]');
-    pinInputs.forEach(input => {
-        input.addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
         });
     });
 
@@ -45,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Task completion confirmation
     const completeTaskButtons = document.querySelectorAll('button[type="submit"]:contains("erledigt")');
     completeTaskButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function (e) {
             // Optional: Add visual feedback
             this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Wird gespeichert...';
             this.disabled = true;
