@@ -42,7 +42,7 @@
                                         <td>
                                             <span class="badge"
                                                 th:classappend="${user.role.name() == 'ADMIN'} ? 'bg-danger' : (${user.role.name() == 'PARENT'} ? 'bg-success' : 'bg-info')"
-                                                th:text="${user.role.name()}">Role</span>
+                                                th:text="#{${user.role.getDisplayKey()}}">Role</span>
                                         </td>
                                         <td>
                                             <span class="badge"

@@ -30,7 +30,8 @@
                                 <select class="form-select" id="role" name="role" required>
                                     <option value="" selected disabled th:text="#{user.role.select}">Rolle auswählen...
                                     </option>
-                                    <option th:each="role : ${roles}" th:value="${role}" th:text="${role}">Role</option>
+                                    <option th:each="role : ${roles}" th:value="${role}"
+                                        th:text="#{${role.getDisplayKey()}}">Role</option>
                                 </select>
                             </div>
 

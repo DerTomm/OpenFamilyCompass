@@ -48,8 +48,8 @@
                                         </td>
                                         <td>
                                             <span class="badge"
-                                                th:classappend="${user.role == 'ADMIN'} ? 'bg-danger' : (${user.role == 'PARENT'} ? 'bg-primary' : 'bg-info')"
-                                                th:text="${user.role}">ROLE</span>
+                                                th:classappend="${user.role.name() == 'ADMIN'} ? 'bg-danger' : (${user.role.name() == 'PARENT'} ? 'bg-primary' : 'bg-info')"
+                                                th:text="#{${user.role.getDisplayKey()}}">ROLE</span>
                                         </td>
                                         <td th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy')}">Datum</td>
                                         <td>

@@ -16,7 +16,8 @@ public class ChangePasswordRequest {
     private String confirmPassword;
 
     // Default constructor
-    public ChangePasswordRequest() {}
+    public ChangePasswordRequest() {
+    }
 
     // Constructor with parameters
     public ChangePasswordRequest(String currentPassword, String newPassword, String confirmPassword) {
