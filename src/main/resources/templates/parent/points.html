@@ -6,71 +6,44 @@
     <div layout:fragment="content" class="container my-4">
         <div class="row mb-4">
             <div class="col-12">
-                <h2><i class="fas fa-coins"></i> Bonus- und Minuspunkte</h2>
-                <p class="text-muted">Vergebe Bonus- oder Strafpunkte an deine Kinder</p>
+                <h2><i class="fas fa-coins"></i> <span th:text="#{points.title}">Bonus and Penalty Points</span></h2>
+                <p class="text-muted" th:text="#{points.subtitle}">Select a child to give bonus or penalty points.</p>
             </div>
         </div>
 
         <div class="row">
             <div th:each="child : ${children}" class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <div class="text-center mb-3">
-                            <div th:if="${child.avatarPath}">
-                                <img th:src="@{${child.avatarPath}}" class="rounded-circle mb-2"
-                                    style="width: 80px; height: 80px; object-fit: cover;" alt="Avatar">
-                            </div>
-                            <div th:unless="${child.avatarPath}" class="rounded-circle bg-secondary mx-auto mb-2"
-                                style="width: 80px; height: 80px; line-height: 80px; font-size: 2.5rem; display: inline-block;">
-                                👤
-                            </div>
-                            <h5 class="card-title mb-1" th:text="${child.firstName}">Kind</h5>
-                            <small class="text-muted">
-                                Aktuell: <strong th:text="${child.totalPoints}">0</strong> Punkte
-                            </small>
-                        </div>
-
-                        <hr>
-
-                        <!-- Bonuspunkte -->
+                    <div class="card-body text-center">
+                        <!-- Avatar Display -->
                         <div class="mb-3">
-                            <h6 class="text-success"><i class="fas fa-plus-circle"></i> Bonuspunkte vergeben</h6>
-                            <form th:action="@{/parent/points/bonus}" method="post">
-                                <input type="hidden" name="childId" th:value="${child.id}">
-                                <div class="mb-2">
-                                    <input type="text" class="form-control form-control-sm" name="reason"
-                                        placeholder="Grund für Bonuspunkte" required>
-                                </div>
-                                <div class="mb-2">
-                                    <input type="number" class="form-control form-control-sm" name="points"
-                                        placeholder="Punkte" min="1" required>
-                                </div>
-                                <button type="submit" class="btn btn-success btn-sm w-100">
-                                    <i class="fas fa-plus"></i> Bonuspunkte gutschreiben
-                                </button>
-                            </form>
-                        </div>
+                            <!-- Photo Avatar -->
+                            <img th:if="${child.avatarType == 'PHOTO'}" th:src="@{/avatar/{userId}(userId=${child.id})}"
+                                class="rounded-circle"
+                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #007bff;"
+                                alt="Avatar">
 
-                        <hr>
+                            <!-- Icon Avatar -->
+                            <img th:if="${child.avatarType == 'ICON' and child.avatarIconName != null}"
+                                th:src="@{/images/avatars/{icon}.svg(icon=${child.avatarIconName})}"
+                                class="rounded-circle"
+                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #007bff; padding: 10px; background: white;"
+                                alt="Avatar">
 
-                        <!-- Strafpunkte -->
-                        <div>
-                            <h6 class="text-danger"><i class="fas fa-minus-circle"></i> Strafpunkte vergeben</h6>
-                            <form th:action="@{/parent/points/penalty}" method="post">
-                                <input type="hidden" name="childId" th:value="${child.id}">
-                                <div class="mb-2">
-                                    <input type="text" class="form-control form-control-sm" name="reason"
-                                        placeholder="Grund für Strafpunkte" required>
-                                </div>
-                                <div class="mb-2">
-                                    <input type="number" class="form-control form-control-sm" name="points"
-                                        placeholder="Punkte" min="1" required>
-                                </div>
-                                <button type="submit" class="btn btn-danger btn-sm w-100">
-                                    <i class="fas fa-minus"></i> Strafpunkte abziehen
-                                </button>
-                            </form>
+                            <!-- Default Avatar -->
+                            <div th:if="${child.avatarType == 'DEFAULT' or (child.avatarType == 'ICON' and child.avatarIconName == null)}"
+                                class="rounded-circle bg-secondary mx-auto d-inline-flex align-items-center justify-content-center"
+                                style="width: 80px; height: 80px; border: 3px solid #007bff;">
+                                <i class="fas fa-user fa-2x text-white"></i>
+                            </div>
                         </div>
+                        <h5 class="card-title" th:text="${child.firstName}">Kind</h5>
+                        <p class="text-muted mb-3">
+                            <small th:text="#{points.current.points(${child.totalPoints})}">Current points: 0</small>
+                        </p>
+                        <a th:href="@{/parent/points/manage/{childId}(childId=${child.id})}" class="btn btn-primary">
+                            <i class="fas fa-coins"></i> <span th:text="#{points.child}">Manage Points</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -78,7 +51,7 @@
             <div th:if="${children.isEmpty()}" class="col-12">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i>
-                    Es wurden noch keine Kinder angelegt.
+                    <span th:text="#{message.no.data}">No children available.</span>
                 </div>
             </div>
         </div>

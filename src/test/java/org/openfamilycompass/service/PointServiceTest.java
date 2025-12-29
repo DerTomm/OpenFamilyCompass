@@ -26,6 +26,9 @@ class PointServiceTest {
     @Mock
     private PointTransactionRepository pointTransactionRepository;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private PointService pointService;
 
@@ -64,7 +67,7 @@ class PointServiceTest {
         verify(pointTransactionRepository).save(argThat(t -> t.getPoints() == 50 &&
                 t.getType().equals("TASK") &&
                 t.getDescription().equals("Completed homework")));
-        // Note: updateUserPoints is called internally, no need to verify childService
+        verify(userService).save(testUserChild);
     }
 
     @Test
@@ -83,6 +86,7 @@ class PointServiceTest {
         assertThat(result).isNotNull();
         verify(pointTransactionRepository).save(argThat(t -> t.getPoints() == -30 &&
                 t.getType().equals("PENALTY")));
+        verify(userService).save(testUserChild);
     }
 
     @Test
@@ -98,6 +102,7 @@ class PointServiceTest {
         // Then
         verify(pointTransactionRepository).save(argThat(t -> t.getRemarks() != null &&
                 t.getRemarks().equals("Excellent work!")));
+        verify(userService).save(testUserChild);
     }
 
     @Test
@@ -110,6 +115,7 @@ class PointServiceTest {
 
         // Then
         assertThat(testUserChild.getTotalPoints()).isEqualTo(250);
+        verify(userService).save(testUserChild);
     }
 
     @Test
@@ -122,6 +128,7 @@ class PointServiceTest {
 
         // Then
         assertThat(testUserChild.getTotalPoints()).isEqualTo(0);
+        verify(userService).save(testUserChild);
     }
 
     @Test

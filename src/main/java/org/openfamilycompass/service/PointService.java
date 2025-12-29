@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class PointService {
 
     private final PointTransactionRepository pointTransactionRepository;
+    private final UserService userService;
 
     @Transactional
     public PointTransaction addPoints(@NonNull User user, int points, @NonNull String type,
@@ -72,6 +73,7 @@ public class PointService {
             totalPoints = 0;
         }
         user.setTotalPoints(totalPoints);
+        userService.save(user);
     }
 
     public List<PointTransaction> getTransactionHistory(@NonNull User user) {

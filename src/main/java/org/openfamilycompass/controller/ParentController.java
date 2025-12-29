@@ -12,11 +12,12 @@ import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.service.BehaviorEvaluationService;
 import org.openfamilycompass.service.BehaviorService;
-import org.openfamilycompass.service.PenaltyService;
+import org.openfamilycompass.service.PointService;
 import org.openfamilycompass.service.RewardRedemptionService;
 import org.openfamilycompass.service.RewardService;
 import org.openfamilycompass.service.TaskService;
 import org.openfamilycompass.service.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/parent")
+@PreAuthorize("hasRole('PARENT')")
 @RequiredArgsConstructor
 public class ParentController {
 
@@ -41,8 +43,8 @@ public class ParentController {
     private final RewardRedemptionService redemptionService;
     private final BehaviorService behaviorService;
     private final BehaviorEvaluationService behaviorEvaluationService;
-    private final PenaltyService penaltyService;
     private final RewardService rewardService;
+    private final PointService pointService;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -285,45 +287,30 @@ public class ParentController {
         return "parent/points";
     }
 
-    @PostMapping("/points/bonus")
-    public String addBonusPoints(@RequestParam Long childId,
-            @RequestParam String reason,
-            @RequestParam int points,
-            Authentication authentication) {
+    @GetMapping("/points/manage/{childId}")
+    public String managePoints(@PathVariable Long childId, Model model) {
         User child = userService.findById(childId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        User currentUser = (User) authentication.getPrincipal();
-        penaltyService.addBonusPoints(child, reason, points, currentUser);
-
-        return "redirect:/parent/dashboard";
+        model.addAttribute("child", child);
+        return "parent/points-manage";
     }
 
-    @PostMapping("/points/penalty")
-    public String addPenaltyPoints(@RequestParam Long childId,
+    @PostMapping("/points/manage/{childId}")
+    public String assignPoints(@PathVariable Long childId,
             @RequestParam String reason,
+            @RequestParam String type,
             @RequestParam int points,
             Authentication authentication) {
         User child = userService.findById(childId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
         User currentUser = (User) authentication.getPrincipal();
-        penaltyService.createPenalty(child, reason, points, currentUser);
 
-        return "redirect:/parent/dashboard";
-    }
+        if ("bonus".equals(type)) {
+            pointService.addPoints(child, points, "ADJUSTMENT", reason, null, currentUser);
+        } else if ("penalty".equals(type)) {
+            pointService.deductPoints(child, points, "PENALTY", reason, null, currentUser);
+        }
 
-    @PostMapping("/penalties/create")
-    public String createPenalty(@RequestParam Long childId,
-            @RequestParam String reason,
-            @RequestParam int points,
-            Authentication authentication) {
-        User child = userService.findById(childId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        User currentUser = (User) authentication.getPrincipal();
-        penaltyService.createPenalty(child, reason, points, currentUser);
-
-        return "redirect:/parent/children/" + childId;
+        return "redirect:/parent/points/manage/" + childId + "?success=true";
     }
 }

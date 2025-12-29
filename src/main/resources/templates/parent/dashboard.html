@@ -12,7 +12,7 @@
                 <h4><i class="fas fa-bolt"></i> <span th:text="#{dashboard.quick.actions}">Quick Actions</span></h4>
             </div>
 
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="card border-warning">
                     <div class="card-header bg-warning text-white">
                         <h5 class="mb-0"><i class="fas fa-check-circle"></i> <span
@@ -27,7 +27,7 @@
                 </div>
             </div>
 
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="card border-info">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0"><i class="fas fa-gift"></i> <span
@@ -42,7 +42,7 @@
                 </div>
             </div>
 
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="card border-success">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0"><i class="fas fa-star"></i> <span
@@ -53,6 +53,21 @@
                             behavior</p>
                         <a href="/parent/behaviors" class="btn btn-success"
                             th:text="#{dashboard.evaluate.behavior.button}">Evaluate Behavior</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-coins"></i> <span th:text="#{dashboard.manage.points}">Bonus
+                                and Penalty Points</span></h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2" th:text="#{dashboard.manage.points.desc}">Give bonus or penalty points to your
+                            children</p>
+                        <a href="/parent/points" class="btn btn-primary"
+                            th:text="#{dashboard.manage.points.button}">Bonus and Penalty Points</a>
                     </div>
                 </div>
             </div>
@@ -101,55 +116,13 @@
                                             </span>
                                         </p>
 
-                                        <hr>
-
-                                        <!-- Bonuspunkte -->
-                                        <div class="mb-3">
-                                            <h6 class="text-success mb-2">
-                                                <i class="fas fa-plus-circle"></i> <span
-                                                    th:text="#{dashboard.bonus.points}">Bonus Points</span>
-                                            </h6>
-                                            <form th:action="@{/parent/points/bonus}" method="post">
-                                                <input type="hidden" name="childId" th:value="${child.id}">
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <input type="text" class="form-control" name="reason"
-                                                        th:placeholder="#{dashboard.bonus.points.reason}" required>
-                                                    <input type="number" class="form-control" name="points"
-                                                        th:placeholder="#{dashboard.bonus.points.amount}" min="1"
-                                                        style="max-width: 80px;" required>
-                                                    <button type="submit" class="btn btn-success btn-sm">
-                                                        <i class="fas fa-plus"></i>
-                                                    </button>
-                                                </div>
-                                            </form>
+                                        <div class="text-center">
+                                            <a th:href="@{/parent/children/{id}(id=${child.id})}"
+                                                class="btn btn-outline-success btn-sm">
+                                                <i class="fas fa-info-circle"></i> <span
+                                                    th:text="#{children.details}">Details</span>
+                                            </a>
                                         </div>
-
-                                        <!-- Strafpunkte -->
-                                        <div class="mb-3">
-                                            <h6 class="text-danger mb-2">
-                                                <i class="fas fa-minus-circle"></i> <span
-                                                    th:text="#{dashboard.penalty.points}">Penalty Points</span>
-                                            </h6>
-                                            <form th:action="@{/parent/points/penalty}" method="post">
-                                                <input type="hidden" name="childId" th:value="${child.id}">
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <input type="text" class="form-control" name="reason"
-                                                        th:placeholder="#{dashboard.penalty.points.reason}" required>
-                                                    <input type="number" class="form-control" name="points"
-                                                        th:placeholder="#{dashboard.penalty.points.amount}" min="1"
-                                                        style="max-width: 80px;" required>
-                                                    <button type="submit" class="btn btn-danger btn-sm">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        </div>
-
-                                        <a th:href="@{/parent/children/{id}(id=${child.id})}"
-                                            class="btn btn-outline-success btn-sm w-100">
-                                            <i class="fas fa-info-circle"></i> <span
-                                                th:text="#{children.details}">Details</span>
-                                        </a>
                                     </div>
                                 </div>
                             </div>
