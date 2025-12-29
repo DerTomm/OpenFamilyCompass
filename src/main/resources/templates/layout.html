@@ -1,76 +1,48 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle} ?: 'OpenFamilyCompass'">OpenFamilyCompass</title>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">OpenFamilyCompass</title>
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/images/logo.png}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Page-specific styles -->
+    <th:block layout:fragment="styles"></th:block>
 </head>
 
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                🧭 OpenFamilyCompass
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i>
-                            <span sec:authentication="name">User</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                            <li>
-                                <h6 class="dropdown-header">
-                                    <i class="fas fa-user"></i>
-                                    <span sec:authentication="name">User</span>
-                                </h6>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/profile/settings">
-                                    <i class="fas fa-cog"></i> Profileinstellungen
-                                </a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form th:action="@{/logout}" method="post" class="d-inline w-100">
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> Abmelden
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+<body class="d-flex flex-column min-vh-100" th:attr="data-bs-theme=${userTheme}">
+    <!-- Role-based Navbar - always at top -->
+    <header>
+        <div sec:authorize="hasRole('ADMIN')" th:replace="~{fragments/navbar :: adminNav}"></div>
+        <div sec:authorize="hasRole('PARENT')" th:replace="~{fragments/navbar :: parentNav}"></div>
+        <div sec:authorize="hasRole('CHILD')" th:replace="~{fragments/navbar :: childNav}"></div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="flex-grow-1">
+        <div layout:fragment="content">
+            <!-- Page content will be inserted here -->
+            <div class="container my-4">
+                <p class="text-muted">Inhalt wird geladen...</p>
             </div>
         </div>
-    </nav>
-
-    <main class="container my-4" th:fragment="content">
-        <!-- Content wird hier eingefügt -->
     </main>
 
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">© 2025 OpenFamilyCompass</span>
-        </div>
-    </footer>
+    <!-- Footer - always at bottom -->
+    <div th:replace="~{fragments/navbar :: footer}"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:src="@{/js/app.js}"></script>
+    <!-- Scripts - loaded on every page -->
+    <div th:replace="~{fragments/navbar :: scripts}"></div>
+
+    <!-- Page-specific scripts -->
+    <th:block layout:fragment="scripts"></th:block>
 </body>
 
 </html>

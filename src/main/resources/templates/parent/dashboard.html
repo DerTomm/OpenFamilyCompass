@@ -1,14 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    th:attr="data-bs-theme=${userTheme}">
-
-<head th:replace="~{fragments/navbar :: head}">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}" th:attr="data-bs-theme=${userTheme}">
 
 <body>
-    <nav th:replace="~{fragments/navbar :: parentNav}"></nav>
-
-    <div class="container my-4">
+    <div layout:fragment="content" class="container my-4">
         <h2 class="mb-4"><i class="fas fa-home"></i> <span th:text="#{dashboard.title}">Dashboard</span></h2>
 
         <!-- Quick Actions -->
@@ -165,8 +160,6 @@
             </div>
         </div>
     </div>
-
-    <div th:replace="~{fragments/navbar :: scripts}"></div>
 </body>
 
 </html>

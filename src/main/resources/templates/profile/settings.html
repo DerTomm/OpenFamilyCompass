@@ -1,17 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    th:attr="data-bs-theme=${userTheme}">
-
-<head th:replace="~{fragments/navbar :: head}">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}" th:attr="data-bs-theme=${userTheme}">
 
 <body>
-    <!-- Dynamische Navigation basierend auf Rolle -->
-    <nav sec:authorize="hasRole('ADMIN')" th:replace="~{fragments/navbar :: adminNav}"></nav>
-    <nav sec:authorize="hasRole('PARENT')" th:replace="~{fragments/navbar :: parentNav}"></nav>
-    <nav sec:authorize="hasRole('CHILD')" th:replace="~{fragments/navbar :: childNav}"></nav>
-
-    <div class="container my-5">
+    <div layout:fragment="content" class="container my-5">
         <div class="row">
             <div class="col-md-8 offset-md-2">
                 <h2 class="mb-4">
@@ -212,48 +204,47 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div layout:fragment="scripts">
+        <script>
+            // Avatar Management
+            let currentAvatarType = '[[${avatarType}]]' || 'DEFAULT';
+            let currentIconName = '[[${avatarIconName}]]' || null;
 
-    <script>
-        // Avatar Management
-        let currentAvatarType = '[[${avatarType}]]' || 'DEFAULT';
-        let currentIconName = '[[${avatarIconName}]]' || null;
+            // Get CSRF token from meta tags
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
-        // Get CSRF token from meta tags
-        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+            // Load available icons and current avatar on page load
+            document.addEventListener('DOMContentLoaded', function () {
+                loadAvailableIcons();
+                loadCurrentAvatar();
+            });
 
-        // Load available icons and current avatar on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            loadAvailableIcons();
-            loadCurrentAvatar();
-        });
+            // Load available icons from server
+            async function loadAvailableIcons() {
+                try {
+                    const response = await fetch('/api/avatar/icons');
+                    const data = await response.json();
 
-        // Load available icons from server
-        async function loadAvailableIcons() {
-            try {
-                const response = await fetch('/api/avatar/icons');
-                const data = await response.json();
+                    const iconGrid = document.getElementById('iconGrid');
+                    iconGrid.innerHTML = '';
 
-                const iconGrid = document.getElementById('iconGrid');
-                iconGrid.innerHTML = '';
+                    data.icons.forEach(iconName => {
+                        const col = document.createElement('div');
+                        col.className = 'col-6 col-sm-4 col-md-3 col-lg-2';
 
-                data.icons.forEach(iconName => {
-                    const col = document.createElement('div');
-                    col.className = 'col-6 col-sm-4 col-md-3 col-lg-2';
+                        const iconCard = document.createElement('div');
+                        iconCard.className = 'avatar-icon-option card h-100 text-center';
+                        iconCard.style.cursor = 'pointer';
 
-                    const iconCard = document.createElement('div');
-                    iconCard.className = 'avatar-icon-option card h-100 text-center';
-                    iconCard.style.cursor = 'pointer';
+                        // Highlight if this is the current icon
+                        if (currentAvatarType === 'ICON' && currentIconName === iconName) {
+                            iconCard.classList.add('border-primary', 'border-3');
+                        }
 
-                    // Highlight if this is the current icon
-                    if (currentAvatarType === 'ICON' && currentIconName === iconName) {
-                        iconCard.classList.add('border-primary', 'border-3');
-                    }
+                        iconCard.onclick = () => selectIcon(iconName);
 
-                    iconCard.onclick = () => selectIcon(iconName);
-
-                    iconCard.innerHTML = `
+                        iconCard.innerHTML = `
                         <div class="card-body p-2">
                             <img src="/images/avatars/${iconName}.svg" 
                                  alt="${iconName}" 
@@ -263,220 +254,218 @@
                         </div>
                     `;
 
-                    col.appendChild(iconCard);
-                    iconGrid.appendChild(col);
-                });
-            } catch (error) {
-                console.error('Error loading icons:', error);
-                showAlert('Fehler beim Laden der Icons', 'danger');
+                        col.appendChild(iconCard);
+                        iconGrid.appendChild(col);
+                    });
+                } catch (error) {
+                    console.error('Error loading icons:', error);
+                    showAlert('Fehler beim Laden der Icons', 'danger');
+                }
             }
-        }
 
-        // Load current avatar
-        async function loadCurrentAvatar() {
-            const display = document.getElementById('currentAvatarDisplay');
+            // Load current avatar
+            async function loadCurrentAvatar() {
+                const display = document.getElementById('currentAvatarDisplay');
 
-            if (currentAvatarType === 'ICON' && currentIconName) {
-                // Show icon avatar
-                display.innerHTML = `
+                if (currentAvatarType === 'ICON' && currentIconName) {
+                    // Show icon avatar
+                    display.innerHTML = `
                     <img src="/images/avatars/${currentIconName}.svg" 
                          alt="${currentIconName}" 
                          class="rounded-circle" 
                          style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #0d6efd; padding: 10px; background: white;">
                 `;
-            } else if (currentAvatarType === 'PHOTO') {
-                // Try to fetch photo
-                try {
-                    const response = await fetch('/avatar/current');
-                    if (response.ok && response.status === 200) {
-                        const blob = await response.blob();
-                        const imageUrl = URL.createObjectURL(blob);
-                        display.innerHTML = `
+                } else if (currentAvatarType === 'PHOTO') {
+                    // Try to fetch photo
+                    try {
+                        const response = await fetch('/avatar/current');
+                        if (response.ok && response.status === 200) {
+                            const blob = await response.blob();
+                            const imageUrl = URL.createObjectURL(blob);
+                            display.innerHTML = `
                             <img src="${imageUrl}" 
                                  alt="Avatar" 
                                  class="rounded-circle" 
                                  style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #0d6efd;">
                         `;
+                        }
+                    } catch (error) {
+                        console.error('Error loading photo:', error);
+                        showDefaultAvatar(display);
                     }
-                } catch (error) {
-                    console.error('Error loading photo:', error);
+                } else {
+                    // Show default
                     showDefaultAvatar(display);
                 }
-            } else {
-                // Show default
-                showDefaultAvatar(display);
             }
-        }
 
-        function showDefaultAvatar(display) {
-            display.innerHTML = `
+            function showDefaultAvatar(display) {
+                display.innerHTML = `
                 <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" 
                      style="width: 120px; height: 120px; border: 3px solid #6c757d;">
                     <i class="fas fa-user fa-4x text-white"></i>
                 </div>
             `;
-        }
+            }
 
-        // Select an icon as avatar
-        async function selectIcon(iconName) {
-            try {
-                const headers = {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                };
-                if (csrfToken && csrfHeader) {
-                    headers[csrfHeader] = csrfToken;
-                }
+            // Select an icon as avatar
+            async function selectIcon(iconName) {
+                try {
+                    const headers = {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    };
+                    if (csrfToken && csrfHeader) {
+                        headers[csrfHeader] = csrfToken;
+                    }
 
-                const response = await fetch('/profile/avatar/select-icon', {
-                    method: 'POST',
-                    headers: headers,
-                    body: `iconName=${iconName}`
-                });
+                    const response = await fetch('/profile/avatar/select-icon', {
+                        method: 'POST',
+                        headers: headers,
+                        body: `iconName=${iconName}`
+                    });
 
-                const data = await response.json();
+                    const data = await response.json();
 
-                if (response.ok) {
-                    showAlert('Avatar erfolgreich aktualisiert!', 'success');
-                    currentIconName = iconName;
-                    currentAvatarType = 'ICON';
+                    if (response.ok) {
+                        showAlert('Avatar erfolgreich aktualisiert!', 'success');
+                        currentIconName = iconName;
+                        currentAvatarType = 'ICON';
 
-                    // Update display
-                    const display = document.getElementById('currentAvatarDisplay');
-                    display.innerHTML = `
+                        // Update display
+                        const display = document.getElementById('currentAvatarDisplay');
+                        display.innerHTML = `
                         <img src="/images/avatars/${iconName}.svg" 
                              alt="${iconName}" 
                              class="rounded-circle" 
                              style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #0d6efd; padding: 10px; background: white;">
                     `;
 
-                    // Reload page after short delay to update navbar
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showAlert(data.error || 'Fehler beim Speichern', 'danger');
+                        // Reload page after short delay to update navbar
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(data.error || 'Fehler beim Speichern', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error selecting icon:', error);
+                    showAlert('Fehler beim Auswählen des Icons', 'danger');
                 }
-            } catch (error) {
-                console.error('Error selecting icon:', error);
-                showAlert('Fehler beim Auswählen des Icons', 'danger');
-            }
-        }
-
-        // Upload photo as avatar
-        async function uploadAvatarPhoto() {
-            const fileInput = document.getElementById('avatarPhotoInput');
-            const file = fileInput.files[0];
-
-            if (!file) {
-                showAlert('Bitte wähle eine Datei aus', 'warning');
-                return;
             }
 
-            if (file.size > 5 * 1024 * 1024) {
-                showAlert('Datei zu groß (max. 5 MB)', 'danger');
-                return;
-            }
+            // Upload photo as avatar
+            async function uploadAvatarPhoto() {
+                const fileInput = document.getElementById('avatarPhotoInput');
+                const file = fileInput.files[0];
 
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const headers = {};
-                if (csrfToken && csrfHeader) {
-                    headers[csrfHeader] = csrfToken;
+                if (!file) {
+                    showAlert('Bitte wähle eine Datei aus', 'warning');
+                    return;
                 }
 
-                const response = await fetch('/profile/avatar/upload', {
-                    method: 'POST',
-                    headers: headers,
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showAlert('Avatar erfolgreich hochgeladen!', 'success');
-                    currentAvatarType = 'PHOTO';
-                    loadCurrentAvatar();
-
-                    // Reload page after short delay to update navbar
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showAlert(data.error || 'Fehler beim Hochladen', 'danger');
-                }
-            } catch (error) {
-                console.error('Error uploading photo:', error);
-                showAlert('Fehler beim Hochladen des Fotos', 'danger');
-            }
-        }
-
-        // Reset avatar to default
-        async function resetAvatar() {
-            if (!confirm('Möchtest du deinen Avatar wirklich zurücksetzen?')) {
-                return;
-            }
-
-            try {
-                const headers = {};
-                if (csrfToken && csrfHeader) {
-                    headers[csrfHeader] = csrfToken;
+                if (file.size > 5 * 1024 * 1024) {
+                    showAlert('Datei zu groß (max. 5 MB)', 'danger');
+                    return;
                 }
 
-                const response = await fetch('/profile/avatar', {
-                    method: 'DELETE',
-                    headers: headers
-                });
+                const formData = new FormData();
+                formData.append('file', file);
 
-                const data = await response.json();
+                try {
+                    const headers = {};
+                    if (csrfToken && csrfHeader) {
+                        headers[csrfHeader] = csrfToken;
+                    }
 
-                if (response.ok) {
-                    showAlert('Avatar zurückgesetzt', 'success');
-                    currentAvatarType = 'DEFAULT';
-                    currentIconName = null;
-                    loadCurrentAvatar();
+                    const response = await fetch('/profile/avatar/upload', {
+                        method: 'POST',
+                        headers: headers,
+                        body: formData
+                    });
 
-                    // Reload page after short delay to update navbar
-                    setTimeout(() => location.reload(), 1500);
-                } else {
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showAlert('Avatar erfolgreich hochgeladen!', 'success');
+                        currentAvatarType = 'PHOTO';
+                        loadCurrentAvatar();
+
+                        // Reload page after short delay to update navbar
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(data.error || 'Fehler beim Hochladen', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error uploading photo:', error);
+                    showAlert('Fehler beim Hochladen des Fotos', 'danger');
+                }
+            }
+
+            // Reset avatar to default
+            async function resetAvatar() {
+                if (!confirm('Möchtest du deinen Avatar wirklich zurücksetzen?')) {
+                    return;
+                }
+
+                try {
+                    const headers = {};
+                    if (csrfToken && csrfHeader) {
+                        headers[csrfHeader] = csrfToken;
+                    }
+
+                    const response = await fetch('/profile/avatar', {
+                        method: 'DELETE',
+                        headers: headers
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showAlert('Avatar zurückgesetzt', 'success');
+                        currentAvatarType = 'DEFAULT';
+                        currentIconName = null;
+                        loadCurrentAvatar();
+
+                        // Reload page after short delay to update navbar
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert('Fehler beim Zurücksetzen', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error resetting avatar:', error);
                     showAlert('Fehler beim Zurücksetzen', 'danger');
                 }
-            } catch (error) {
-                console.error('Error resetting avatar:', error);
-                showAlert('Fehler beim Zurücksetzen', 'danger');
             }
-        }
 
-        // Show alert message
-        function showAlert(message, type) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-            alertDiv.style.zIndex = '9999';
-            alertDiv.innerHTML = `
+            // Show alert message
+            function showAlert(message, type) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+                alertDiv.style.zIndex = '9999';
+                alertDiv.innerHTML = `
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
-            document.body.appendChild(alertDiv);
+                document.body.appendChild(alertDiv);
 
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 5000);
-        }
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
 
-        // Make entire card clickable for theme selection
-        document.querySelectorAll('.theme-option').forEach(card => {
-            card.addEventListener('click', function () {
-                const radio = this.querySelector('input[type="radio"]');
-                radio.checked = true;
+            // Make entire card clickable for theme selection
+            document.querySelectorAll('.theme-option').forEach(card => {
+                card.addEventListener('click', function () {
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
 
-                // Update visual selection
-                document.querySelectorAll('.theme-option').forEach(c => {
-                    c.classList.remove('border-primary', 'border-3');
+                    // Update visual selection
+                    document.querySelectorAll('.theme-option').forEach(c => {
+                        c.classList.remove('border-primary', 'border-3');
+                    });
+                    this.classList.add('border-primary', 'border-3');
                 });
-                this.classList.add('border-primary', 'border-3');
             });
-        });
-    </script>
-
-    <!-- Token Manager for Logout -->
-    <div th:replace="~{fragments/token-manager :: token-manager}"></div>
+        </script>
+    </div>
 </body>
 
 </html>

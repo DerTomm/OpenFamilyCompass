@@ -1,119 +1,70 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    th:attr="data-bs-theme=${userTheme}">
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="#{tasks.my.title} + ' - OpenFamilyCompass'">My Tasks - OpenFamilyCompass</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
+    <title th:text="#{tasks.my.title}">My Tasks</title>
+    <th:block layout:fragment="styles">
+        <style>
+            body {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
 
-        .child-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-    </style>
+            .child-card {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            }
+        </style>
+    </th:block>
 </head>
 
 <body>
-    <nav class="navbar navbar-dark navbar-expand-lg" style="background: rgba(0,0,0,0.2);">
-        <div class="container-fluid">
-            <a class="navbar-brand text-white" href="/child/dashboard">
-                <span style="font-size: 1.5rem;">📝</span> <span th:text="#{tasks.my.title}">My Tasks</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle fa-lg"></i>
-                            <span sec:authentication="name">User</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                            <li>
-                                <h6 class="dropdown-header">
-                                    <i class="fas fa-user"></i>
-                                    <span sec:authentication="name">User</span>
-                                </h6>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/profile/settings">
-                                    <i class="fas fa-cog"></i> <span th:text="#{nav.settings}">Settings</span>
-                                </a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form th:action="@{/logout}" method="post" class="d-inline w-100">
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> <span th:text="#{nav.logout}">Logout</span>
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <div layout:fragment="content">
+        <div class="container my-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="child-card p-4">
+                        <h3 class="mb-4"><i class="fas fa-tasks"></i> <span th:text="#{tasks.my.title}">My Tasks</span>
+                        </h3>
 
-    <div class="container my-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="child-card p-4">
-                    <h3 class="mb-4"><i class="fas fa-tasks"></i> <span th:text="#{tasks.my.title}">My Tasks</span></h3>
-
-                    <div th:each="task : ${tasks}" class="card mb-3 border-start border-primary border-5">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h5 class="card-title" th:text="${task.title}">Task</h5>
-                                    <p class="card-text" th:text="${task.description}">Description</p>
-                                    <small class="text-muted" th:if="${task.dueDate}">
-                                        <span th:text="#{child.dashboard.due}">📅 Due:</span> <span
-                                            th:text="${#temporals.format(task.dueDate, 'dd.MM.yyyy')}">Date</span>
-                                    </small>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="mb-2">
-                                        <span class="badge bg-success" style="font-size: 1.2rem;"
-                                            th:text="#{child.dashboard.tasks.points(${task.basePoints})}">
-                                            ⭐ 0 Points
-                                        </span>
+                        <div th:each="task : ${tasks}" class="card mb-3 border-start border-primary border-5">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h5 class="card-title" th:text="${task.title}">Task</h5>
+                                        <p class="card-text" th:text="${task.description}">Description</p>
+                                        <small class="text-muted" th:if="${task.dueDate}">
+                                            <span th:text="#{child.dashboard.due}">📅 Due:</span> <span
+                                                th:text="${#temporals.format(task.dueDate, 'dd.MM.yyyy')}">Date</span>
+                                        </small>
                                     </div>
-                                    <form th:action="@{/child/tasks/{id}/complete(id=${task.id})}" method="post">
-                                        <button type="submit" class="btn btn-primary" th:text="#{tasks.completed}">
-                                            Completed!
-                                        </button>
-                                    </form>
+                                    <div class="col-md-4 text-end">
+                                        <div class="mb-2">
+                                            <span class="badge bg-success" style="font-size: 1.2rem;"
+                                                th:text="#{child.dashboard.tasks.points(${task.basePoints})}">
+                                                ⭐ 0 Points
+                                            </span>
+                                        </div>
+                                        <form th:action="@{/child/tasks/{id}/complete(id=${task.id})}" method="post">
+                                            <button type="submit" class="btn btn-primary" th:text="#{tasks.completed}">
+                                                Completed!
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div th:if="${tasks.isEmpty()}" class="alert alert-info" th:utext="#{tasks.all.completed}">
-                        <i class="fas fa-star"></i> Great!
+                        <div th:if="${tasks.isEmpty()}" class="alert alert-info" th:utext="#{tasks.all.completed}">
+                            <i class="fas fa-star"></i> Great!
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

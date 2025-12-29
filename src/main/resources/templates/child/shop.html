@@ -1,198 +1,144 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    th:attr="data-bs-theme=${userTheme}">
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="#{shop.title.page} + ' - OpenFamilyCompass'">Reward Shop - OpenFamilyCompass</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
+    <title th:text="#{shop.title.page}">Reward Shop</title>
+    <th:block layout:fragment="styles">
+        <style>
+            body {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
 
-        .shop-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
+            .shop-card {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            }
 
-        .reward-card {
-            border: 3px solid transparent;
-            transition: all 0.3s;
-            height: 100%;
-        }
+            .reward-card {
+                border: 3px solid transparent;
+                transition: all 0.3s;
+                height: 100%;
+            }
 
-        .reward-card:hover {
-            border-color: #667eea;
-            transform: translateY(-5px);
-        }
+            .reward-card:hover {
+                border-color: #667eea;
+                transform: translateY(-5px);
+            }
 
-        .reward-card.affordable {
-            border-color: #28a745;
-        }
+            .reward-card.affordable {
+                border-color: #28a745;
+            }
 
-        .reward-card.too-expensive {
-            opacity: 0.6;
-        }
-    </style>
+            .reward-card.too-expensive {
+                opacity: 0.6;
+            }
+        </style>
+    </th:block>
 </head>
 
 <body>
-    <nav class="navbar navbar-dark navbar-expand-lg" style="background: rgba(0,0,0,0.2);">
-        <div class="container-fluid">
-            <a class="navbar-brand text-white" href="/child/dashboard">
-                🛑️ <span th:text="#{shop.title}">Reward Shop</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item me-3">
-                        <span class="badge bg-success" style="font-size: 1.2rem;"
-                            th:text="#{shop.your.points} + ': ' + ${totalPoints}">
-                            ⭐ 0 Points
-                        </span>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" id="profileDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle fa-lg"></i>
-                            <span sec:authentication="name">User</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                            <li>
-                                <h6 class="dropdown-header">
-                                    <i class="fas fa-user"></i>
-                                    <span sec:authentication="name">User</span>
-                                </h6>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/profile/settings">
-                                    <i class="fas fa-cog"></i> <span th:text="#{nav.settings}">Settings</span>
-                                </a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form th:action="@{/logout}" method="post" class="d-inline w-100">
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> <span th:text="#{nav.logout}">Logout</span>
+    <div layout:fragment="content">
+        <div class="container my-4">
+            <!-- Success/Error Messages -->
+            <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show"
+                th:text="#{shop.reward.pending}">
+                ✅ Reward redeemed!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div th:if="${param.error == 'notenough'}" class="alert alert-danger alert-dismissible fade show"
+                th:text="#{shop.reward.not.enough}">
+                ❌ Not enough points!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Available Rewards -->
+            <div class="shop-card p-4 mb-4">
+                <h2 class="mb-4"><i class="fas fa-gifts"></i> <span th:text="#{shop.available.rewards}">Available
+                        Rewards</span></h2>
+
+                <div class="row">
+                    <div class="col-md-4 mb-4" th:each="reward : ${rewards}">
+                        <div class="card reward-card"
+                            th:classappend="${reward.pointsCost <= totalPoints} ? 'affordable' : 'too-expensive'">
+                            <div class="card-body text-center">
+                                <div th:if="${reward.imagePath}">
+                                    <img th:src="@{${reward.imagePath}}" class="img-fluid mb-3"
+                                        style="max-height: 150px;" alt="Belohnung">
+                                </div>
+                                <div th:unless="${reward.imagePath}" class="mb-3" style="font-size: 5rem;">
+                                    🎁
+                                </div>
+
+                                <h4 class="card-title" th:text="${reward.title}">Belohnung</h4>
+                                <p class="card-text" th:text="${reward.description}">Beschreibung</p>
+
+                                <div class="mb-3">
+                                    <span class="badge bg-primary" style="font-size: 1.3rem;">
+                                        💎 <span th:text="${reward.pointsCost}">0</span> Punkte
+                                    </span>
+                                </div>
+
+                                <form th:action="@{/child/shop/redeem/{id}(id=${reward.id})}" method="post">
+                                    <button type="submit" class="btn btn-success btn-lg w-100"
+                                        th:disabled="${reward.pointsCost > totalPoints}">
+                                        <span th:if="${reward.pointsCost <= totalPoints}">🛒 Einlösen</span>
+                                        <span th:unless="${reward.pointsCost <= totalPoints}">❌ Zu teuer</span>
                                     </button>
                                 </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container my-4">
-        <!-- Success/Error Messages -->
-        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show"
-            th:text="#{shop.reward.pending}">
-            ✅ Reward redeemed!
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <div th:if="${param.error == 'notenough'}" class="alert alert-danger alert-dismissible fade show"
-            th:text="#{shop.reward.not.enough}">
-            ❌ Not enough points!
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <!-- Available Rewards -->
-        <div class="shop-card p-4 mb-4">
-            <h2 class="mb-4"><i class="fas fa-gifts"></i> <span th:text="#{shop.available.rewards}">Available
-                    Rewards</span></h2>
-
-            <div class="row">
-                <div class="col-md-4 mb-4" th:each="reward : ${rewards}">
-                    <div class="card reward-card"
-                        th:classappend="${reward.pointsCost <= totalPoints} ? 'affordable' : 'too-expensive'">
-                        <div class="card-body text-center">
-                            <div th:if="${reward.imagePath}">
-                                <img th:src="@{${reward.imagePath}}" class="img-fluid mb-3" style="max-height: 150px;"
-                                    alt="Belohnung">
                             </div>
-                            <div th:unless="${reward.imagePath}" class="mb-3" style="font-size: 5rem;">
-                                🎁
-                            </div>
-
-                            <h4 class="card-title" th:text="${reward.title}">Belohnung</h4>
-                            <p class="card-text" th:text="${reward.description}">Beschreibung</p>
-
-                            <div class="mb-3">
-                                <span class="badge bg-primary" style="font-size: 1.3rem;">
-                                    💎 <span th:text="${reward.pointsCost}">0</span> Punkte
-                                </span>
-                            </div>
-
-                            <form th:action="@{/child/shop/redeem/{id}(id=${reward.id})}" method="post">
-                                <button type="submit" class="btn btn-success btn-lg w-100"
-                                    th:disabled="${reward.pointsCost > totalPoints}">
-                                    <span th:if="${reward.pointsCost <= totalPoints}">🛒 Einlösen</span>
-                                    <span th:unless="${reward.pointsCost <= totalPoints}">❌ Zu teuer</span>
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </div>
+
+                <div th:if="${rewards.isEmpty()}" class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-4x mb-3"></i>
+                    <h4 th:text="#{shop.no.rewards}">No rewards available</h4>
+                    <p th:text="#{shop.no.rewards.desc}">Your parents will add great rewards soon!</p>
+                </div>
             </div>
 
-            <div th:if="${rewards.isEmpty()}" class="text-center text-muted py-5">
-                <i class="fas fa-inbox fa-4x mb-3"></i>
-                <h4 th:text="#{shop.no.rewards}">No rewards available</h4>
-                <p th:text="#{shop.no.rewards.desc}">Your parents will add great rewards soon!</p>
-            </div>
-        </div>
+            <!-- My Redemptions -->
+            <div class="shop-card p-4" th:if="${!myRedemptions.isEmpty()}">
+                <h3 class="mb-4"><i class="fas fa-list"></i> <span th:text="#{shop.my.redemptions}">My Rewards</span>
+                </h3>
 
-        <!-- My Redemptions -->
-        <div class="shop-card p-4" th:if="${!myRedemptions.isEmpty()}">
-            <h3 class="mb-4"><i class="fas fa-list"></i> <span th:text="#{shop.my.redemptions}">My Rewards</span></h3>
-
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th th:text="#{shop.reward.name}">Reward</th>
-                            <th th:text="#{points.title}">Points</th>
-                            <th th:text="#{shop.status}">Status</th>
-                            <th th:text="#{shop.date}">Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="redemption : ${myRedemptions}">
-                            <td th:text="${redemption.reward.title}">Reward</td>
-                            <td th:text="${redemption.pointsSpent}">0</td>
-                            <td>
-                                <span th:if="${redemption.status.name() == 'REQUESTED'}" class="badge bg-warning"
-                                    th:text="#{shop.status.requested}">⏳ Awaiting Approval</span>
-                                <span th:if="${redemption.status.name() == 'APPROVED'}" class="badge bg-info"
-                                    th:text="#{shop.status.approved}">✅ Approved</span>
-                                <span th:if="${redemption.status.name() == 'DELIVERED'}" class="badge bg-success"
-                                    th:text="#{shop.status.delivered}">🎉 Received!</span>
-                                <span th:if="${redemption.status.name() == 'CANCELLED'}" class="badge bg-danger"
-                                    th:text="#{shop.status.cancelled}">❌ Cancelled</span>
-                            </td>
-                            <td th:text="${#temporals.format(redemption.requestedAt, 'dd.MM.yyyy HH:mm')}">Datum</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th th:text="#{shop.reward.name}">Reward</th>
+                                <th th:text="#{points.title}">Points</th>
+                                <th th:text="#{shop.status}">Status</th>
+                                <th th:text="#{shop.date}">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="redemption : ${myRedemptions}">
+                                <td th:text="${redemption.reward.title}">Reward</td>
+                                <td th:text="${redemption.pointsSpent}">0</td>
+                                <td>
+                                    <span th:if="${redemption.status.name() == 'REQUESTED'}" class="badge bg-warning"
+                                        th:text="#{shop.status.requested}">⏳ Awaiting Approval</span>
+                                    <span th:if="${redemption.status.name() == 'APPROVED'}" class="badge bg-info"
+                                        th:text="#{shop.status.approved}">✅ Approved</span>
+                                    <span th:if="${redemption.status.name() == 'DELIVERED'}" class="badge bg-success"
+                                        th:text="#{shop.status.delivered}">🎉 Received!</span>
+                                    <span th:if="${redemption.status.name() == 'CANCELLED'}" class="badge bg-danger"
+                                        th:text="#{shop.status.cancelled}">❌ Cancelled</span>
+                                </td>
+                                <td th:text="${#temporals.format(redemption.requestedAt, 'dd.MM.yyyy HH:mm')}">Datum
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
