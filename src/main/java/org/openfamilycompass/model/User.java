@@ -67,6 +67,9 @@ public class User implements UserDetails {
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
+    @Column(name = "language", length = 2)
+    private String language; // User preferred language: "en" or "de", null means use browser default
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

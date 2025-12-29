@@ -35,6 +35,7 @@ public class ProfileController {
         model.addAttribute("currentTheme", user.getTheme() != null ? user.getTheme() : "LIGHT");
         model.addAttribute("avatarType", user.getAvatarType() != null ? user.getAvatarType() : "DEFAULT");
         model.addAttribute("avatarIconName", user.getAvatarIconName());
+        model.addAttribute("currentLanguage", user.getLanguage());
 
         return "profile/settings";
     }
@@ -72,6 +73,49 @@ public class ProfileController {
             redirectAttributes.addFlashAttribute("success", "Design settings successfully saved!");
         } else {
             redirectAttributes.addFlashAttribute("error", "Invalid theme selected!");
+        }
+
+        return "redirect:/profile/settings";
+    }
+
+    @PostMapping("/settings/language")
+    public String updateLanguage(
+            @RequestParam String language,
+            Authentication authentication,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+
+        String username = authentication.getName();
+        User user = userService.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Validate language input
+        if (language == null || language.trim().isEmpty() ||
+                "en".equals(language) || "de".equals(language)) {
+
+            // Empty string means use browser default
+            String languageToSet = language != null && language.trim().isEmpty() ? null : language;
+            user.setLanguage(languageToSet);
+            userService.save(user);
+
+            // Update the user in the security context immediately
+            UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(
+                    user,
+                    authentication.getCredentials(),
+                    authentication.getAuthorities());
+            newAuth.setDetails(authentication.getDetails());
+
+            SecurityContext securityContext = SecurityContextHolder.getContext();
+            securityContext.setAuthentication(newAuth);
+
+            // Update the session
+            request.getSession().setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    securityContext);
+
+            redirectAttributes.addFlashAttribute("success", "Language settings successfully saved!");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Invalid language selected!");
         }
 
         return "redirect:/profile/settings";

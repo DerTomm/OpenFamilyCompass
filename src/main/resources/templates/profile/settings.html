@@ -237,6 +237,86 @@
                     </div>
                 </div>
 
+                <!-- Language Settings Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-language"></i> <span th:text="#{profile.language}">Language</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/profile/settings/language}" method="post">
+                            <div class="mb-3">
+                                <strong th:text="#{settings.language.select}">Choose language:</strong>
+                                <p class="text-muted small mb-3" th:text="#{settings.language.desc}">
+                                    Select your preferred language. If not set, the browser's language will be used.
+                                </p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card language-option"
+                                        th:classappend="${user.language == null || user.language == ''} ? 'border-primary border-3' : ''">
+                                        <div class="card-body text-center">
+                                            <input type="radio" class="btn-check" name="language" id="browserDefault"
+                                                value="" th:checked="${user.language == null || user.language == ''}">
+                                            <label class="btn btn-outline-primary w-100" for="browserDefault">
+                                                <h5 th:text="#{settings.language.browser}">Browser Default</h5>
+                                                <p class="mb-0 small" th:text="#{settings.language.browser.desc}">
+                                                    Use browser's language preference
+                                                </p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="card language-option"
+                                        th:classappend="${user.language == 'en'} ? 'border-primary border-3' : ''">
+                                        <div class="card-body text-center">
+                                            <input type="radio" class="btn-check" name="language" id="english"
+                                                value="en" th:checked="${user.language == 'en'}">
+                                            <label class="btn btn-outline-primary w-100" for="english">
+                                                <h5 th:text="#{profile.language.en}">English</h5>
+                                                <p class="mb-0 small" th:text="#{settings.language.en.desc}">
+                                                    Use English language
+                                                </p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="card language-option"
+                                        th:classappend="${user.language == 'de'} ? 'border-primary border-3' : ''">
+                                        <div class="card-body text-center">
+                                            <input type="radio" class="btn-check" name="language" id="german" value="de"
+                                                th:checked="${user.language == 'de'}">
+                                            <label class="btn btn-outline-primary w-100" for="german">
+                                                <h5 th:text="#{profile.language.de}">Deutsch</h5>
+                                                <p class="mb-0 small" th:text="#{settings.language.de.desc}">
+                                                    Use German language
+                                                </p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="button" class="btn btn-secondary" onclick="history.back()">
+                                    <i class="fas fa-arrow-left"></i> <span
+                                        th:text="#{settings.button.back}">Back</span>
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> <span th:text="#{settings.button.save}">Save
+                                        Settings</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Info Box -->
                 <div class="alert alert-info mt-4">
                     <i class="fas fa-info-circle"></i>
