@@ -78,7 +78,7 @@ class UserServiceTest {
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // When
-        User result = userService.createUser("testuser", "rawPassword", UserRole.PARENT);
+        User result = userService.createUser("testuser", "rawPassword", UserRole.PARENT, "Test User");
 
         // Then
         assertThat(result).isNotNull();

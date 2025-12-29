@@ -20,6 +20,14 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="firstName" class="form-label"
+                                    th:text="#{user.firstname}">Anzeigename</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" required>
+                                <div class="form-text" th:text="#{user.firstname.hint}">Wird standardmäßig mit dem
+                                    Benutzernamen vorbelegt</div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="password" class="form-label" th:text="#{user.password}">Passwort</label>
                                 <input type="password" class="form-control" id="password" name="password" required>
                                 <div class="form-text" th:text="#{user.password.hint}">Mindestens 6 Zeichen</div>
@@ -33,38 +41,6 @@
                                     <option th:each="role : ${roles}" th:value="${role}"
                                         th:text="#{${role.getDisplayKey()}}">Role</option>
                                 </select>
-                            </div>
-
-                            <div id="childFields" style="display: none;">
-                                <div class="mb-3">
-                                    <label for="firstName" class="form-label" th:text="#{user.child.firstname}">Vorname
-                                        des Kindes</label>
-                                    <input type="text" class="form-control" id="firstName" name="firstName">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="avatarPath" class="form-label" th:text="#{user.child.avatar}">Avatar
-                                        (optional)</label>
-                                    <select class="form-select" id="avatarPath" name="avatarPath">
-                                        <option value="" th:text="#{user.avatar.none}">Kein Avatar</option>
-                                        <option value="/images/avatars/cat.png" th:text="#{user.avatar.cat}">🐱 Katze
-                                        </option>
-                                        <option value="/images/avatars/dog.png" th:text="#{user.avatar.dog}">🐶 Hund
-                                        </option>
-                                        <option value="/images/avatars/bear.png" th:text="#{user.avatar.bear}">🐻 Bär
-                                        </option>
-                                        <option value="/images/avatars/lion.png" th:text="#{user.avatar.lion}">🦁 Löwe
-                                        </option>
-                                        <option value="/images/avatars/elephant.png" th:text="#{user.avatar.elephant}">
-                                            🐘 Elefant</option>
-                                        <option value="/images/avatars/giraffe.png" th:text="#{user.avatar.giraffe}">🦒
-                                            Giraffe</option>
-                                        <option value="/images/avatars/panda.png" th:text="#{user.avatar.panda}">🐼
-                                            Panda</option>
-                                        <option value="/images/avatars/unicorn.png" th:text="#{user.avatar.unicorn}">🦄
-                                            Einhorn</option>
-                                    </select>
-                                </div>
                             </div>
 
                             <div class="d-grid gap-2">
@@ -84,16 +60,20 @@
 
     <div layout:fragment="scripts">
         <script>
+            document.getElementById('username').addEventListener('input', function () {
+                const firstNameInput = document.getElementById('firstName');
+                if (!firstNameInput.value || firstNameInput.value === firstNameInput.defaultValue) {
+                    firstNameInput.value = this.value;
+                }
+            });
+
             document.getElementById('role').addEventListener('change', function () {
                 const childFields = document.getElementById('childFields');
-                const firstNameInput = document.getElementById('firstName');
 
                 if (this.value === 'CHILD') {
                     childFields.style.display = 'block';
-                    firstNameInput.required = true;
                 } else {
                     childFields.style.display = 'none';
-                    firstNameInput.required = false;
                 }
             });
         </script>

@@ -45,11 +45,11 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="child-card p-4 text-center">
-                        <div th:if="${child.avatarPath}" class="mb-3">
-                            <img th:src="@{${child.avatarPath}}" class="rounded-circle"
+                        <div th:if="${user.avatarPath}" class="mb-3">
+                            <img th:src="@{${user.avatarPath}}" class="rounded-circle"
                                 style="width: 120px; height: 120px; border: 5px solid #667eea;" alt="Dein Avatar">
                         </div>
-                        <div th:unless="${child.avatarPath}" class="rounded-circle bg-secondary mx-auto mb-3"
+                        <div th:unless="${user.avatarPath}" class="rounded-circle bg-secondary mx-auto mb-3"
                             style="width: 120px; height: 120px; line-height: 120px; font-size: 4rem; display: inline-block;">
                             👤
                         </div>

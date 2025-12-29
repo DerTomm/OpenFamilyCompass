@@ -1,21 +1,32 @@
 package org.openfamilycompass.controller;
 
-import org.openfamilycompass.model.*;
-import org.openfamilycompass.service.*;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
+import org.openfamilycompass.model.PointTransaction;
+import org.openfamilycompass.model.Reward;
+import org.openfamilycompass.model.RewardRedemption;
+import org.openfamilycompass.model.Task;
+import org.openfamilycompass.model.TaskStatus;
+import org.openfamilycompass.model.User;
+import org.openfamilycompass.service.PointService;
+import org.openfamilycompass.service.RewardRedemptionService;
+import org.openfamilycompass.service.RewardService;
+import org.openfamilycompass.service.TaskService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/child")
 @RequiredArgsConstructor
 public class ChildController {
 
-    private final ChildService childService;
     private final TaskService taskService;
     private final RewardService rewardService;
     private final RewardRedemptionService redemptionService;
@@ -24,31 +35,27 @@ public class ChildController {
     @GetMapping("/dashboard")
     public String dashboard(Authentication authentication, Model model) {
         User currentUser = (User) authentication.getPrincipal();
-        Child child = childService.findByUser(currentUser)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
 
-        List<Task> pendingTasks = taskService.findPendingForChild(child);
-        List<Task> completedTasks = taskService.findByChildAndStatus(child, TaskStatus.CHILD_COMPLETED);
-        
-        model.addAttribute("child", child);
+        List<Task> pendingTasks = taskService.findPendingForUser(currentUser);
+        List<Task> completedTasks = taskService.findByUserAndStatus(currentUser, TaskStatus.CHILD_COMPLETED);
+
+        model.addAttribute("user", currentUser);
         model.addAttribute("pendingTasks", pendingTasks);
         model.addAttribute("completedTasks", completedTasks);
-        model.addAttribute("totalPoints", child.getTotalPoints());
-        
+        model.addAttribute("totalPoints", currentUser.getTotalPoints());
+
         return "child/dashboard";
     }
 
     @GetMapping("/tasks")
     public String tasks(Authentication authentication, Model model) {
         User currentUser = (User) authentication.getPrincipal();
-        Child child = childService.findByUser(currentUser)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
 
-        List<Task> tasks = taskService.findPendingForChild(child);
-        
-        model.addAttribute("child", child);
+        List<Task> tasks = taskService.findPendingForUser(currentUser);
+
+        model.addAttribute("user", currentUser);
         model.addAttribute("tasks", tasks);
-        
+
         return "child/tasks";
     }
 
@@ -62,50 +69,44 @@ public class ChildController {
     @GetMapping("/shop")
     public String shop(Authentication authentication, Model model) {
         User currentUser = (User) authentication.getPrincipal();
-        Child child = childService.findByUser(currentUser)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
 
         List<Reward> rewards = rewardService.findAllActive();
-        List<RewardRedemption> myRedemptions = redemptionService.findByChild(child);
-        
-        model.addAttribute("child", child);
+        List<RewardRedemption> myRedemptions = redemptionService.findByUser(currentUser);
+
+        model.addAttribute("user", currentUser);
         model.addAttribute("rewards", rewards);
         model.addAttribute("myRedemptions", myRedemptions);
-        model.addAttribute("totalPoints", child.getTotalPoints());
-        
+        model.addAttribute("totalPoints", currentUser.getTotalPoints());
+
         return "child/shop";
     }
 
     @PostMapping("/shop/redeem/{rewardId}")
     public String redeemReward(@PathVariable Long rewardId, Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
-        Child child = childService.findByUser(currentUser)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
 
         Reward reward = rewardService.findById(rewardId)
                 .orElseThrow(() -> new IllegalArgumentException("Reward not found"));
 
         try {
-            redemptionService.requestReward(child, reward);
+            redemptionService.requestReward(currentUser, reward);
         } catch (IllegalStateException e) {
             // Nicht genug Punkte
             return "redirect:/child/shop?error=notenough";
         }
-        
+
         return "redirect:/child/shop?success=true";
     }
 
     @GetMapping("/history")
     public String history(Authentication authentication, Model model) {
         User currentUser = (User) authentication.getPrincipal();
-        Child child = childService.findByUser(currentUser)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
 
-        List<PointTransaction> transactions = pointService.getTransactionHistory(child);
-        
-        model.addAttribute("child", child);
+        List<PointTransaction> transactions = pointService.getTransactionHistory(currentUser);
+
+        model.addAttribute("user", currentUser);
         model.addAttribute("transactions", transactions);
-        
+
         return "child/history";
     }
 }

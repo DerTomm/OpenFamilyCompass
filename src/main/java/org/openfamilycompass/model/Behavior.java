@@ -36,8 +36,8 @@ public class Behavior {
     private int points; // Points for positive behavior
 
     @ManyToOne
-    @JoinColumn(name = "child_id")
-    private Child child; // Can be null for all children
+    @JoinColumn(name = "user_id")
+    private User user; // Can be null for all users
 
     @Column(nullable = false)
     private boolean active = true;

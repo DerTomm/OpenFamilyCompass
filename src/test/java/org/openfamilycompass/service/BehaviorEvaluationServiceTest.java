@@ -22,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
-import org.openfamilycompass.model.Child;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.BehaviorEvaluationRepository;
@@ -44,15 +43,16 @@ class BehaviorEvaluationServiceTest {
         private BehaviorEvaluationService evaluationService;
 
         private Behavior testBehavior;
-        private Child testChild;
+        private User testUserChild;
         private User testUser;
         private BehaviorEvaluation testEvaluation;
 
         @BeforeEach
         void setUp() {
-                testChild = new Child();
-                testChild.setId(1L);
-                testChild.setFirstName("TestChild");
+                testUserChild = new User();
+                testUserChild.setId(1L);
+                testUserChild.setFirstName("TestChild");
+                testUserChild.setRole(UserRole.CHILD);
 
                 testUser = new User();
                 testUser.setId(1L);
@@ -69,7 +69,7 @@ class BehaviorEvaluationServiceTest {
                 testEvaluation = new BehaviorEvaluation();
                 testEvaluation.setId(1L);
                 testEvaluation.setBehavior(testBehavior);
-                testEvaluation.setChild(testChild);
+                testEvaluation.setUser(testUserChild);
                 testEvaluation.setCurrentPoints(8);
                 testEvaluation.setCommitted(false);
         }
@@ -78,13 +78,13 @@ class BehaviorEvaluationServiceTest {
         void updateEvaluation_ShouldCreateNewEvaluation_WhenNotExists() {
                 // Given
                 when(behaviorRepository.findById(1L)).thenReturn(Optional.of(testBehavior));
-                when(evaluationRepository.findByChildAndBehaviorAndWeekStartDateAndCommittedFalse(
+                when(evaluationRepository.findByUserAndBehaviorAndWeekStartDateAndCommittedFalse(
                                 any(), any(), any())).thenReturn(Optional.empty());
                 when(evaluationRepository.save(any(BehaviorEvaluation.class))).thenReturn(testEvaluation);
 
                 // When
                 BehaviorEvaluation result = evaluationService.updateEvaluation(
-                                1L, testChild, 8, "Good progress", testUser);
+                                1L, testUserChild, 8, "Good progress", testUser);
 
                 // Then
                 assertThat(result).isNotNull();
@@ -95,13 +95,13 @@ class BehaviorEvaluationServiceTest {
         void updateEvaluation_ShouldUpdateExisting_WhenExists() {
                 // Given
                 when(behaviorRepository.findById(1L)).thenReturn(Optional.of(testBehavior));
-                when(evaluationRepository.findByChildAndBehaviorAndWeekStartDateAndCommittedFalse(
+                when(evaluationRepository.findByUserAndBehaviorAndWeekStartDateAndCommittedFalse(
                                 any(), any(), any())).thenReturn(Optional.of(testEvaluation));
                 when(evaluationRepository.save(any(BehaviorEvaluation.class))).thenReturn(testEvaluation);
 
                 // When
                 BehaviorEvaluation result = evaluationService.updateEvaluation(
-                                1L, testChild, 9, "Excellent!", testUser);
+                                1L, testUserChild, 9, "Excellent!", testUser);
 
                 // Then
                 assertThat(result.getCurrentPoints()).isEqualTo(9);
@@ -116,7 +116,7 @@ class BehaviorEvaluationServiceTest {
 
                 // When/Then
                 assertThatThrownBy(() -> evaluationService.updateEvaluation(
-                                1L, testChild, 5, "Notes", testUser))
+                                1L, testUserChild, 5, "Notes", testUser))
                                 .isInstanceOf(IllegalStateException.class)
                                 .hasMessageContaining("not active");
         }
@@ -128,7 +128,7 @@ class BehaviorEvaluationServiceTest {
 
                 // When/Then
                 assertThatThrownBy(() -> evaluationService.updateEvaluation(
-                                1L, testChild, -1, "Notes", testUser))
+                                1L, testUserChild, -1, "Notes", testUser))
                                 .isInstanceOf(IllegalArgumentException.class)
                                 .hasMessageContaining("between 0 and");
         }
@@ -140,7 +140,7 @@ class BehaviorEvaluationServiceTest {
 
                 // When/Then
                 assertThatThrownBy(() -> evaluationService.updateEvaluation(
-                                1L, testChild, 15, "Notes", testUser))
+                                1L, testUserChild, 15, "Notes", testUser))
                                 .isInstanceOf(IllegalArgumentException.class)
                                 .hasMessageContaining("between 0 and");
         }
@@ -149,31 +149,31 @@ class BehaviorEvaluationServiceTest {
         void getCurrentWeekEvaluations_ShouldReturnEvaluations() {
                 // Given
                 List<BehaviorEvaluation> evaluations = Arrays.asList(testEvaluation);
-                when(evaluationRepository.findByChildAndWeekStartDateAndCommittedFalse(
+                when(evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(
                                 any(), any())).thenReturn(evaluations);
 
                 // When
-                List<BehaviorEvaluation> result = evaluationService.getCurrentWeekEvaluations(testChild);
+                List<BehaviorEvaluation> result = evaluationService.getCurrentWeekEvaluations(testUserChild);
 
                 // Then
                 assertThat(result).hasSize(1);
-                assertThat(result.get(0).getChild()).isEqualTo(testChild);
+                assertThat(result.get(0).getUser()).isEqualTo(testUserChild);
         }
 
         @Test
         void commitWeeklyEvaluations_ShouldAddPointsAndMarkCommitted() {
                 // Given
                 List<BehaviorEvaluation> evaluations = Arrays.asList(testEvaluation);
-                when(evaluationRepository.findByChildAndWeekStartDateAndCommittedFalse(
+                when(evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(
                                 any(), any())).thenReturn(evaluations);
                 when(evaluationRepository.save(any(BehaviorEvaluation.class))).thenReturn(testEvaluation);
 
                 // When
-                evaluationService.commitWeeklyEvaluations(testChild, testUser);
+                evaluationService.commitWeeklyEvaluations(testUserChild, testUser);
 
                 // Then
                 verify(pointService).addPointsWithRemarks(
-                                eq(testChild),
+                                eq(testUserChild),
                                 eq(8),
                                 eq("BEHAVIOR"),
                                 anyString(),
@@ -186,30 +186,30 @@ class BehaviorEvaluationServiceTest {
         @Test
         void commitWeeklyEvaluations_ShouldThrowException_WhenNoEvaluations() {
                 // Given
-                when(evaluationRepository.findByChildAndWeekStartDateAndCommittedFalse(
+                when(evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(
                                 any(), any())).thenReturn(Arrays.asList());
 
                 // When/Then
-                assertThatThrownBy(() -> evaluationService.commitWeeklyEvaluations(testChild, testUser))
+                assertThatThrownBy(() -> evaluationService.commitWeeklyEvaluations(testUserChild, testUser))
                                 .isInstanceOf(IllegalStateException.class)
                                 .hasMessageContaining("No evaluations to commit");
         }
 
         @Test
-        void getActiveBehaviorsForChild_ShouldReturnChildAndGlobalBehaviors() {
+        void getActiveBehaviorsForUser_ShouldReturnUserAndGlobalBehaviors() {
                 // Given
-                Behavior childBehavior = new Behavior();
-                childBehavior.setChild(testChild);
+                Behavior userBehavior = new Behavior();
+                userBehavior.setUser(testUserChild);
                 Behavior globalBehavior = new Behavior();
-                globalBehavior.setChild(null);
+                globalBehavior.setUser(null);
 
-                when(behaviorRepository.findByChildAndActiveTrue(testChild))
-                                .thenReturn(new java.util.ArrayList<>(Arrays.asList(childBehavior)));
-                when(behaviorRepository.findByChildIsNullAndActiveTrue())
+                when(behaviorRepository.findByUserAndActiveTrue(testUserChild))
+                                .thenReturn(new java.util.ArrayList<>(Arrays.asList(userBehavior)));
+                when(behaviorRepository.findByUserIsNullAndActiveTrue())
                                 .thenReturn(new java.util.ArrayList<>(Arrays.asList(globalBehavior)));
 
                 // When
-                List<Behavior> result = evaluationService.getActiveBehaviorsForChild(testChild);
+                List<Behavior> result = evaluationService.getActiveBehaviorsForUser(testUserChild);
 
                 // Then
                 assertThat(result).hasSize(2);
@@ -223,11 +223,11 @@ class BehaviorEvaluationServiceTest {
                 BehaviorEvaluation eval2 = new BehaviorEvaluation();
                 eval2.setCurrentPoints(7);
 
-                when(evaluationRepository.findByChildAndWeekStartDateAndCommittedFalse(
+                when(evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(
                                 any(), any())).thenReturn(Arrays.asList(eval1, eval2));
 
                 // When
-                int total = evaluationService.calculateWeeklyTotal(testChild);
+                int total = evaluationService.calculateWeeklyTotal(testUserChild);
 
                 // Then
                 assertThat(total).isEqualTo(12);

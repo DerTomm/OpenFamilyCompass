@@ -36,8 +36,8 @@ public class BehaviorEvaluation {
     private Behavior behavior;
 
     @ManyToOne
-    @JoinColumn(name = "child_id", nullable = false)
-    private Child child;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false)
     private int currentPoints; // Currently assigned points (0 to max. points of the behavior)

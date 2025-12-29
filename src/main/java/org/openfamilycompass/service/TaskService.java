@@ -5,17 +5,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.lang.NonNull;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import org.openfamilycompass.model.Child;
 import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.Task;
 import org.openfamilycompass.model.TaskStatus;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.TaskRepository;
+import org.springframework.lang.NonNull;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +28,13 @@ public class TaskService {
 
     @Transactional
     public Task createTask(@NonNull String title, String description, int basePoints,
-            Child assignedChild, @NonNull RecurrenceType recurrenceType,
+            User assignedUser, @NonNull RecurrenceType recurrenceType,
             LocalDate dueDate, boolean isTemplate) {
         Task task = new Task();
         task.setTitle(title);
         task.setDescription(description);
         task.setBasePoints(basePoints);
-        task.setAssignedChild(assignedChild);
+        task.setAssignedUser(assignedUser);
         task.setRecurrenceType(recurrenceType);
         task.setDueDate(dueDate);
         task.setStatus(TaskStatus.PENDING);
@@ -79,7 +77,7 @@ public class TaskService {
 
         // Credit points
         Long taskId2 = Objects.requireNonNull(task.getId(), "Task ID must not be null");
-        pointService.addPoints(task.getAssignedChild(), awardedPoints,
+        pointService.addPoints(task.getAssignedUser(), awardedPoints,
                 "TASK", "Task completed: " + task.getTitle(),
                 taskId2, approver);
 
@@ -121,7 +119,7 @@ public class TaskService {
         nextTask.setTitle(template.getTitle());
         nextTask.setDescription(template.getDescription());
         nextTask.setBasePoints(template.getBasePoints());
-        nextTask.setAssignedChild(template.getAssignedChild());
+        nextTask.setAssignedUser(template.getAssignedUser());
         nextTask.setRecurrenceType(template.getRecurrenceType());
         nextTask.setDueDate(nextDueDate);
         nextTask.setStatus(TaskStatus.PENDING);
@@ -170,7 +168,7 @@ public class TaskService {
         task.setTitle(template.getTitle());
         task.setDescription(template.getDescription());
         task.setBasePoints(template.getBasePoints());
-        task.setAssignedChild(template.getAssignedChild());
+        task.setAssignedUser(template.getAssignedUser());
         task.setRecurrenceType(template.getRecurrenceType());
         task.setDueDate(dueDate);
         task.setStatus(TaskStatus.PENDING);
@@ -181,16 +179,16 @@ public class TaskService {
         log.info("Created task from template: {}", template.getTitle());
     }
 
-    public List<Task> findByChild(@NonNull Child child) {
-        return taskRepository.findByAssignedChild(child);
+    public List<Task> findByUser(@NonNull User user) {
+        return taskRepository.findByAssignedUser(user);
     }
 
-    public List<Task> findByChildAndStatus(@NonNull Child child, @NonNull TaskStatus status) {
-        return taskRepository.findByAssignedChildAndStatus(child, status);
+    public List<Task> findByUserAndStatus(@NonNull User user, @NonNull TaskStatus status) {
+        return taskRepository.findByAssignedUserAndStatus(user, status);
     }
 
-    public List<Task> findPendingForChild(@NonNull Child child) {
-        return taskRepository.findByAssignedChildAndStatusIn(child,
+    public List<Task> findPendingForUser(@NonNull User user) {
+        return taskRepository.findByAssignedUserAndStatusIn(user,
                 List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS));
     }
 

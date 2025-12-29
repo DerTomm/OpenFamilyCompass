@@ -27,8 +27,8 @@ public class Penalty {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "child_id", nullable = false)
-    private Child child;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false)
     private String reason;

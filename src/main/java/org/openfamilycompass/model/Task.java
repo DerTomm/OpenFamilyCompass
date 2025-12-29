@@ -39,8 +39,8 @@ public class Task {
     private int basePoints; // Base reward points
 
     @ManyToOne
-    @JoinColumn(name = "assigned_child_id")
-    private Child assignedChild; // Can be null if for all children
+    @JoinColumn(name = "assigned_user_id")
+    private User assignedUser; // Can be null if for all users
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

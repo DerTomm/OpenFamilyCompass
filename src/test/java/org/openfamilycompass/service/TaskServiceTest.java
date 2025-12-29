@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openfamilycompass.model.Child;
 import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.Task;
 import org.openfamilycompass.model.TaskStatus;
@@ -41,17 +40,19 @@ class TaskServiceTest {
     private TaskService taskService;
 
     private Task testTask;
-    private Child testChild;
+    private User testChildUser;
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        testChild = new Child();
-        testChild.setId(1L);
-        testChild.setFirstName("TestChild");
+        testChildUser = new User();
+        testChildUser.setId(1L);
+        testChildUser.setUsername("testchild");
+        testChildUser.setRole(UserRole.CHILD);
+        testChildUser.setFirstName("TestChild");
 
         testUser = new User();
-        testUser.setId(1L);
+        testUser.setId(2L);
         testUser.setUsername("parent");
         testUser.setRole(UserRole.PARENT);
 
@@ -60,7 +61,7 @@ class TaskServiceTest {
         testTask.setTitle("Test Task");
         testTask.setDescription("Test Description");
         testTask.setBasePoints(10);
-        testTask.setAssignedChild(testChild);
+        testTask.setAssignedUser(testChildUser);
         testTask.setStatus(TaskStatus.PENDING);
         testTask.setRecurrenceType(RecurrenceType.ONCE);
     }
@@ -75,7 +76,7 @@ class TaskServiceTest {
                 "Test Task",
                 "Test Description",
                 10,
-                testChild,
+                testChildUser,
                 RecurrenceType.ONCE,
                 LocalDate.now(),
                 false);

@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openfamilycompass.model.Child;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
 import org.openfamilycompass.model.RewardStatus;
@@ -40,17 +39,19 @@ class RewardRedemptionServiceTest {
     @InjectMocks
     private RewardRedemptionService redemptionService;
 
-    private Child testChild;
+    private User testChildUser;
     private Reward testReward;
     private User testUser;
     private RewardRedemption testRedemption;
 
     @BeforeEach
     void setUp() {
-        testChild = new Child();
-        testChild.setId(1L);
-        testChild.setFirstName("TestChild");
-        testChild.setTotalPoints(100);
+        testChildUser = new User();
+        testChildUser.setId(1L);
+        testChildUser.setUsername("testchild");
+        testChildUser.setRole(UserRole.CHILD);
+        testChildUser.setFirstName("TestChild");
+        testChildUser.setTotalPoints(100);
 
         testReward = new Reward();
         testReward.setId(1L);
@@ -64,7 +65,7 @@ class RewardRedemptionServiceTest {
 
         testRedemption = new RewardRedemption();
         testRedemption.setId(1L);
-        testRedemption.setChild(testChild);
+        testRedemption.setUser(testChildUser);
         testRedemption.setReward(testReward);
         testRedemption.setPointsSpent(50);
         testRedemption.setStatus(RewardStatus.REQUESTED);
@@ -76,13 +77,13 @@ class RewardRedemptionServiceTest {
         when(redemptionRepository.save(any(RewardRedemption.class))).thenReturn(testRedemption);
 
         // When
-        RewardRedemption result = redemptionService.requestReward(testChild, testReward);
+        RewardRedemption result = redemptionService.requestReward(testChildUser, testReward);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getStatus()).isEqualTo(RewardStatus.REQUESTED);
         verify(pointService).deductPoints(
-                eq(testChild),
+                eq(testChildUser),
                 eq(50),
                 eq("REWARD"),
                 anyString(),
@@ -93,10 +94,10 @@ class RewardRedemptionServiceTest {
     @Test
     void requestReward_ShouldThrowException_WhenNotEnoughPoints() {
         // Given
-        testChild.setTotalPoints(30);
+        testChildUser.setTotalPoints(30);
 
         // When/Then
-        assertThatThrownBy(() -> redemptionService.requestReward(testChild, testReward))
+        assertThatThrownBy(() -> redemptionService.requestReward(testChildUser, testReward))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Not enough points");
     }
@@ -156,7 +157,7 @@ class RewardRedemptionServiceTest {
         // Then
         assertThat(result.getStatus()).isEqualTo(RewardStatus.CANCELLED);
         verify(pointService).addPoints(
-                eq(testChild),
+                eq(testChildUser),
                 eq(50),
                 eq("REWARD"),
                 anyString(),
@@ -165,18 +166,18 @@ class RewardRedemptionServiceTest {
     }
 
     @Test
-    void findByChild_ShouldReturnRedemptions() {
+    void findByUser_ShouldReturnRedemptions() {
         // Given
         List<RewardRedemption> redemptions = Arrays.asList(testRedemption);
-        when(redemptionRepository.findByChildOrderByRequestedAtDesc(testChild))
+        when(redemptionRepository.findByUserOrderByRequestedAtDesc(testChildUser))
                 .thenReturn(redemptions);
 
         // When
-        List<RewardRedemption> result = redemptionService.findByChild(testChild);
+        List<RewardRedemption> result = redemptionService.findByUser(testChildUser);
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getChild()).isEqualTo(testChild);
+        assertThat(result.get(0).getUser()).isEqualTo(testChildUser);
     }
 
     @Test

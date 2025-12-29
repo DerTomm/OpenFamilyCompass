@@ -15,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openfamilycompass.model.Child;
 import org.openfamilycompass.model.PointTransaction;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
@@ -27,21 +26,19 @@ class PointServiceTest {
     @Mock
     private PointTransactionRepository pointTransactionRepository;
 
-    @Mock
-    private ChildService childService;
-
     @InjectMocks
     private PointService pointService;
 
-    private Child testChild;
+    private User testUserChild;
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        testChild = new Child();
-        testChild.setId(1L);
-        testChild.setFirstName("TestChild");
-        testChild.setTotalPoints(100);
+        testUserChild = new User();
+        testUserChild.setId(1L);
+        testUserChild.setFirstName("TestChild");
+        testUserChild.setRole(UserRole.CHILD);
+        testUserChild.setTotalPoints(100);
 
         testUser = new User();
         testUser.setId(1L);
@@ -56,18 +53,18 @@ class PointServiceTest {
         transaction.setId(1L);
         transaction.setPoints(50);
         when(pointTransactionRepository.save(any(PointTransaction.class))).thenReturn(transaction);
-        when(pointTransactionRepository.sumPointsByChild(testChild)).thenReturn(150);
+        when(pointTransactionRepository.sumPointsByUser(testUserChild)).thenReturn(150);
 
         // When
         PointTransaction result = pointService.addPoints(
-                testChild, 50, "TASK", "Completed homework", 1L, testUser);
+                testUserChild, 50, "TASK", "Completed homework", 1L, testUser);
 
         // Then
         assertThat(result).isNotNull();
         verify(pointTransactionRepository).save(argThat(t -> t.getPoints() == 50 &&
                 t.getType().equals("TASK") &&
                 t.getDescription().equals("Completed homework")));
-        verify(childService).updatePoints(1L, 150);
+        // Note: updateUserPoints is called internally, no need to verify childService
     }
 
     @Test
@@ -76,11 +73,11 @@ class PointServiceTest {
         PointTransaction transaction = new PointTransaction();
         transaction.setPoints(-30);
         when(pointTransactionRepository.save(any(PointTransaction.class))).thenReturn(transaction);
-        when(pointTransactionRepository.sumPointsByChild(testChild)).thenReturn(70);
+        when(pointTransactionRepository.sumPointsByUser(testUserChild)).thenReturn(70);
 
         // When
         PointTransaction result = pointService.deductPoints(
-                testChild, 30, "PENALTY", "Misbehavior", 1L, testUser);
+                testUserChild, 30, "PENALTY", "Misbehavior", 1L, testUser);
 
         // Then
         assertThat(result).isNotNull();
@@ -92,11 +89,11 @@ class PointServiceTest {
     void addPointsWithRemarks_ShouldIncludeRemarks() {
         // Given
         when(pointTransactionRepository.save(any(PointTransaction.class))).thenReturn(new PointTransaction());
-        when(pointTransactionRepository.sumPointsByChild(testChild)).thenReturn(110);
+        when(pointTransactionRepository.sumPointsByUser(testUserChild)).thenReturn(110);
 
         // When
         pointService.addPointsWithRemarks(
-                testChild, 10, "BEHAVIOR", "Good behavior", 1L, "Excellent work!", testUser);
+                testUserChild, 10, "BEHAVIOR", "Good behavior", 1L, "Excellent work!", testUser);
 
         // Then
         verify(pointTransactionRepository).save(argThat(t -> t.getRemarks() != null &&
@@ -104,27 +101,27 @@ class PointServiceTest {
     }
 
     @Test
-    void updateChildPoints_ShouldCalculateTotalAndUpdate() {
+    void updateUserPoints_ShouldCalculateTotalAndUpdate() {
         // Given
-        when(pointTransactionRepository.sumPointsByChild(testChild)).thenReturn(250);
+        when(pointTransactionRepository.sumPointsByUser(testUserChild)).thenReturn(250);
 
         // When
-        pointService.updateChildPoints(testChild);
+        pointService.updateUserPoints(testUserChild);
 
         // Then
-        verify(childService).updatePoints(1L, 250);
+        assertThat(testUserChild.getTotalPoints()).isEqualTo(250);
     }
 
     @Test
-    void updateChildPoints_ShouldHandleNullSum() {
+    void updateUserPoints_ShouldHandleNullSum() {
         // Given
-        when(pointTransactionRepository.sumPointsByChild(testChild)).thenReturn(null);
+        when(pointTransactionRepository.sumPointsByUser(testUserChild)).thenReturn(null);
 
         // When
-        pointService.updateChildPoints(testChild);
+        pointService.updateUserPoints(testUserChild);
 
         // Then
-        verify(childService).updatePoints(1L, 0);
+        assertThat(testUserChild.getTotalPoints()).isEqualTo(0);
     }
 
     @Test
@@ -135,11 +132,11 @@ class PointServiceTest {
         PointTransaction t2 = new PointTransaction();
         t2.setPoints(-20);
         List<PointTransaction> transactions = Arrays.asList(t1, t2);
-        when(pointTransactionRepository.findByChildOrderByCreatedAtDesc(testChild))
+        when(pointTransactionRepository.findByUserOrderByCreatedAtDesc(testUserChild))
                 .thenReturn(transactions);
 
         // When
-        List<PointTransaction> result = pointService.getTransactionHistory(testChild);
+        List<PointTransaction> result = pointService.getTransactionHistory(testUserChild);
 
         // Then
         assertThat(result).hasSize(2);

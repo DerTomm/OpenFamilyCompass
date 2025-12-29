@@ -61,6 +61,12 @@ public class User implements UserDetails {
     @Column(name = "avatar_data", columnDefinition = "BYTEA")
     private byte[] avatarData; // Photo upload as Blob
 
+    @Column(name = "total_points", nullable = false)
+    private int totalPoints = 0;
+
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -103,5 +109,20 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return active;
+    }
+
+    /**
+     * Returns the avatar path/URL for this user, or null if no avatar is set.
+     * For PHOTO type: returns "/avatar/{id}"
+     * For ICON type: returns "/images/avatars/{iconName}.svg"
+     * For DEFAULT or null: returns null
+     */
+    public String getAvatarPath() {
+        if ("PHOTO".equals(avatarType) && avatarData != null) {
+            return "/avatar/" + id;
+        } else if ("ICON".equals(avatarType) && avatarIconName != null) {
+            return "/images/avatars/" + avatarIconName + ".svg";
+        }
+        return null; // DEFAULT or no avatar
     }
 }

@@ -2,6 +2,21 @@ package org.openfamilycompass.controller;
 
 import java.util.List;
 
+import org.openfamilycompass.model.Behavior;
+import org.openfamilycompass.model.BehaviorEvaluation;
+import org.openfamilycompass.model.RecurrenceType;
+import org.openfamilycompass.model.Reward;
+import org.openfamilycompass.model.RewardRedemption;
+import org.openfamilycompass.model.Task;
+import org.openfamilycompass.model.User;
+import org.openfamilycompass.model.UserRole;
+import org.openfamilycompass.service.BehaviorEvaluationService;
+import org.openfamilycompass.service.BehaviorService;
+import org.openfamilycompass.service.PenaltyService;
+import org.openfamilycompass.service.RewardRedemptionService;
+import org.openfamilycompass.service.RewardService;
+import org.openfamilycompass.service.TaskService;
+import org.openfamilycompass.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,22 +29,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.openfamilycompass.model.Behavior;
-import org.openfamilycompass.model.BehaviorEvaluation;
-import org.openfamilycompass.model.Child;
-import org.openfamilycompass.model.RecurrenceType;
-import org.openfamilycompass.model.Reward;
-import org.openfamilycompass.model.RewardRedemption;
-import org.openfamilycompass.model.Task;
-import org.openfamilycompass.model.User;
-import org.openfamilycompass.service.BehaviorEvaluationService;
-import org.openfamilycompass.service.BehaviorService;
-import org.openfamilycompass.service.ChildService;
-import org.openfamilycompass.service.PenaltyService;
-import org.openfamilycompass.service.RewardRedemptionService;
-import org.openfamilycompass.service.RewardService;
-import org.openfamilycompass.service.TaskService;
-
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -37,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ParentController {
 
-    private final ChildService childService;
+    private final UserService userService;
     private final TaskService taskService;
     private final RewardRedemptionService redemptionService;
     private final BehaviorService behaviorService;
@@ -47,7 +46,7 @@ public class ParentController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        List<Child> children = childService.findAll();
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
         List<Task> pendingApprovals = taskService.findPendingApproval();
         List<RewardRedemption> pendingRedemptions = redemptionService.findPendingApprovals();
 
@@ -75,7 +74,7 @@ public class ParentController {
 
     @GetMapping("/tasks/create")
     public String createTaskForm(Model model) {
-        List<Child> children = childService.findAll();
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
         model.addAttribute("children", children);
         model.addAttribute("recurrenceTypes", RecurrenceType.values());
         return "parent/task-create";
@@ -83,7 +82,7 @@ public class ParentController {
 
     @PostMapping("/tasks/create")
     public String createTask(@ModelAttribute TaskForm form) {
-        Child child = form.getChildId() != null ? childService.findById(form.getChildId()).orElse(null) : null;
+        User child = form.getUserId() != null ? userService.findById(form.getUserId()).orElse(null) : null;
 
         taskService.createTask(form.getTitle(), form.getDescription(),
                 form.getBasePoints(), child,
@@ -159,10 +158,10 @@ public class ParentController {
 
     @GetMapping("/children/{id}")
     public String childDetails(@PathVariable Long id, Model model) {
-        Child child = childService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        User child = userService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        List<Task> tasks = taskService.findByChild(child);
+        List<Task> tasks = taskService.findByUser(child);
         List<Behavior> behaviors = behaviorService.findAllActive();
 
         model.addAttribute("child", child);
@@ -174,17 +173,17 @@ public class ParentController {
 
     @GetMapping("/behaviors")
     public String listBehaviors(Model model) {
-        List<Child> children = childService.findAll();
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
         model.addAttribute("children", children);
         return "parent/behaviors";
     }
 
     @GetMapping("/behaviors/evaluate/{childId}")
     public String evaluateBehaviors(@PathVariable Long childId, Model model) {
-        Child child = childService.findById(childId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        User child = userService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        List<Behavior> behaviors = behaviorEvaluationService.getActiveBehaviorsForChild(child);
+        List<Behavior> behaviors = behaviorEvaluationService.getActiveBehaviorsForUser(child);
         List<BehaviorEvaluation> evaluations = behaviorEvaluationService.getCurrentWeekEvaluations(child);
         int weeklyTotal = behaviorEvaluationService.calculateWeeklyTotal(child);
 
@@ -212,8 +211,8 @@ public class ParentController {
             @RequestParam(required = false) String remarks,
             Authentication authentication) {
 
-        Child child = childService.findById(childId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        User child = userService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         User currentUser = (User) authentication.getPrincipal();
 
@@ -224,8 +223,8 @@ public class ParentController {
     @PostMapping("/behaviors/evaluate/{childId}/commit")
     public String commitWeeklyEvaluations(@PathVariable Long childId,
             Authentication authentication) {
-        Child child = childService.findById(childId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        User child = userService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         User currentUser = (User) authentication.getPrincipal();
         behaviorEvaluationService.commitWeeklyEvaluations(child, currentUser);
@@ -236,7 +235,7 @@ public class ParentController {
     @GetMapping("/behaviors/manage")
     public String manageBehaviors(Model model) {
         List<Behavior> behaviors = behaviorService.findAllActive();
-        List<Child> children = childService.findAll();
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
         model.addAttribute("behaviors", behaviors);
         model.addAttribute("children", children);
         return "parent/behaviors-manage";
@@ -244,7 +243,7 @@ public class ParentController {
 
     @GetMapping("/behaviors/create")
     public String createBehaviorForm(Model model) {
-        List<Child> children = childService.findAll();
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
         model.addAttribute("children", children);
         return "parent/behavior-create";
     }
@@ -254,7 +253,7 @@ public class ParentController {
             @RequestParam String guideline,
             @RequestParam int points,
             @RequestParam(required = false) Long childId) {
-        Child child = childId != null ? childService.findById(childId).orElse(null) : null;
+        User child = childId != null ? userService.findById(childId).orElse(null) : null;
 
         behaviorService.createBehavior(title, guideline, points, child);
         return "redirect:/parent/behaviors/manage";
@@ -270,8 +269,8 @@ public class ParentController {
     public String recordBehavior(@PathVariable Long behaviorId,
             @RequestParam Long childId,
             Authentication authentication) {
-        Child child = childService.findById(childId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        User child = userService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         User currentUser = (User) authentication.getPrincipal();
         behaviorService.recordBehavior(behaviorId, child, currentUser);
@@ -281,7 +280,7 @@ public class ParentController {
 
     @GetMapping("/points")
     public String pointsManagement(Model model) {
-        List<Child> children = childService.findAll();
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
         model.addAttribute("children", children);
         return "parent/points";
     }
@@ -291,8 +290,8 @@ public class ParentController {
             @RequestParam String reason,
             @RequestParam int points,
             Authentication authentication) {
-        Child child = childService.findById(childId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        User child = userService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         User currentUser = (User) authentication.getPrincipal();
         penaltyService.addBonusPoints(child, reason, points, currentUser);
@@ -305,8 +304,8 @@ public class ParentController {
             @RequestParam String reason,
             @RequestParam int points,
             Authentication authentication) {
-        Child child = childService.findById(childId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        User child = userService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         User currentUser = (User) authentication.getPrincipal();
         penaltyService.createPenalty(child, reason, points, currentUser);
@@ -319,8 +318,8 @@ public class ParentController {
             @RequestParam String reason,
             @RequestParam int points,
             Authentication authentication) {
-        Child child = childService.findById(childId)
-                .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+        User child = userService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         User currentUser = (User) authentication.getPrincipal();
         penaltyService.createPenalty(child, reason, points, currentUser);

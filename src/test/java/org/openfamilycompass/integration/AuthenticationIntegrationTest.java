@@ -45,6 +45,7 @@ class AuthenticationIntegrationTest {
         // Create test user
         User testUser = new User();
         testUser.setUsername("testparent");
+        testUser.setFirstName("Test Parent");
         testUser.setPassword(passwordEncoder.encode("testpassword"));
         testUser.setRole(UserRole.PARENT);
         userRepository.save(testUser);

@@ -28,6 +28,7 @@ class UserRepositoryTest {
         // Given
         User user = new User();
         user.setUsername("testuser");
+        user.setFirstName("Test User");
         user.setPassword("encoded-password");
         user.setRole(UserRole.PARENT);
         entityManager.persistAndFlush(user);
@@ -85,6 +86,7 @@ class UserRepositoryTest {
     private User createUser(String username, UserRole role) {
         User user = new User();
         user.setUsername(username);
+        user.setFirstName(username.substring(0, 1).toUpperCase() + username.substring(1));
         user.setPassword("password");
         user.setRole(role);
         user.setActive(true);

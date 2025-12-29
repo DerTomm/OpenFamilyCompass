@@ -19,15 +19,15 @@ public class RewardRedemption {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "child_id", nullable = false)
-    private Child child;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "reward_id", nullable = false)
     private Reward reward;
 
     @Column(nullable = false)
-    private int pointsSpent;  // Punkte, die ausgegeben wurden
+    private int pointsSpent; // Punkte, die ausgegeben wurden
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -3,14 +3,12 @@ package org.openfamilycompass.service;
 import java.util.List;
 import java.util.Objects;
 
+import org.openfamilycompass.model.Behavior;
+import org.openfamilycompass.model.User;
+import org.openfamilycompass.repository.BehaviorRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.openfamilycompass.model.Behavior;
-import org.openfamilycompass.model.Child;
-import org.openfamilycompass.model.User;
-import org.openfamilycompass.repository.BehaviorRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,19 +20,19 @@ public class BehaviorService {
     private final PointService pointService;
 
     @Transactional
-    public Behavior createBehavior(@NonNull String title, @NonNull String guideline, int points, Child child) {
+    public Behavior createBehavior(@NonNull String title, @NonNull String guideline, int points, User user) {
         Behavior behavior = new Behavior();
         behavior.setTitle(title);
         behavior.setGuideline(guideline);
         behavior.setPoints(points);
-        behavior.setChild(child);
+        behavior.setUser(user);
         behavior.setActive(true);
 
         return behaviorRepository.save(behavior);
     }
 
     @Transactional
-    public void recordBehavior(@NonNull Long behaviorId, @NonNull Child child, @NonNull User recordedBy) {
+    public void recordBehavior(@NonNull Long behaviorId, @NonNull User user, @NonNull User recordedBy) {
         Behavior behavior = behaviorRepository.findById(behaviorId)
                 .orElseThrow(() -> new IllegalArgumentException("Behavior not found"));
 
@@ -44,7 +42,7 @@ public class BehaviorService {
 
         // Credit points - ID must not be null after loading from DB
         Long id = Objects.requireNonNull(behavior.getId(), "Behavior ID must not be null");
-        pointService.addPoints(child, behavior.getPoints(), "BEHAVIOR",
+        pointService.addPoints(user, behavior.getPoints(), "BEHAVIOR",
                 "Positive behavior: " + behavior.getTitle(),
                 id, recordedBy);
     }
@@ -62,11 +60,11 @@ public class BehaviorService {
         return behaviorRepository.findByActiveTrue();
     }
 
-    public List<Behavior> findByChild(@NonNull Child child) {
-        return behaviorRepository.findByChild(child);
+    public List<Behavior> findByUser(@NonNull User user) {
+        return behaviorRepository.findByUser(user);
     }
 
     public List<Behavior> findGlobalBehaviors() {
-        return behaviorRepository.findByChildIsNullAndActiveTrue();
+        return behaviorRepository.findByUserIsNullAndActiveTrue();
     }
 }

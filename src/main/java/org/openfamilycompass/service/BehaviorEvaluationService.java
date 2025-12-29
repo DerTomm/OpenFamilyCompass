@@ -6,16 +6,14 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
-import org.openfamilycompass.model.Child;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.BehaviorEvaluationRepository;
 import org.openfamilycompass.repository.BehaviorRepository;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -44,7 +42,7 @@ public class BehaviorEvaluationService {
      */
     @Transactional
     public BehaviorEvaluation updateEvaluation(@NonNull Long behaviorId,
-            @NonNull Child child,
+            @NonNull User user,
             int currentPoints,
             String remarks,
             @NonNull User updatedBy) {
@@ -65,11 +63,11 @@ public class BehaviorEvaluationService {
 
         // Find existing evaluation or create new one
         BehaviorEvaluation evaluation = evaluationRepository
-                .findByChildAndBehaviorAndWeekStartDateAndCommittedFalse(child, behavior, weekStart)
+                .findByUserAndBehaviorAndWeekStartDateAndCommittedFalse(user, behavior, weekStart)
                 .orElseGet(() -> {
                     BehaviorEvaluation newEval = new BehaviorEvaluation();
                     newEval.setBehavior(behavior);
-                    newEval.setChild(child);
+                    newEval.setUser(user);
                     newEval.setWeekStartDate(weekStart);
                     newEval.setCreatedBy(updatedBy);
                     return newEval;
@@ -85,9 +83,9 @@ public class BehaviorEvaluationService {
      * Loads all uncommitted evaluations for a child of the current week
      */
     @Transactional(readOnly = true)
-    public List<BehaviorEvaluation> getCurrentWeekEvaluations(@NonNull Child child) {
+    public List<BehaviorEvaluation> getCurrentWeekEvaluations(@NonNull User user) {
         LocalDateTime weekStart = getCurrentWeekStart();
-        return evaluationRepository.findByChildAndWeekStartDateAndCommittedFalse(child, weekStart);
+        return evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(user, weekStart);
     }
 
     /**
@@ -102,10 +100,10 @@ public class BehaviorEvaluationService {
      * Commits all evaluations of a child for the current week
      */
     @Transactional
-    public void commitWeeklyEvaluations(@NonNull Child child, @NonNull User committedBy) {
+    public void commitWeeklyEvaluations(@NonNull User user, @NonNull User committedBy) {
         LocalDateTime weekStart = getCurrentWeekStart();
         List<BehaviorEvaluation> evaluations = evaluationRepository
-                .findByChildAndWeekStartDateAndCommittedFalse(child, weekStart);
+                .findByUserAndWeekStartDateAndCommittedFalse(user, weekStart);
 
         if (evaluations.isEmpty()) {
             throw new IllegalStateException("No evaluations to commit for this week");
@@ -118,7 +116,7 @@ public class BehaviorEvaluationService {
                 String description = "Weekly behavior: " + evaluation.getBehavior().getTitle();
 
                 pointService.addPointsWithRemarks(
-                        child,
+                        user,
                         evaluation.getCurrentPoints(),
                         "BEHAVIOR",
                         description,
@@ -133,24 +131,21 @@ public class BehaviorEvaluationService {
         }
     }
 
-    /**
-     * Loads all active behavior rules for a child (including global rules)
-     */
     @Transactional(readOnly = true)
-    public List<Behavior> getActiveBehaviorsForChild(@NonNull Child child) {
-        List<Behavior> childSpecific = behaviorRepository.findByChildAndActiveTrue(child);
-        List<Behavior> global = behaviorRepository.findByChildIsNullAndActiveTrue();
+    public List<Behavior> getActiveBehaviorsForUser(@NonNull User user) {
+        List<Behavior> userSpecific = behaviorRepository.findByUserAndActiveTrue(user);
+        List<Behavior> global = behaviorRepository.findByUserIsNullAndActiveTrue();
 
-        childSpecific.addAll(global);
-        return childSpecific;
+        userSpecific.addAll(global);
+        return userSpecific;
     }
 
     /**
-     * Calculates the total points of the current week for a child
+     * Calculates the total points of the current week for a user
      */
     @Transactional(readOnly = true)
-    public int calculateWeeklyTotal(@NonNull Child child) {
-        return getCurrentWeekEvaluations(child).stream()
+    public int calculateWeeklyTotal(@NonNull User user) {
+        return getCurrentWeekEvaluations(user).stream()
                 .mapToInt(BehaviorEvaluation::getCurrentPoints)
                 .sum();
     }

@@ -4,16 +4,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import org.openfamilycompass.model.Child;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
 import org.openfamilycompass.model.RewardStatus;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.RewardRedemptionRepository;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,14 +23,14 @@ public class RewardRedemptionService {
     private final PointService pointService;
 
     @Transactional
-    public RewardRedemption requestReward(@NonNull Child child, @NonNull Reward reward) {
+    public RewardRedemption requestReward(@NonNull User user, @NonNull Reward reward) {
         // Check if enough points are available
-        if (child.getTotalPoints() < reward.getPointsCost()) {
+        if (user.getTotalPoints() < reward.getPointsCost()) {
             throw new IllegalStateException("Not enough points");
         }
 
         RewardRedemption redemption = new RewardRedemption();
-        redemption.setChild(child);
+        redemption.setUser(user);
         redemption.setReward(reward);
         redemption.setPointsSpent(reward.getPointsCost());
         redemption.setStatus(RewardStatus.REQUESTED);
@@ -41,7 +39,7 @@ public class RewardRedemptionService {
 
         // Deduct points provisionally
         Long redemptionId = Objects.requireNonNull(saved.getId(), "Redemption ID must not be null");
-        pointService.deductPoints(child, reward.getPointsCost(), "REWARD",
+        pointService.deductPoints(user, reward.getPointsCost(), "REWARD",
                 "Reward requested: " + reward.getTitle(),
                 redemptionId, null);
 
@@ -87,15 +85,15 @@ public class RewardRedemptionService {
 
         // Return points
         Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
-        pointService.addPoints(redemption.getChild(), redemption.getPointsSpent(),
+        pointService.addPoints(redemption.getUser(), redemption.getPointsSpent(),
                 "REWARD", "Reward cancelled: " + redemption.getReward().getTitle(),
                 redemptionId2, cancelledBy);
 
         return saved;
     }
 
-    public List<RewardRedemption> findByChild(@NonNull Child child) {
-        return redemptionRepository.findByChildOrderByRequestedAtDesc(child);
+    public List<RewardRedemption> findByUser(@NonNull User user) {
+        return redemptionRepository.findByUserOrderByRequestedAtDesc(user);
     }
 
     public List<RewardRedemption> findPendingApprovals() {

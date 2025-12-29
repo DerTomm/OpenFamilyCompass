@@ -3,14 +3,12 @@ package org.openfamilycompass.service;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import org.openfamilycompass.model.Child;
 import org.openfamilycompass.model.PointTransaction;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.PointTransactionRepository;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,13 +17,12 @@ import lombok.RequiredArgsConstructor;
 public class PointService {
 
     private final PointTransactionRepository pointTransactionRepository;
-    private final ChildService childService;
 
     @Transactional
-    public PointTransaction addPoints(@NonNull Child child, int points, @NonNull String type,
+    public PointTransaction addPoints(@NonNull User user, int points, @NonNull String type,
             @NonNull String description, Long referenceId, User createdBy) {
         PointTransaction transaction = new PointTransaction();
-        transaction.setChild(child);
+        transaction.setUser(user);
         transaction.setPoints(points);
         transaction.setType(type);
         transaction.setDescription(description);
@@ -34,24 +31,24 @@ public class PointService {
 
         PointTransaction saved = pointTransactionRepository.save(transaction);
 
-        // Update child's points
-        updateChildPoints(child);
+        // Update user's points
+        updateUserPoints(user);
 
         return saved;
     }
 
     @Transactional
-    public PointTransaction deductPoints(@NonNull Child child, int points, @NonNull String type,
+    public PointTransaction deductPoints(@NonNull User user, int points, @NonNull String type,
             @NonNull String description, Long referenceId, User createdBy) {
-        return addPoints(child, -points, type, description, referenceId, createdBy);
+        return addPoints(user, -points, type, description, referenceId, createdBy);
     }
 
     @Transactional
-    public PointTransaction addPointsWithRemarks(@NonNull Child child, int points, @NonNull String type,
+    public PointTransaction addPointsWithRemarks(@NonNull User user, int points, @NonNull String type,
             @NonNull String description, Long referenceId,
             String remarks, User createdBy) {
         PointTransaction transaction = new PointTransaction();
-        transaction.setChild(child);
+        transaction.setUser(user);
         transaction.setPoints(points);
         transaction.setType(type);
         transaction.setDescription(description);
@@ -61,28 +58,28 @@ public class PointService {
 
         PointTransaction saved = pointTransactionRepository.save(transaction);
 
-        // Update child's points
-        updateChildPoints(child);
+        // Update user's points
+        updateUserPoints(user);
 
         return saved;
     }
 
     @Transactional
-    public void updateChildPoints(@NonNull Child child) {
-        Long childId = Objects.requireNonNull(child.getId(), "Child ID must not be null");
-        Integer totalPoints = pointTransactionRepository.sumPointsByChild(child);
+    public void updateUserPoints(@NonNull User user) {
+        Long userId = Objects.requireNonNull(user.getId(), "User ID must not be null");
+        Integer totalPoints = pointTransactionRepository.sumPointsByUser(user);
         if (totalPoints == null) {
             totalPoints = 0;
         }
-        childService.updatePoints(childId, totalPoints);
+        user.setTotalPoints(totalPoints);
     }
 
-    public List<PointTransaction> getTransactionHistory(@NonNull Child child) {
-        return pointTransactionRepository.findByChildOrderByCreatedAtDesc(child);
+    public List<PointTransaction> getTransactionHistory(@NonNull User user) {
+        return pointTransactionRepository.findByUserOrderByCreatedAtDesc(user);
     }
 
-    public int calculateTotalPoints(@NonNull Child child) {
-        Integer total = pointTransactionRepository.sumPointsByChild(child);
+    public int calculateTotalPoints(@NonNull User user) {
+        Integer total = pointTransactionRepository.sumPointsByUser(user);
         return total != null ? total : 0;
     }
 }

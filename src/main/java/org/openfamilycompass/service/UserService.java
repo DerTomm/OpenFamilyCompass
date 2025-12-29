@@ -30,7 +30,8 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User createUser(@NonNull String username, @NonNull String password, @NonNull UserRole role) {
+    public User createUser(@NonNull String username, @NonNull String password, @NonNull UserRole role,
+            @NonNull String firstName) {
         if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists: " + username);
         }
@@ -39,6 +40,7 @@ public class UserService implements UserDetailsService {
         user.setUsername(username.toLowerCase());
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
+        user.setFirstName(firstName);
         user.setActive(true);
 
         return userRepository.save(user);

@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
-import org.openfamilycompass.service.ChildService;
 import org.openfamilycompass.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 public class AdminController {
 
     private final UserService userService;
-    private final ChildService childService;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -48,13 +46,9 @@ public class AdminController {
     public String createUser(@RequestParam String username,
             @RequestParam String password,
             @RequestParam UserRole role,
-            @RequestParam(required = false) String firstName,
+            @RequestParam String firstName,
             @RequestParam(required = false) String avatarPath) {
-        User user = userService.createUser(username, password, role);
-
-        if (role == UserRole.CHILD && firstName != null) {
-            childService.createChild(user, firstName, avatarPath);
-        }
+        User user = userService.createUser(username, password, role, firstName);
 
         return "redirect:/admin/users";
     }
