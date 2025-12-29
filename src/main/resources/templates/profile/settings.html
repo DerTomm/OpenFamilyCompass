@@ -121,6 +121,40 @@
                     </div>
                 </div>
 
+                <!-- Password Settings Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-key"></i> <span th:text="#{settings.password.title}">Password Settings</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/profile/settings/password}" method="post">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label" th:text="#{settings.password.current}">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label" th:text="#{settings.password.new}">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" required minlength="6">
+                                <div class="form-text" th:text="#{settings.password.new.hint}">Minimum 6 characters</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label" th:text="#{settings.password.confirm}">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="6">
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-save"></i> <span th:text="#{settings.password.button}">Change Password</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Theme Settings Card -->
                 <div class="card">
                     <div class="card-header bg-secondary text-white">
@@ -464,6 +498,28 @@
                     this.classList.add('border-primary', 'border-3');
                 });
             });
+
+            // Password change validation
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+
+            if (newPasswordInput && confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function() {
+                    if (newPasswordInput.value !== confirmPasswordInput.value) {
+                        confirmPasswordInput.setCustomValidity('Passwords do not match');
+                    } else {
+                        confirmPasswordInput.setCustomValidity('');
+                    }
+                });
+
+                newPasswordInput.addEventListener('input', function() {
+                    if (confirmPasswordInput.value && newPasswordInput.value !== confirmPasswordInput.value) {
+                        confirmPasswordInput.setCustomValidity('Passwords do not match');
+                    } else {
+                        confirmPasswordInput.setCustomValidity('');
+                    }
+                });
+            }
         </script>
     </div>
 </body>

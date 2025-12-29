@@ -1,5 +1,7 @@
 package org.openfamilycompass.controller;
 
+import org.openfamilycompass.model.User;
+import org.openfamilycompass.service.UserService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -12,9 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import org.openfamilycompass.model.User;
-import org.openfamilycompass.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +72,46 @@ public class ProfileController {
             redirectAttributes.addFlashAttribute("success", "Design settings successfully saved!");
         } else {
             redirectAttributes.addFlashAttribute("error", "Invalid theme selected!");
+        }
+
+        return "redirect:/profile/settings";
+    }
+
+    @PostMapping("/settings/password")
+    public String changePassword(
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword,
+            @RequestParam String confirmPassword,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        String username = authentication.getName();
+        User user = userService.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Validate input
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Current password is required");
+            return "redirect:/profile/settings";
+        }
+
+        if (newPassword == null || newPassword.length() < 6) {
+            redirectAttributes.addFlashAttribute("error", "New password must be at least 6 characters long");
+            return "redirect:/profile/settings";
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("error", "New passwords do not match");
+            return "redirect:/profile/settings";
+        }
+
+        // Attempt to change password
+        boolean success = userService.changePassword(user.getId(), currentPassword, newPassword);
+
+        if (success) {
+            redirectAttributes.addFlashAttribute("success", "Password changed successfully!");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Current password is incorrect");
         }
 
         return "redirect:/profile/settings";
