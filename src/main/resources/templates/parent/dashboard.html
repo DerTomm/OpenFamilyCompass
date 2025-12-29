@@ -74,21 +74,20 @@
                                         <!-- Avatar Display -->
                                         <div class="text-center mb-2">
                                             <!-- Photo Avatar -->
-                                            <img th:if="${child.user != null and child.user.avatarType == 'PHOTO'}"
-                                                th:src="@{/avatar/{userId}(userId=${child.user.id})}"
-                                                class="rounded-circle"
+                                            <img th:if="${child.avatarType == 'PHOTO'}"
+                                                th:src="@{/avatar/{userId}(userId=${child.id})}" class="rounded-circle"
                                                 style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745;"
                                                 alt="Avatar">
 
                                             <!-- Icon Avatar -->
-                                            <img th:if="${child.user != null and child.user.avatarType == 'ICON' and child.user.avatarIconName != null}"
-                                                th:src="@{/images/avatars/{icon}.svg(icon=${child.user.avatarIconName})}"
+                                            <img th:if="${child.avatarType == 'ICON' and child.avatarIconName != null}"
+                                                th:src="@{/images/avatars/{icon}.svg(icon=${child.avatarIconName})}"
                                                 class="rounded-circle"
                                                 style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745; padding: 10px; background: white;"
                                                 alt="Avatar">
 
                                             <!-- Default Avatar -->
-                                            <div th:if="${child.user == null or child.user.avatarType == 'DEFAULT' or (child.user.avatarType == 'ICON' and child.user.avatarIconName == null)}"
+                                            <div th:if="${child.avatarType == 'DEFAULT' or (child.avatarType == 'ICON' and child.avatarIconName == null)}"
                                                 class="rounded-circle bg-secondary mx-auto d-inline-flex align-items-center justify-content-center"
                                                 style="width: 80px; height: 80px; border: 3px solid #28a745;">
                                                 <i class="fas fa-user fa-2x text-white"></i>
