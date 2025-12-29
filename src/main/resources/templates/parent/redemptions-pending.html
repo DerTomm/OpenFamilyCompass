@@ -14,7 +14,7 @@
             <div class="col-md-6 mb-3" th:each="redemption : ${redemptions}">
                 <div class="card">
                     <div class="card-header bg-info text-white">
-                        <h5 class="mb-0" th:text="${redemption.child.firstName}">Kind</h5>
+                        <h5 class="mb-0" th:text="${redemption.user.firstName}">Kind</h5>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title" th:text="${redemption.reward.title}">Belohnung</h5>

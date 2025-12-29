@@ -73,7 +73,9 @@
                                             <button
                                                 th:if="${transaction.remarks != null and !#strings.isEmpty(transaction.remarks)}"
                                                 class="btn btn-sm btn-outline-primary"
-                                                th:onclick="'showRemarks(\'' + ${transaction.id} + '\', \'' + ${#strings.escapeJavaScript(transaction.description)} + '\', \'' + ${#strings.escapeJavaScript(transaction.remarks)} + '\')'">
+                                                th:data-transaction-id="${transaction.id}"
+                                                th:data-description="${transaction.description}"
+                                                th:data-remarks="${transaction.remarks}" onclick="showRemarks(this)">
                                                 <i class="fas fa-comment-dots"></i> <span
                                                     th:text="#{history.remarks}">Remarks</span>
                                             </button>
@@ -92,7 +94,7 @@
                         <div class="mt-4 text-center">
                             <h4 th:text="#{history.current.balance}">Current Points:</h4>
                             <div class="badge bg-success" style="font-size: 2rem;">
-                                ⭐ <span th:text="${child.totalPoints}">0</span> <span
+                                ⭐ <span th:text="${user.totalPoints}">0</span> <span
                                     th:text="#{points.title}">Points</span>
                             </div>
                         </div>
@@ -130,7 +132,11 @@
 
     <th:block layout:fragment="scripts">
         <script>
-            function showRemarks(transactionId, description, remarks) {
+            function showRemarks(button) {
+                const transactionId = button.getAttribute('data-transaction-id');
+                const description = button.getAttribute('data-description');
+                const remarks = button.getAttribute('data-remarks');
+
                 document.getElementById('remarks-title').textContent = description;
                 document.getElementById('remarks-content').textContent = remarks;
 

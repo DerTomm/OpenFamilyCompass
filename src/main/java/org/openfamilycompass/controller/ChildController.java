@@ -12,6 +12,7 @@ import org.openfamilycompass.service.PointService;
 import org.openfamilycompass.service.RewardRedemptionService;
 import org.openfamilycompass.service.RewardService;
 import org.openfamilycompass.service.TaskService;
+import org.openfamilycompass.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,18 +32,23 @@ public class ChildController {
     private final RewardService rewardService;
     private final RewardRedemptionService redemptionService;
     private final PointService pointService;
+    private final UserService userService;
 
     @GetMapping("/dashboard")
     public String dashboard(Authentication authentication, Model model) {
         User currentUser = (User) authentication.getPrincipal();
 
-        List<Task> pendingTasks = taskService.findPendingForUser(currentUser);
-        List<Task> completedTasks = taskService.findByUserAndStatus(currentUser, TaskStatus.CHILD_COMPLETED);
+        // Load fresh user data from database to get updated points
+        User freshUser = userService.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        model.addAttribute("user", currentUser);
+        List<Task> pendingTasks = taskService.findPendingForUser(freshUser);
+        List<Task> completedTasks = taskService.findByUserAndStatus(freshUser, TaskStatus.CHILD_COMPLETED);
+
+        model.addAttribute("user", freshUser);
         model.addAttribute("pendingTasks", pendingTasks);
         model.addAttribute("completedTasks", completedTasks);
-        model.addAttribute("totalPoints", currentUser.getTotalPoints());
+        model.addAttribute("totalPoints", freshUser.getTotalPoints());
 
         return "child/dashboard";
     }
@@ -70,13 +76,17 @@ public class ChildController {
     public String shop(Authentication authentication, Model model) {
         User currentUser = (User) authentication.getPrincipal();
 
-        List<Reward> rewards = rewardService.findAllActive();
-        List<RewardRedemption> myRedemptions = redemptionService.findByUser(currentUser);
+        // Load fresh user data from database to get updated points
+        User freshUser = userService.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        model.addAttribute("user", currentUser);
+        List<Reward> rewards = rewardService.findAllActive();
+        List<RewardRedemption> myRedemptions = redemptionService.findByUser(freshUser);
+
+        model.addAttribute("user", freshUser);
         model.addAttribute("rewards", rewards);
         model.addAttribute("myRedemptions", myRedemptions);
-        model.addAttribute("totalPoints", currentUser.getTotalPoints());
+        model.addAttribute("totalPoints", freshUser.getTotalPoints());
 
         return "child/shop";
     }
