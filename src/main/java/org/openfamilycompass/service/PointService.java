@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.openfamilycompass.model.PointTransaction;
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.PointTransactionRepository;
 import org.springframework.lang.NonNull;
@@ -21,7 +22,7 @@ public class PointService {
     private final UserService userService;
 
     @Transactional
-    public PointTransaction addPoints(@NonNull User user, int points, @NonNull String type,
+    public PointTransaction addPoints(@NonNull User user, int points, @NonNull PointTransactionType type,
             @NonNull String description, Long referenceId, User createdBy) {
         PointTransaction transaction = new PointTransaction();
         transaction.setUser(user);
@@ -40,13 +41,13 @@ public class PointService {
     }
 
     @Transactional
-    public PointTransaction deductPoints(@NonNull User user, int points, @NonNull String type,
+    public PointTransaction deductPoints(@NonNull User user, int points, @NonNull PointTransactionType type,
             @NonNull String description, Long referenceId, User createdBy) {
         return addPoints(user, -points, type, description, referenceId, createdBy);
     }
 
     @Transactional
-    public PointTransaction addPointsWithRemarks(@NonNull User user, int points, @NonNull String type,
+    public PointTransaction addPointsWithRemarks(@NonNull User user, int points, @NonNull PointTransactionType type,
             @NonNull String description, Long referenceId,
             String remarks, User createdBy) {
         PointTransaction transaction = new PointTransaction();

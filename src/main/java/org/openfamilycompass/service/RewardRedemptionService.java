@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
 import org.openfamilycompass.model.RewardStatus;
@@ -54,7 +55,7 @@ public class RewardRedemptionService {
         }
 
         // Deduct points when approving the redemption
-        pointService.deductPoints(redemption.getUser(), redemption.getPointsSpent(), "REWARD",
+        pointService.deductPoints(redemption.getUser(), redemption.getPointsSpent(), PointTransactionType.REWARD,
                 "Reward approved: " + redemption.getReward().getTitle(),
                 redemptionId, approver);
 
@@ -89,7 +90,7 @@ public class RewardRedemptionService {
         // Return points
         Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
         pointService.addPoints(redemption.getUser(), redemption.getPointsSpent(),
-                "REWARD", "Reward cancelled: " + redemption.getReward().getTitle(),
+                PointTransactionType.REWARD, "Reward cancelled: " + redemption.getReward().getTitle(),
                 redemptionId2, cancelledBy);
 
         return saved;

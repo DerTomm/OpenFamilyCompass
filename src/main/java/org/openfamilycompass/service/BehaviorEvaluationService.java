@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.BehaviorEvaluationRepository;
 import org.openfamilycompass.repository.BehaviorRepository;
@@ -118,7 +119,7 @@ public class BehaviorEvaluationService {
                 pointService.addPointsWithRemarks(
                         user,
                         evaluation.getCurrentPoints(),
-                        "BEHAVIOR",
+                        PointTransactionType.BEHAVIOR,
                         description,
                         evaluation.getBehavior().getId(),
                         evaluation.getRemarks(),

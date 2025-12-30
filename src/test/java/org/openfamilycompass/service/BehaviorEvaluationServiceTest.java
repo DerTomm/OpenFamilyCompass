@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.BehaviorEvaluationRepository;
@@ -175,7 +176,7 @@ class BehaviorEvaluationServiceTest {
                 verify(pointService).addPointsWithRemarks(
                                 eq(testUserChild),
                                 eq(8),
-                                eq("BEHAVIOR"),
+                                eq(PointTransactionType.BEHAVIOR),
                                 anyString(),
                                 anyLong(),
                                 any(),

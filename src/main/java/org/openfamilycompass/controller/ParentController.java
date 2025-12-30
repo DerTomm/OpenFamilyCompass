@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
@@ -306,9 +307,9 @@ public class ParentController {
         User currentUser = (User) authentication.getPrincipal();
 
         if ("bonus".equals(type)) {
-            pointService.addPoints(child, points, "ADJUSTMENT", reason, null, currentUser);
+            pointService.addPoints(child, points, PointTransactionType.BONUS, reason, null, currentUser);
         } else if ("penalty".equals(type)) {
-            pointService.deductPoints(child, points, "PENALTY", reason, null, currentUser);
+            pointService.deductPoints(child, points, PointTransactionType.PENALTY, reason, null, currentUser);
         }
 
         return "redirect:/parent/points/manage/" + childId + "?success=true";

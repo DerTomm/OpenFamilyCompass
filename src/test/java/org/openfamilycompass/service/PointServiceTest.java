@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openfamilycompass.model.PointTransaction;
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.PointTransactionRepository;
@@ -60,12 +61,12 @@ class PointServiceTest {
 
         // When
         PointTransaction result = pointService.addPoints(
-                testUserChild, 50, "TASK", "Completed homework", 1L, testUser);
+                testUserChild, 50, PointTransactionType.TASK, "Completed homework", 1L, testUser);
 
         // Then
         assertThat(result).isNotNull();
         verify(pointTransactionRepository).save(argThat(t -> t.getPoints() == 50 &&
-                t.getType().equals("TASK") &&
+                t.getType().equals(PointTransactionType.TASK) &&
                 t.getDescription().equals("Completed homework")));
         verify(userService).save(testUserChild);
     }
@@ -80,12 +81,12 @@ class PointServiceTest {
 
         // When
         PointTransaction result = pointService.deductPoints(
-                testUserChild, 30, "PENALTY", "Misbehavior", 1L, testUser);
+                testUserChild, 30, PointTransactionType.PENALTY, "Misbehavior", 1L, testUser);
 
         // Then
         assertThat(result).isNotNull();
         verify(pointTransactionRepository).save(argThat(t -> t.getPoints() == -30 &&
-                t.getType().equals("PENALTY")));
+                t.getType().equals(PointTransactionType.PENALTY)));
         verify(userService).save(testUserChild);
     }
 
@@ -97,7 +98,7 @@ class PointServiceTest {
 
         // When
         pointService.addPointsWithRemarks(
-                testUserChild, 10, "BEHAVIOR", "Good behavior", 1L, "Excellent work!", testUser);
+                testUserChild, 10, PointTransactionType.BEHAVIOR, "Good behavior", 1L, "Excellent work!", testUser);
 
         // Then
         verify(pointTransactionRepository).save(argThat(t -> t.getRemarks() != null &&

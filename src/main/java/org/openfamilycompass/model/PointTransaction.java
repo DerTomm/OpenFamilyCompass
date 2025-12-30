@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,8 +35,9 @@ public class PointTransaction {
     @Column(nullable = false)
     private int points; // Positive for credit, negative for deduction
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type; // "TASK", "REWARD", "HABIT", "PENALTY", "ADJUSTMENT"
+    private PointTransactionType type; // "TASK", "REWARD", "BEHAVIOR", "PENALTY", "BONUS"
 
     @Column(columnDefinition = "TEXT")
     private String description;

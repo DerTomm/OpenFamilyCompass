@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
 import org.openfamilycompass.model.RewardStatus;
@@ -85,7 +86,7 @@ class RewardRedemptionServiceTest {
         verify(pointService).deductPoints(
                 eq(testChildUser),
                 eq(50),
-                eq("REWARD"),
+                eq(PointTransactionType.REWARD),
                 anyString(),
                 anyLong(),
                 isNull());
@@ -159,7 +160,7 @@ class RewardRedemptionServiceTest {
         verify(pointService).addPoints(
                 eq(testChildUser),
                 eq(50),
-                eq("REWARD"),
+                eq(PointTransactionType.REWARD),
                 anyString(),
                 anyLong(),
                 eq(testUser));

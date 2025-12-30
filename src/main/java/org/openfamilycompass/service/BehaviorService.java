@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.openfamilycompass.model.Behavior;
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.BehaviorRepository;
 import org.springframework.lang.NonNull;
@@ -42,7 +43,7 @@ public class BehaviorService {
 
         // Credit points - ID must not be null after loading from DB
         Long id = Objects.requireNonNull(behavior.getId(), "Behavior ID must not be null");
-        pointService.addPoints(user, behavior.getPoints(), "BEHAVIOR",
+        pointService.addPoints(user, behavior.getPoints(), PointTransactionType.BEHAVIOR,
                 "Positive behavior: " + behavior.getTitle(),
                 id, recordedBy);
     }

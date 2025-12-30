@@ -64,7 +64,7 @@
                                                               (${item.transaction.type == 'REWARD'} ? 'bg-danger' : 
                                                               (${item.transaction.type == 'PENALTY'} ? 'bg-warning' : 
                                                               (${item.transaction.type == 'BEHAVIOR'} ? 'bg-primary' : 'bg-info')))"
-                                                th:text="${item.transaction.type}">Typ</span>
+                                                th:text="#{__${'point.transaction.type.' + item.transaction.type}__}">Typ</span>
                                         </td>
                                         <td class="text-end"
                                             th:classappend="${item.transaction.points > 0} ? 'positive' : 'negative'">

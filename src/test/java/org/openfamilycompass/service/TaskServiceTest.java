@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.Task;
 import org.openfamilycompass.model.TaskStatus;
@@ -128,7 +129,8 @@ class TaskServiceTest {
         assertThat(result.getStatus()).isEqualTo(TaskStatus.APPROVED);
         assertThat(result.getApprovedBy()).isEqualTo(testUser);
         assertThat(result.getAwardedPoints()).isEqualTo(10);
-        verify(pointService).addPoints(any(), eq(10), eq("TASK"), anyString(), anyLong(), eq(testUser));
+        verify(pointService).addPoints(any(), eq(10), eq(PointTransactionType.TASK), anyString(), anyLong(),
+                eq(testUser));
     }
 
     @Test

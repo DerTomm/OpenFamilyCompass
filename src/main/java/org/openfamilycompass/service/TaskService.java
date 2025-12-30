@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.Task;
 import org.openfamilycompass.model.TaskStatus;
@@ -78,7 +79,7 @@ public class TaskService {
         // Credit points
         Long taskId2 = Objects.requireNonNull(task.getId(), "Task ID must not be null");
         pointService.addPoints(task.getAssignedUser(), awardedPoints,
-                "TASK", "Task completed: " + task.getTitle(),
+                PointTransactionType.TASK, "Task completed: " + task.getTitle(),
                 taskId2, approver);
 
         // If recurring task, create next instance
