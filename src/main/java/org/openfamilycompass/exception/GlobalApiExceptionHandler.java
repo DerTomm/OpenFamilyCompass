@@ -1,6 +1,6 @@
 package org.openfamilycompass.exception;
 
-import org.openfamilycompass.controller.AuthApiController;
+import org.openfamilycompass.controller.AdminController;
 import org.openfamilycompass.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import lombok.extern.slf4j.Slf4j;
 
-@RestControllerAdvice(basePackageClasses = { AuthApiController.class })
+@RestControllerAdvice(basePackageClasses = { AdminController.class })
 @Slf4j
 public class GlobalApiExceptionHandler {
 

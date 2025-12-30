@@ -1,21 +1,18 @@
 package org.openfamilycompass.config;
 
-import org.openfamilycompass.security.JwtAuthenticationFilter;
-import org.openfamilycompass.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,26 +22,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final UserService userService;
-        private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
         @Bean
         public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
                 return config.getAuthenticationManager();
         }
 
-        // API Security: Stateless with JWT
+        // API Security: Stateless with OIDC JWT
         @Bean
-        @Order(1)
+        @Order(3)
         public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .securityMatcher("/api/**")
-                                .userDetailsService(userService)
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/api/avatar/icons").permitAll()
                                                 .anyRequest().authenticated())
+                                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .csrf(csrf -> csrf.disable())
@@ -58,14 +51,13 @@ public class SecurityConfig {
         // Web UI Security: Stateful with form login - ONLY for non-API requests
         @Bean
         @Order(2)
-        public SecurityFilterChain webFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector)
+        public SecurityFilterChain webFilterChain(HttpSecurity http)
                         throws Exception {
 
                 http
 
                                 .securityMatcher(new NegatedRequestMatcher(
                                                 PathPatternRequestMatcher.withDefaults().matcher("/api/**")))
-                                .userDetailsService(userService)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**",
                                                                 "/favicon.png", "/favicon.ico")
@@ -85,6 +77,10 @@ public class SecurityConfig {
                                                 .defaultSuccessUrl("/dashboard", true)
                                                 .failureUrl("/login?error=true")
                                                 .permitAll())
+                                .rememberMe(remember -> remember
+                                                .key("openFamilyCompassKey")
+                                                .tokenValiditySeconds(86400 * 30) // 30 Tage
+                                                .rememberMeParameter("remember-me"))
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/")
