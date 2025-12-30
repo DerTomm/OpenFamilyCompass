@@ -38,9 +38,9 @@ public class RewardRedemptionService {
 
         RewardRedemption saved = redemptionRepository.save(redemption);
 
-        // Note: Points are NOT deducted here - they will be deducted only after
-        // approval
-        // This allows children to request rewards without losing points immediately
+        // Deduct points immediately when requesting the reward
+        pointService.deductPoints(user, reward.getPointsCost(), PointTransactionType.REWARD,
+                "Reward requested: " + reward.getTitle(), saved.getId(), user);
 
         return saved;
     }
@@ -54,10 +54,7 @@ public class RewardRedemptionService {
             throw new IllegalStateException("Redemption not in REQUESTED state");
         }
 
-        // Deduct points when approving the redemption
-        pointService.deductPoints(redemption.getUser(), redemption.getPointsSpent(), PointTransactionType.REWARD,
-                "Reward approved: " + redemption.getReward().getTitle(),
-                redemptionId, approver);
+        // Points are already deducted when requesting, so no need to deduct again
 
         redemption.setStatus(RewardStatus.APPROVED);
         redemption.setApprovedAt(LocalDateTime.now());
@@ -83,15 +80,11 @@ public class RewardRedemptionService {
         RewardRedemption redemption = redemptionRepository.findById(redemptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Redemption not found"));
 
-        // Only refund points if the redemption was already approved (points were
-        // deducted)
-        if (redemption.getStatus() == RewardStatus.APPROVED) {
-            // Return points
-            Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
-            pointService.addPoints(redemption.getUser(), redemption.getPointsSpent(),
-                    PointTransactionType.REWARD, "Reward cancelled: " + redemption.getReward().getTitle(),
-                    redemptionId2, cancelledBy);
-        }
+        // Return points since they were deducted when the reward was requested
+        Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
+        pointService.addPoints(redemption.getUser(), redemption.getPointsSpent(),
+                PointTransactionType.REWARD, "Reward cancelled: " + redemption.getReward().getTitle(),
+                redemptionId2, cancelledBy);
 
         redemption.setStatus(RewardStatus.CANCELLED);
 
