@@ -48,12 +48,6 @@ public class AuthorizationServerConfig {
         http.exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
 
-        http.formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/perform_login")
-                .defaultSuccessUrl("/dashboard", true)
-                .failureUrl("/login?error=true"));
-
         return http.build();
     }
 
