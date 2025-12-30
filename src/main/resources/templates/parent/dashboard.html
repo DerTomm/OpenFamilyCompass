@@ -111,9 +111,9 @@
 
                                         <h5 class="text-center mb-1" th:text="${child.firstName}">Kind</h5>
                                         <p class="text-center mb-3">
-                                            <span class="badge bg-success">
-                                                ⭐ <span th:text="${child.totalPoints}">0</span> Punkte
-                                            </span>
+                                            ⭐ <span
+                                                th:text="${child.totalPoints != null ? child.totalPoints : 0}">0</span>
+                                            Punkte
                                         </p>
 
                                         <div class="text-center">
