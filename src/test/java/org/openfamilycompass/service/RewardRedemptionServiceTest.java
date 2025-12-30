@@ -26,6 +26,7 @@ import org.openfamilycompass.model.RewardStatus;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.RewardRedemptionRepository;
+import org.openfamilycompass.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class RewardRedemptionServiceTest {
@@ -35,6 +36,12 @@ class RewardRedemptionServiceTest {
 
     @Mock
     private PointService pointService;
+
+    @Mock
+    private NotificationService notificationService;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private RewardRedemptionService redemptionService;

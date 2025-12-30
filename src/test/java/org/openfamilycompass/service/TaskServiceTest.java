@@ -27,6 +27,7 @@ import org.openfamilycompass.model.TaskStatus;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.TaskRepository;
+import org.openfamilycompass.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
@@ -36,6 +37,12 @@ class TaskServiceTest {
 
     @Mock
     private PointService pointService;
+
+    @Mock
+    private NotificationService notificationService;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private TaskService taskService;

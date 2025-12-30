@@ -8,5 +8,6 @@
     "editor.formatOnSave": true,
     "java.saveActions.organizeImports": true,
     "java.format.enabled": true,
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.debug.settings.onBuildFailureProceed": true
 }

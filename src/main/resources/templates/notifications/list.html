@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Benachrichtigungen - OpenFamilyCompass</title>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <div class="container my-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3">
+                            <i class="fas fa-bell text-primary me-2"></i>
+                            Benachrichtigungen
+                        </h1>
+                        <button id="markAllReadBtn" class="btn btn-outline-primary">
+                            <i class="fas fa-check-double"></i> Alle als gelesen markieren
+                        </button>
+                    </div>
+
+                    <div th:if="${notifications.empty}" class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Keine Benachrichtigungen</h4>
+                        <p class="text-muted">Hier werden Ihre Benachrichtigungen angezeigt.</p>
+                    </div>
+
+                    <div th:if="${!notifications.empty}" class="row">
+                        <div class="col-12">
+                            <div class="list-group">
+                                <div th:each="notification : ${notifications}"
+                                    class="list-group-item list-group-item-action">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            <i th:classappend="'fas fa-lg ' + ${notification.type.iconClass}"
+                                                th:class="'text-' + ${notification.type.colorClass}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <h6 class="mb-1 fw-bold" th:text="${notification.title}">Titel</h6>
+                                                <div class="text-muted small">
+                                                    <span
+                                                        th:text="${#temporals.format(notification.createdAt, 'dd.MM.yyyy HH:mm')}">Zeit</span>
+                                                    <span th:if="${!notification.read}"
+                                                        class="badge bg-primary ms-2">Neu</span>
+                                                </div>
+                                            </div>
+                                            <p class="mb-1 text-muted" th:text="${notification.message}">Nachricht</p>
+                                            <div th:if="${notification.referenceId != null}" class="mt-2">
+                                                <a th:if="${notification.type.name().startsWith('TASK_')}"
+                                                    th:href="'/parent/tasks#' + ${notification.referenceId}"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-tasks"></i> Aufgabe anzeigen
+                                                </a>
+                                                <a th:if="${notification.type.name().startsWith('REWARD_')}"
+                                                    th:href="'/parent/rewards#' + ${notification.referenceId}"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-gift"></i> Belohnung anzeigen
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script>
+            document.getElementById('markAllReadBtn').addEventListener('click', function () {
+                fetch('/notifications/mark-all-read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content')
+                    }
+                }).then(() => {
+                    // Entferne alle "Neu" Badges und aktualisiere die Seite
+                    location.reload();
+                }).catch(error => console.error('Error marking all notifications as read:', error));
+            });
+        </script>
+    </div>
+</body>
+
+</html>

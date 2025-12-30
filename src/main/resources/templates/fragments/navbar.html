@@ -110,6 +110,9 @@
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <div th:replace="~{fragments/notifications :: notificationDropdown(${notifications})}"></div>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#"
                             id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -165,6 +168,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <div th:replace="~{fragments/notifications :: notificationDropdown(${notifications})}"></div>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#"
                             id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

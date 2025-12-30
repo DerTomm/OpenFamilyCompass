@@ -53,7 +53,6 @@ class RewardRedemptionIntegrationTest {
     private User testParent;
     private User testChild;
     private Reward testReward;
-    private RewardRedemption testRedemption;
 
     @BeforeEach
     void setUp() {
@@ -101,7 +100,7 @@ class RewardRedemptionIntegrationTest {
         }
 
         // Request reward (this will deduct points)
-        testRedemption = redemptionService.requestReward(testChild, testReward);
+        redemptionService.requestReward(testChild, testReward);
     }
 
     @Test
@@ -175,7 +174,6 @@ class RewardRedemptionIntegrationTest {
 
         // Request reward (this will deduct points)
         RewardRedemption testRedemptionLocal = redemptionService.requestReward(testChildLocal, testRewardLocal);
-        int pointsAfterRequest = testChildLocal.getTotalPoints() - 50; // Should be 50
 
         // When
         mockMvc.perform(post("/parent/redemptions/{id}/approve", testRedemptionLocal.getId())

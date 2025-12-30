@@ -5,12 +5,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import org.openfamilycompass.model.NotificationType;
 import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.Task;
 import org.openfamilycompass.model.TaskStatus;
 import org.openfamilycompass.model.User;
+import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.TaskRepository;
+import org.openfamilycompass.repository.UserRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,8 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final PointService pointService;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     @Transactional
     public Task createTask(@NonNull String title, String description, int basePoints,
@@ -56,7 +61,21 @@ public class TaskService {
         task.setStatus(TaskStatus.CHILD_COMPLETED);
         task.setCompletedAt(LocalDateTime.now());
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        // Notify all parents about completed task
+        List<User> parents = userRepository.findByRole(UserRole.PARENT);
+        for (User parent : parents) {
+            notificationService.createNotification(
+                    parent,
+                    NotificationType.TASK_COMPLETED,
+                    "Aufgabe abgeschlossen",
+                    String.format("'%s' hat die Aufgabe '%s' abgeschlossen und wartet auf Genehmigung.",
+                            child.getFirstName(), task.getTitle()),
+                    task.getId());
+        }
+
+        return savedTask;
     }
 
     @Transactional
@@ -82,6 +101,15 @@ public class TaskService {
                 PointTransactionType.TASK, "Task completed: " + task.getTitle(),
                 taskId2, approver);
 
+        // Notify child about approved task and points
+        notificationService.createNotification(
+                task.getAssignedUser(),
+                NotificationType.TASK_APPROVED,
+                "Aufgabe genehmigt",
+                String.format("Deine Aufgabe '%s' wurde genehmigt! Du hast %d Punkte erhalten.",
+                        task.getTitle(), awardedPoints),
+                task.getId());
+
         // If recurring task, create next instance
         if (task.getRecurrenceType() != RecurrenceType.ONCE) {
             createNextRecurrence(task);
@@ -99,7 +127,18 @@ public class TaskService {
         task.setApprovedBy(rejector);
         task.setParentNotes(notes);
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        // Notify child about rejected task
+        notificationService.createNotification(
+                task.getAssignedUser(),
+                NotificationType.TASK_REJECTED,
+                "Aufgabe abgelehnt",
+                String.format("Deine Aufgabe '%s' wurde abgelehnt. %s",
+                        task.getTitle(), notes != null ? "Notiz: " + notes : ""),
+                task.getId());
+
+        return savedTask;
     }
 
     @Transactional

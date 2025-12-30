@@ -4,12 +4,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import org.openfamilycompass.model.NotificationType;
 import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
 import org.openfamilycompass.model.RewardStatus;
 import org.openfamilycompass.model.User;
+import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.RewardRedemptionRepository;
+import org.openfamilycompass.repository.UserRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,8 @@ public class RewardRedemptionService {
 
     private final RewardRedemptionRepository redemptionRepository;
     private final PointService pointService;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     @Transactional
     public RewardRedemption requestReward(@NonNull User user, @NonNull Reward reward) {
@@ -42,6 +47,18 @@ public class RewardRedemptionService {
         pointService.deductPoints(user, reward.getPointsCost(), PointTransactionType.REWARD,
                 "Reward requested: " + reward.getTitle(), saved.getId(), user);
 
+        // Notify all parents about reward request
+        List<User> parents = userRepository.findByRole(UserRole.PARENT);
+        for (User parent : parents) {
+            notificationService.createNotification(
+                    parent,
+                    NotificationType.REWARD_REQUESTED,
+                    "Belohnungsanfrage",
+                    String.format("%s möchte die Belohnung '%s' (%d Punkte) einlösen.",
+                            user.getFirstName(), reward.getTitle(), reward.getPointsCost()),
+                    saved.getId());
+        }
+
         return saved;
     }
 
@@ -61,7 +78,19 @@ public class RewardRedemptionService {
         redemption.setApprovedBy(approver);
         redemption.setNotes(notes);
 
-        return redemptionRepository.save(redemption);
+        RewardRedemption saved = redemptionRepository.save(redemption);
+
+        // Notify child about approved reward
+        notificationService.createNotification(
+                redemption.getUser(),
+                NotificationType.REWARD_APPROVED,
+                "Belohnung genehmigt",
+                String.format("Deine Belohnung '%s' wurde genehmigt! %s",
+                        redemption.getReward().getTitle(),
+                        notes != null ? "Notiz: " + notes : ""),
+                redemption.getId());
+
+        return saved;
     }
 
     @Transactional
@@ -88,7 +117,18 @@ public class RewardRedemptionService {
 
         redemption.setStatus(RewardStatus.CANCELLED);
 
-        return redemptionRepository.save(redemption);
+        RewardRedemption saved = redemptionRepository.save(redemption);
+
+        // Notify child about rejected reward
+        notificationService.createNotification(
+                redemption.getUser(),
+                NotificationType.REWARD_REJECTED,
+                "Belohnung abgelehnt",
+                String.format("Deine Belohnung '%s' wurde abgelehnt. Die Punkte wurden zurückerstattet.",
+                        redemption.getReward().getTitle()),
+                redemption.getId());
+
+        return saved;
     }
 
     public List<RewardRedemption> findByUser(@NonNull User user) {
