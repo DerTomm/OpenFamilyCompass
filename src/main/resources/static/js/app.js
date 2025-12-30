@@ -35,13 +35,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Task completion confirmation
-    const completeTaskButtons = document.querySelectorAll('button[type="submit"]:contains("erledigt")');
+    const completeTaskButtons = document.querySelectorAll('button[type="submit"]');
     completeTaskButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            // Optional: Add visual feedback
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Wird gespeichert...';
-            this.disabled = true;
-        });
+        if (button.textContent.toLowerCase().includes('erledigt')) {
+            button.addEventListener('click', function (e) {
+                // Optional: Add visual feedback
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Wird gespeichert...';
+                this.disabled = true;
+            });
+        }
     });
 });
 

@@ -1,6 +1,10 @@
 package org.openfamilycompass.controller;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
@@ -14,6 +18,7 @@ import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.service.BehaviorEvaluationService;
 import org.openfamilycompass.service.BehaviorService;
 import org.openfamilycompass.service.PointService;
+import org.openfamilycompass.service.PointTransactionWithBalance;
 import org.openfamilycompass.service.RewardRedemptionService;
 import org.openfamilycompass.service.RewardService;
 import org.openfamilycompass.service.TaskService;
@@ -50,6 +55,12 @@ public class ParentController {
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         List<User> children = userService.findAllByRole(UserRole.CHILD);
+
+        // Ensure all children have current point totals
+        children.forEach(child -> {
+            pointService.updateUserPoints(child);
+        });
+
         List<Task> pendingApprovals = taskService.findPendingApproval();
         List<RewardRedemption> pendingRedemptions = redemptionService.findPendingApprovals();
 
@@ -171,18 +182,57 @@ public class ParentController {
     }
 
     @GetMapping("/children/{id}")
-    public String childDetails(@PathVariable Long id, Model model) {
+    public String childDetails(@PathVariable Long id, @RequestParam(defaultValue = "ALL") String period, Model model) {
         User child = userService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        // Calculate start date based on period
+        LocalDateTime startDate = calculateStartDate(period);
+
+        // Get transactions with balance for the period
+        List<PointTransactionWithBalance> transactionsWithBalance = pointService
+                .getTransactionHistoryWithBalance(child);
+
+        // Filter by date if not ALL
+        if (!"ALL".equals(period)) {
+            transactionsWithBalance = transactionsWithBalance.stream()
+                    .filter(t -> t.getTransaction().getCreatedAt().isAfter(startDate))
+                    .toList();
+        }
+
+        // Prepare chart data
+        List<Map<String, Object>> chartData = new ArrayList<>();
+        for (PointTransactionWithBalance t : transactionsWithBalance) {
+            Map<String, Object> dataPoint = new HashMap<>();
+            dataPoint.put("date", t.getTransaction().getCreatedAt().toLocalDate().toString());
+            dataPoint.put("balance", t.getBalance());
+            chartData.add(dataPoint);
+        }
+
+        // Reverse to show chronologically in chart
+        java.util.Collections.reverse(chartData);
+
         List<Task> tasks = taskService.findByUser(child);
-        List<Behavior> behaviors = behaviorService.findAllActive();
 
         model.addAttribute("child", child);
+        model.addAttribute("transactionsWithBalance", transactionsWithBalance);
+        model.addAttribute("chartData", chartData);
         model.addAttribute("tasks", tasks);
-        model.addAttribute("behaviors", behaviors);
+        model.addAttribute("selectedPeriod", period);
 
         return "parent/child-details";
+    }
+
+    private LocalDateTime calculateStartDate(String period) {
+        LocalDateTime now = LocalDateTime.now();
+        return switch (period.toUpperCase()) {
+            case "TODAY" -> now.toLocalDate().atStartOfDay();
+            case "7DAYS" -> now.minusDays(7);
+            case "30DAYS" -> now.minusDays(30);
+            case "180DAYS" -> now.minusDays(180);
+            case "365DAYS" -> now.minusDays(365);
+            default -> LocalDateTime.MIN; // ALL
+        };
     }
 
     @GetMapping("/behaviors")

@@ -2,23 +2,44 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layout}" th:attr="data-bs-theme=${userTheme}">
 
+<head>
+    <title th:text="'Details: ' + ${child.firstName} + ' - OpenFamilyCompass'">Kind Details</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
 <body>
     <div layout:fragment="content" class="container my-4">
+        <!-- Child Header -->
         <div class="row mb-4">
-            <div class="col-md-12">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-body text-center">
-                        <div th:if="${child.avatarPath}">
-                            <img th:src="@{${child.avatarPath}}" class="rounded-circle mb-3"
-                                style="width: 150px; height: 150px;" alt="Avatar">
+                        <!-- Avatar Display -->
+                        <div class="mb-3">
+                            <!-- Photo Avatar -->
+                            <img th:if="${child.avatarType == 'PHOTO'}" th:src="@{/avatar/{userId}(userId=${child.id})}"
+                                class="rounded-circle"
+                                style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #28a745;"
+                                alt="Avatar">
+
+                            <!-- Icon Avatar -->
+                            <img th:if="${child.avatarType == 'ICON' and child.avatarIconName != null}"
+                                th:src="@{/images/avatars/{icon}.svg(icon=${child.avatarIconName})}"
+                                class="rounded-circle"
+                                style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #28a745; padding: 15px; background: white;"
+                                alt="Avatar">
+
+                            <!-- Default Avatar -->
+                            <div th:if="${child.avatarType == 'DEFAULT' or (child.avatarType == 'ICON' and child.avatarIconName == null)}"
+                                class="rounded-circle bg-secondary mx-auto d-inline-flex align-items-center justify-content-center"
+                                style="width: 120px; height: 120px; border: 4px solid #28a745;">
+                                <i class="fas fa-user fa-3x text-white"></i>
+                            </div>
                         </div>
-                        <div th:unless="${child.avatarPath}" class="rounded-circle bg-secondary mx-auto mb-3"
-                            style="width: 150px; height: 150px; line-height: 150px; font-size: 5rem; display: inline-block;">
-                            👤
-                        </div>
-                        <h2 th:text="${child.firstName}">Kind</h2>
+
+                        <h1 class="h2 mb-2" th:text="${child.firstName}">Kind</h1>
                         <p class="mb-0">
-                            <span class="badge bg-success" style="font-size: 1.5rem;">
+                            <span class="badge bg-success fs-5">
                                 ⭐ <span th:text="${child.totalPoints}">0</span> Punkte
                             </span>
                         </p>
@@ -27,11 +48,131 @@
             </div>
         </div>
 
-        <div class="row">
+        <!-- Time Period Selector -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-calendar-alt"></i> Zeitraum auswählen</h5>
+                        <div class="btn-group" role="group">
+                            <a th:href="@{/parent/children/{id}(id=${child.id}, period='TODAY')}"
+                                class="btn btn-outline-primary"
+                                th:classappend="${selectedPeriod == 'TODAY'} ? 'active' : ''">
+                                Heute
+                            </a>
+                            <a th:href="@{/parent/children/{id}(id=${child.id}, period='7DAYS')}"
+                                class="btn btn-outline-primary"
+                                th:classappend="${selectedPeriod == '7DAYS'} ? 'active' : ''">
+                                7 Tage
+                            </a>
+                            <a th:href="@{/parent/children/{id}(id=${child.id}, period='30DAYS')}"
+                                class="btn btn-outline-primary"
+                                th:classappend="${selectedPeriod == '30DAYS'} ? 'active' : ''">
+                                30 Tage
+                            </a>
+                            <a th:href="@{/parent/children/{id}(id=${child.id}, period='180DAYS')}"
+                                class="btn btn-outline-primary"
+                                th:classappend="${selectedPeriod == '180DAYS'} ? 'active' : ''">
+                                180 Tage
+                            </a>
+                            <a th:href="@{/parent/children/{id}(id=${child.id}, period='365DAYS')}"
+                                class="btn btn-outline-primary"
+                                th:classappend="${selectedPeriod == '365DAYS'} ? 'active' : ''">
+                                365 Tage
+                            </a>
+                            <a th:href="@{/parent/children/{id}(id=${child.id}, period='ALL')}"
+                                class="btn btn-outline-primary"
+                                th:classappend="${selectedPeriod == 'ALL'} ? 'active' : ''">
+                                Gesamt
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Points Chart -->
+        <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-tasks"></i> Aufgaben</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Punkteentwicklung</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="pointsChart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-history"></i> Letzte Transaktionen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>Typ</th>
+                                        <th>Beschreibung</th>
+                                        <th>Punkte</th>
+                                        <th>Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="transaction : ${transactionsWithBalance}">
+                                        <td
+                                            th:text="${#temporals.format(transaction.transaction.createdAt, 'dd.MM.yyyy HH:mm')}">
+                                            Datum</td>
+                                        <td>
+                                            <span class="badge"
+                                                th:classappend="${transaction.transaction.type.name() == 'TASK'} ? 'bg-success' :
+                                                                   (${transaction.transaction.type.name() == 'REWARD'} ? 'bg-danger' :
+                                                                   (${transaction.transaction.type.name() == 'BEHAVIOR'} ? 'bg-warning' :
+                                                                   (${transaction.transaction.type.name() == 'BONUS'} ? 'bg-info' : 'bg-secondary')))">
+                                                <i
+                                                    th:classappend="${transaction.transaction.type.name() == 'TASK'} ? 'fas fa-tasks' :
+                                                                  (${transaction.transaction.type.name() == 'REWARD'} ? 'fas fa-gift' :
+                                                                  (${transaction.transaction.type.name() == 'BEHAVIOR'} ? 'fas fa-star' :
+                                                                  (${transaction.transaction.type.name() == 'BONUS'} ? 'fas fa-plus-circle' : 'fas fa-coins')))"></i>
+                                                <span th:text="${transaction.transaction.type}">Typ</span>
+                                            </span>
+                                        </td>
+                                        <td th:text="${transaction.transaction.description}">Beschreibung</td>
+                                        <td>
+                                            <span
+                                                th:class="${transaction.transaction.points >= 0 ? 'text-success' : 'text-danger'}">
+                                                <span th:if="${transaction.transaction.points >= 0}">+</span>
+                                                <span th:text="${transaction.transaction.points}">0</span>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong th:text="${transaction.balance}">0</strong>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${transactionsWithBalance.isEmpty()}">
+                                        <td colspan="5" class="text-center text-muted">Keine Transaktionen in diesem
+                                            Zeitraum</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Overview -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-tasks"></i> Aktuelle Aufgaben</h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -68,6 +209,77 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function () {
+                const chartData = /*[[${chartData}]]*/[];
+
+                if (chartData && chartData.length > 0) {
+                    try {
+                        const labels = chartData.map(d => {
+                            const date = new Date(d.date);
+                            return date.toLocaleDateString('de-DE');
+                        });
+                        const balances = chartData.map(d => d.balance);
+
+                        const ctx = document.getElementById('pointsChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Punkteverlauf',
+                                    data: balances,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                    tension: 0.1,
+                                    fill: true
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: {
+                                    legend: {
+                                        display: true,
+                                        position: 'top'
+                                    },
+                                    title: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Punkte'
+                                        }
+                                    },
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Datum'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Fehler beim Erstellen des Charts:', error);
+                        document.getElementById('pointsChart').parentElement.innerHTML =
+                            '<p class="text-center text-muted">Fehler beim Laden des Diagramms</p>';
+                    }
+                } else {
+                    document.getElementById('pointsChart').parentElement.innerHTML =
+                        '<p class="text-center text-muted">Keine Daten für den ausgewählten Zeitraum</p>';
+                }
+            });
+            /*]]>*/
+        </script>
     </div>
 </body>
 
