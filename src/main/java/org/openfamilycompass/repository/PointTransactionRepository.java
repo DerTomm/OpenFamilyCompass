@@ -15,6 +15,8 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
 
     List<PointTransaction> findByUserOrderByCreatedAtDesc(User user);
 
+    List<PointTransaction> findByUserOrderByCreatedAtAsc(User user);
+
     @Query("SELECT SUM(pt.points) FROM PointTransaction pt WHERE pt.user = :user")
     Integer sumPointsByUser(User user);
 }

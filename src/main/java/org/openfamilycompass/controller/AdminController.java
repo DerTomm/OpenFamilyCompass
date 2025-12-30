@@ -48,7 +48,7 @@ public class AdminController {
             @RequestParam UserRole role,
             @RequestParam String firstName,
             @RequestParam(required = false) String avatarPath) {
-        User user = userService.createUser(username, password, role, firstName);
+        userService.createUser(username, password, role, firstName);
 
         return "redirect:/admin/users";
     }

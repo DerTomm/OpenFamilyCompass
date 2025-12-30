@@ -1,7 +1,8 @@
 package org.openfamilycompass.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import org.openfamilycompass.model.PointTransaction;
 import org.openfamilycompass.model.User;
@@ -67,7 +68,6 @@ public class PointService {
 
     @Transactional
     public void updateUserPoints(@NonNull User user) {
-        Long userId = Objects.requireNonNull(user.getId(), "User ID must not be null");
         Integer totalPoints = pointTransactionRepository.sumPointsByUser(user);
         if (totalPoints == null) {
             totalPoints = 0;
@@ -78,6 +78,21 @@ public class PointService {
 
     public List<PointTransaction> getTransactionHistory(@NonNull User user) {
         return pointTransactionRepository.findByUserOrderByCreatedAtDesc(user);
+    }
+
+    public List<PointTransactionWithBalance> getTransactionHistoryWithBalance(@NonNull User user) {
+        List<PointTransaction> transactions = pointTransactionRepository.findByUserOrderByCreatedAtAsc(user);
+        List<PointTransactionWithBalance> result = new ArrayList<>();
+        int runningBalance = 0;
+
+        for (PointTransaction transaction : transactions) {
+            runningBalance += transaction.getPoints();
+            result.add(new PointTransactionWithBalance(transaction, runningBalance));
+        }
+
+        // Reverse to show newest first
+        Collections.reverse(result);
+        return result;
     }
 
     public int calculateTotalPoints(@NonNull User user) {

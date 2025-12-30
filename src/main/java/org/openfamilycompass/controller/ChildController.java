@@ -2,13 +2,13 @@ package org.openfamilycompass.controller;
 
 import java.util.List;
 
-import org.openfamilycompass.model.PointTransaction;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
 import org.openfamilycompass.model.Task;
 import org.openfamilycompass.model.TaskStatus;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.service.PointService;
+import org.openfamilycompass.service.PointTransactionWithBalance;
 import org.openfamilycompass.service.RewardRedemptionService;
 import org.openfamilycompass.service.RewardService;
 import org.openfamilycompass.service.TaskService;
@@ -95,11 +95,15 @@ public class ChildController {
     public String redeemReward(@PathVariable Long rewardId, Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
 
+        // Load fresh user data to ensure we have current points
+        User freshUser = userService.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         Reward reward = rewardService.findById(rewardId)
                 .orElseThrow(() -> new IllegalArgumentException("Reward not found"));
 
         try {
-            redemptionService.requestReward(currentUser, reward);
+            redemptionService.requestReward(freshUser, reward);
         } catch (IllegalStateException e) {
             // Nicht genug Punkte
             return "redirect:/child/shop?error=notenough";
@@ -112,10 +116,15 @@ public class ChildController {
     public String history(Authentication authentication, Model model) {
         User currentUser = (User) authentication.getPrincipal();
 
-        List<PointTransaction> transactions = pointService.getTransactionHistory(currentUser);
+        // Load fresh user data from database to get updated points
+        User freshUser = userService.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        model.addAttribute("user", currentUser);
-        model.addAttribute("transactions", transactions);
+        List<PointTransactionWithBalance> transactionsWithBalance = pointService
+                .getTransactionHistoryWithBalance(freshUser);
+
+        model.addAttribute("user", freshUser);
+        model.addAttribute("transactions", transactionsWithBalance);
 
         return "child/history";
     }

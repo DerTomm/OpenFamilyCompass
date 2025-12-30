@@ -47,42 +47,48 @@
                                         <th th:text="#{history.description}">Description</th>
                                         <th th:text="#{history.type}">Type</th>
                                         <th class="text-end" th:text="#{history.points}">Points</th>
+                                        <th class="text-end" th:text="#{history.balance}">Balance</th>
                                         <th class="text-center" th:text="#{history.details}">Details</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="transaction : ${transactions}">
-                                        <td th:text="${#temporals.format(transaction.createdAt, 'dd.MM.yyyy HH:mm')}">
+                                    <tr th:each="item : ${transactions}">
+                                        <td
+                                            th:text="${#temporals.format(item.transaction.createdAt, 'dd.MM.yyyy HH:mm')}">
                                             Datum
                                         </td>
-                                        <td th:text="${transaction.description}">Beschreibung</td>
+                                        <td th:text="${item.transaction.description}">Beschreibung</td>
                                         <td>
                                             <span class="badge"
-                                                th:classappend="${transaction.type == 'TASK'} ? 'bg-success' : 
-                                                              (${transaction.type == 'REWARD'} ? 'bg-danger' : 
-                                                              (${transaction.type == 'PENALTY'} ? 'bg-warning' : 
-                                                              (${transaction.type == 'BEHAVIOR'} ? 'bg-primary' : 'bg-info')))"
-                                                th:text="${transaction.type}">Typ</span>
+                                                th:classappend="${item.transaction.type == 'TASK'} ? 'bg-success' : 
+                                                              (${item.transaction.type == 'REWARD'} ? 'bg-danger' : 
+                                                              (${item.transaction.type == 'PENALTY'} ? 'bg-warning' : 
+                                                              (${item.transaction.type == 'BEHAVIOR'} ? 'bg-primary' : 'bg-info')))"
+                                                th:text="${item.transaction.type}">Typ</span>
                                         </td>
                                         <td class="text-end"
-                                            th:classappend="${transaction.points > 0} ? 'positive' : 'negative'">
-                                            <span th:if="${transaction.points > 0}">+</span>
-                                            <span th:text="${transaction.points}">0</span>
+                                            th:classappend="${item.transaction.points > 0} ? 'positive' : 'negative'">
+                                            <span th:if="${item.transaction.points > 0}">+</span>
+                                            <span th:text="${item.transaction.points}">0</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span th:text="${item.balance}">0</span>
                                         </td>
                                         <td class="text-center">
                                             <button
-                                                th:if="${transaction.remarks != null and !#strings.isEmpty(transaction.remarks)}"
+                                                th:if="${item.transaction.remarks != null and !#strings.isEmpty(item.transaction.remarks)}"
                                                 class="btn btn-sm btn-outline-primary"
-                                                th:data-transaction-id="${transaction.id}"
-                                                th:data-description="${transaction.description}"
-                                                th:data-remarks="${transaction.remarks}" onclick="showRemarks(this)">
+                                                th:data-transaction-id="${item.transaction.id}"
+                                                th:data-description="${item.transaction.description}"
+                                                th:data-remarks="${item.transaction.remarks}"
+                                                onclick="showRemarks(this)">
                                                 <i class="fas fa-comment-dots"></i> <span
                                                     th:text="#{history.remarks}">Remarks</span>
                                             </button>
                                         </td>
                                     </tr>
                                     <tr th:if="${transactions.isEmpty()}">
-                                        <td colspan="5" class="text-center text-muted"
+                                        <td colspan="6" class="text-center text-muted"
                                             th:text="#{history.no.activities}">
                                             No activities yet.
                                         </td>

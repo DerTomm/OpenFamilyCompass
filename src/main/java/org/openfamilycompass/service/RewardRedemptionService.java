@@ -37,11 +37,9 @@ public class RewardRedemptionService {
 
         RewardRedemption saved = redemptionRepository.save(redemption);
 
-        // Deduct points provisionally
-        Long redemptionId = Objects.requireNonNull(saved.getId(), "Redemption ID must not be null");
-        pointService.deductPoints(user, reward.getPointsCost(), "REWARD",
-                "Reward requested: " + reward.getTitle(),
-                redemptionId, null);
+        // Note: Points are NOT deducted here - they will be deducted only after
+        // approval
+        // This allows children to request rewards without losing points immediately
 
         return saved;
     }
@@ -54,6 +52,11 @@ public class RewardRedemptionService {
         if (redemption.getStatus() != RewardStatus.REQUESTED) {
             throw new IllegalStateException("Redemption not in REQUESTED state");
         }
+
+        // Deduct points when approving the redemption
+        pointService.deductPoints(redemption.getUser(), redemption.getPointsSpent(), "REWARD",
+                "Reward approved: " + redemption.getReward().getTitle(),
+                redemptionId, approver);
 
         redemption.setStatus(RewardStatus.APPROVED);
         redemption.setApprovedAt(LocalDateTime.now());
