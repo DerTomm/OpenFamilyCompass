@@ -32,13 +32,30 @@
 
                         <hr>
 
-                        <form th:action="@{/parent/redemptions/{id}/approve(id=${redemption.id})}" method="post"
-                            class="d-inline">
-                            <input type="text" class="form-control mb-2" name="notes" placeholder="Notizen (optional)">
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-check"></i> <span th:text="#{rewards.pending.approve}">Approve</span>
-                            </button>
-                        </form>
+                        <div class="row">
+                            <div class="col-6">
+                                <form th:action="@{/parent/redemptions/{id}/approve(id=${redemption.id})}" method="post"
+                                    class="d-inline">
+                                    <input type="text" class="form-control mb-2" name="notes"
+                                        placeholder="Notizen (optional)">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-check"></i> <span
+                                            th:text="#{rewards.pending.approve}">Approve</span>
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-6">
+                                <form th:action="@{/parent/redemptions/{id}/reject(id=${redemption.id})}" method="post"
+                                    class="d-inline">
+                                    <input type="text" class="form-control mb-2" name="notes"
+                                        placeholder="Grund für Ablehnung (optional)">
+                                    <button type="submit" class="btn btn-danger w-100">
+                                        <i class="fas fa-times"></i> <span
+                                            th:text="#{rewards.pending.reject}">Reject</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

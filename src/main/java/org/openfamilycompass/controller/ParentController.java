@@ -125,8 +125,19 @@ public class ParentController {
     public String approveRedemption(@PathVariable Long id,
             @RequestParam(required = false) String notes,
             Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
+        User currentUser = userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         redemptionService.approveRedemption(id, currentUser, notes);
+        return "redirect:/parent/redemptions/pending";
+    }
+
+    @PostMapping("/redemptions/{id}/reject")
+    public String rejectRedemption(@PathVariable Long id,
+            @RequestParam(required = false) String notes,
+            Authentication authentication) {
+        User currentUser = userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        redemptionService.cancelRedemption(id, currentUser);
         return "redirect:/parent/redemptions/pending";
     }
 

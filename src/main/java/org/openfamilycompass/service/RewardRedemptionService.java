@@ -83,17 +83,19 @@ public class RewardRedemptionService {
         RewardRedemption redemption = redemptionRepository.findById(redemptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Redemption not found"));
 
+        // Only refund points if the redemption was already approved (points were
+        // deducted)
+        if (redemption.getStatus() == RewardStatus.APPROVED) {
+            // Return points
+            Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
+            pointService.addPoints(redemption.getUser(), redemption.getPointsSpent(),
+                    PointTransactionType.REWARD, "Reward cancelled: " + redemption.getReward().getTitle(),
+                    redemptionId2, cancelledBy);
+        }
+
         redemption.setStatus(RewardStatus.CANCELLED);
 
-        RewardRedemption saved = redemptionRepository.save(redemption);
-
-        // Return points
-        Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
-        pointService.addPoints(redemption.getUser(), redemption.getPointsSpent(),
-                PointTransactionType.REWARD, "Reward cancelled: " + redemption.getReward().getTitle(),
-                redemptionId2, cancelledBy);
-
-        return saved;
+        return redemptionRepository.save(redemption);
     }
 
     public List<RewardRedemption> findByUser(@NonNull User user) {
