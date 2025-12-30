@@ -140,7 +140,8 @@
                                                                   (${transaction.transaction.type.name() == 'REWARD'} ? 'fas fa-gift' :
                                                                   (${transaction.transaction.type.name() == 'BEHAVIOR'} ? 'fas fa-star' :
                                                                   (${transaction.transaction.type.name() == 'BONUS'} ? 'fas fa-plus-circle' : 'fas fa-coins')))"></i>
-                                                <span th:text="${transaction.transaction.type}">Typ</span>
+                                                <span
+                                                    th:text="#{__${'point.transaction.type.' + transaction.transaction.type}__}">Typ</span>
                                             </span>
                                         </td>
                                         <td th:text="${transaction.transaction.description}">Beschreibung</td>
