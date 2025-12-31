@@ -1,0 +1,55 @@
+# Compiled output
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Android Build
+android-app/build/
+android-app/.gradle/
+android-app/local.properties
+android-app/app/build/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.project
+.classpath
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+I18N_README.md
+TOKEN_AUTH_README.md
+
+# Database
+database/
+
+# Media (kann bei Bedarf angepasst werden)
+media/
