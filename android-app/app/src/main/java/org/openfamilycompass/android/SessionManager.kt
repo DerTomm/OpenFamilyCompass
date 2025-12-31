@@ -1,4 +1,4 @@
-package com.family.kidschores
+package org.openfamilycompass.android
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -8,6 +8,11 @@ class SessionManager(context: Context) {
     
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val cookieManager: CookieManager = CookieManager.getInstance()
+    
+    init {
+        // Aktiviere persistente Cookie-Speicherung
+        cookieManager.setAcceptCookie(true)
+    }
     
     companion object {
         private const val PREFS_NAME = "KidsChoresPrefs"
@@ -46,10 +51,17 @@ class SessionManager(context: Context) {
             apply()
         }
         
-        // Speichere Cookies
-        val cookies = cookieManager.getCookie(getServerUrl())
+        // Speichere Cookies (inkl. Remember-Me Cookie)
+        // Flush zuerst, um sicherzustellen dass alle Cookies geschrieben sind
+        cookieManager.flush()
+        
+        val serverUrl = getServerUrl()
+        val cookies = cookieManager.getCookie(serverUrl)
         if (cookies != null) {
             prefs.edit().putString(KEY_SESSION_COOKIE, cookies).apply()
+            android.util.Log.d("SessionManager", "Saved cookies for $serverUrl: $cookies")
+        } else {
+            android.util.Log.d("SessionManager", "No cookies found for $serverUrl")
         }
     }
     
@@ -60,14 +72,27 @@ class SessionManager(context: Context) {
         val cookies = prefs.getString(KEY_SESSION_COOKIE, null)
         if (cookies != null) {
             val serverUrl = getServerUrl()
+            android.util.Log.d("SessionManager", "Restoring cookies for: $serverUrl")
+            android.util.Log.d("SessionManager", "Cookies to restore: $cookies")
+            
+            // Lösche alte Cookies zuerst
+            cookieManager.removeAllCookies(null)
+            cookieManager.flush()
+            
             // Parse und setze jedes Cookie einzeln
             cookies.split(";").forEach { cookie ->
                 val trimmedCookie = cookie.trim()
                 if (trimmedCookie.isNotEmpty()) {
                     cookieManager.setCookie(serverUrl, trimmedCookie)
+                    android.util.Log.d("SessionManager", "Set cookie: $trimmedCookie")
                 }
             }
+            
+            // Wichtig: Warte auf Completion
             cookieManager.flush()
+            android.util.Log.d("SessionManager", "Cookies restored successfully")
+        } else {
+            android.util.Log.d("SessionManager", "No cookies to restore")
         }
     }
     
@@ -79,6 +104,11 @@ class SessionManager(context: Context) {
         val lastLogin = prefs.getLong(KEY_LAST_LOGIN, 0)
         val cookies = prefs.getString(KEY_SESSION_COOKIE, null)
         
+        android.util.Log.d("SessionManager", "Checking session validity:")
+        android.util.Log.d("SessionManager", "  Username: $username")
+        android.util.Log.d("SessionManager", "  Last Login: $lastLogin")
+        android.util.Log.d("SessionManager", "  Cookies present: ${!cookies.isNullOrEmpty()}")
+        
         // Session ist gültig wenn:
         // - Username vorhanden
         // - Cookies vorhanden
@@ -86,7 +116,10 @@ class SessionManager(context: Context) {
         val thirtyDaysInMillis = 30L * 24 * 60 * 60 * 1000
         val isRecentLogin = (System.currentTimeMillis() - lastLogin) < thirtyDaysInMillis
         
-        return !username.isNullOrEmpty() && !cookies.isNullOrEmpty() && isRecentLogin
+        val isValid = !username.isNullOrEmpty() && !cookies.isNullOrEmpty() && isRecentLogin
+        android.util.Log.d("SessionManager", "  Session valid: $isValid")
+        
+        return isValid
     }
     
     /**
@@ -111,10 +144,11 @@ class SessionManager(context: Context) {
         if (!username.isNullOrEmpty()) {
             prefs.edit().putLong(KEY_LAST_LOGIN, System.currentTimeMillis()).apply()
             
-            // Aktualisiere Cookies
+            // Aktualisiere Cookies (inkl. Remember-Me Cookie falls vorhanden)
             val cookies = cookieManager.getCookie(getServerUrl())
             if (cookies != null) {
                 prefs.edit().putString(KEY_SESSION_COOKIE, cookies).apply()
+                android.util.Log.d("SessionManager", "Refreshed cookies: $cookies")
             }
         }
     }
@@ -131,9 +165,11 @@ class SessionManager(context: Context) {
             apply()
         }
         
-        // Lösche alle Cookies
+        // Lösche alle Cookies (inkl. Remember-Me Cookie)
         cookieManager.removeAllCookies(null)
         cookieManager.flush()
+        
+        android.util.Log.d("SessionManager", "Session and cookies cleared")
     }
     
     /**

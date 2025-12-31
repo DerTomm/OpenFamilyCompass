@@ -8,6 +8,11 @@
     <string name="menu_refresh">Refresh</string>
     <string name="menu_logout">Logout</string>
 
+    <!-- FAB Menu -->
+    <string name="fab_menu">Menu</string>
+    <string name="fab_reload">Reload</string>
+    <string name="fab_settings">Settings</string>
+
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_server_url_title">Server Address</string>

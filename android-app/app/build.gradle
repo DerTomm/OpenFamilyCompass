@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.family.kidschores'
+    namespace 'org.openfamilycompass.android'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.family.kidschores"
+        applicationId "org.openfamilycompass.android"
         minSdk 24
         targetSdk 34
         versionCode 1
@@ -17,10 +17,20 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        release {
+            storeFile file('release.keystore')
+            storePassword 'openfamilycompass'
+            keyAlias 'openfamilycompass'
+            keyPassword 'openfamilycompass'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 

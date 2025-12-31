@@ -1,4 +1,4 @@
-package com.family.kidschores
+package org.openfamilycompass.android
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -9,18 +9,34 @@ import android.view.View
 import android.webkit.*
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
-    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var sessionManager: SessionManager
     private var sessionAlreadyDetected = false
+    private lateinit var fabMain: com.google.android.material.floatingactionbutton.FloatingActionButton
     private lateinit var fabSettings: com.google.android.material.floatingactionbutton.FloatingActionButton
+    private lateinit var fabReload: com.google.android.material.floatingactionbutton.FloatingActionButton
+    private lateinit var fabMenuLayout: android.widget.LinearLayout
+    private lateinit var fabOverlay: View
+    private var isFabMenuOpen = false
+    
+    // Activity Result Launcher für Settings
+    private val settingsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            // Server-URL wurde geändert, lade neue URL
+            android.util.Log.d("MainActivity", "Server URL changed, reloading...")
+            sessionAlreadyDetected = false
+            loadWebApp()
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,21 +47,17 @@ class MainActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         webView = findViewById(R.id.webView)
         progressBar = findViewById(R.id.progressBar)
-        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
+        fabMain = findViewById(R.id.fabMain)
         fabSettings = findViewById(R.id.fabSettings)
+        fabReload = findViewById(R.id.fabReload)
+        fabMenuLayout = findViewById(R.id.fabMenuLayout)
+        fabOverlay = findViewById(R.id.fabOverlay)
         
-        // Setup FAB Click Listener
-        fabSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
+        // Setup FAB Menu
+        setupFabMenu()
 
         // Configure WebView
         setupWebView()
-
-        // Setup SwipeRefresh
-        swipeRefreshLayout.setOnRefreshListener {
-            webView.reload()
-        }
 
         // Check if server is configured
         if (!sessionManager.isServerConfigured()) {
@@ -53,6 +65,69 @@ class MainActivity : AppCompatActivity() {
         } else {
             loadWebApp()
         }
+    }
+
+    private fun setupFabMenu() {
+        // Main FAB öffnet/schließt das Menü
+        fabMain.setOnClickListener {
+            toggleFabMenu()
+        }
+        
+        // Overlay schließt das Menü
+        fabOverlay.setOnClickListener {
+            closeFabMenu()
+        }
+        
+        // Reload FAB
+        fabReload.setOnClickListener {
+            webView.reload()
+            closeFabMenu()
+        }
+        
+        // Settings FAB
+        fabSettings.setOnClickListener {
+            val intent = Intent(this, SettingsActivity::class.java)
+            settingsLauncher.launch(intent)
+            closeFabMenu()
+        }
+    }
+    
+    private fun toggleFabMenu() {
+        if (isFabMenuOpen) {
+            closeFabMenu()
+        } else {
+            openFabMenu()
+        }
+    }
+    
+    private fun openFabMenu() {
+        isFabMenuOpen = true
+        fabMenuLayout.visibility = View.VISIBLE
+        fabOverlay.visibility = View.VISIBLE
+        
+        // Animationen
+        fabMain.animate().rotation(45f).setDuration(200).start()
+        fabMenuLayout.alpha = 0f
+        fabMenuLayout.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(200)
+            .start()
+    }
+    
+    private fun closeFabMenu() {
+        isFabMenuOpen = false
+        
+        // Animationen
+        fabMain.animate().rotation(0f).setDuration(200).start()
+        fabMenuLayout.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                fabMenuLayout.visibility = View.GONE
+                fabOverlay.visibility = View.GONE
+            }
+            .start()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -69,10 +144,12 @@ class MainActivity : AppCompatActivity() {
             setSupportZoom(false)
         }
 
-        // Cookie Manager
+        // Cookie Manager - Persistente Speicherung aktivieren
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
         cookieManager.setAcceptThirdPartyCookies(webView, true)
+        // Wichtig: Persistente Speicherung aktivieren
+        cookieManager.flush()
 
         // WebViewClient
         webView.webViewClient = object : WebViewClient() {
@@ -98,17 +175,32 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBar.visibility = View.GONE
-                swipeRefreshLayout.isRefreshing = false
+
+                // Auf der Login-Seite: "Angemeldet bleiben" automatisch aktivieren
+                if (url?.contains("/login") == true) {
+                    webView.postDelayed({
+                        webView.evaluateJavascript(
+                            """
+                            (function() {
+                                var rememberMeCheckbox = document.getElementById('remember-me');
+                                if (rememberMeCheckbox && !rememberMeCheckbox.checked) {
+                                    rememberMeCheckbox.checked = true;
+                                }
+                            })();
+                            """.trimIndent()
+                        , null)
+                    }, 300)
+                }
 
                 // Nach erfolgreichem Login: Session speichern
                 if (url?.contains("/dashboard") == true || url?.contains("/perform_login") == true) {
                     // Nur einmal pro App-Start Session detektieren
                     if (!sessionAlreadyDetected) {
                         sessionAlreadyDetected = true
-                        // Warte kurz, damit Cookies gesetzt werden
+                        // Warte länger, damit Remember-Me Cookie vom Server gesetzt wird
                         webView.postDelayed({
                             detectAndSaveSession()
-                        }, 500)
+                        }, 1500)
                     }
                 }
             }
@@ -132,20 +224,26 @@ class MainActivity : AppCompatActivity() {
     private fun loadWebApp() {
         val serverUrl = sessionManager.getServerUrl()
         
+        android.util.Log.d("MainActivity", "Loading web app from: $serverUrl")
+        
         // Stelle Cookies wieder her, wenn Session vorhanden
         if (sessionManager.hasValidSession()) {
+            android.util.Log.d("MainActivity", "Valid session found, restoring cookies and loading dashboard")
             sessionManager.restoreCookies()
             // Session aktualisieren
             sessionManager.refreshSession()
             // Direkt zum Dashboard
             webView.loadUrl("$serverUrl/dashboard")
         } else {
+            android.util.Log.d("MainActivity", "No valid session, loading login page")
             // Zur Login-Seite
             webView.loadUrl("$serverUrl/login")
         }
     }
 
     private fun detectAndSaveSession() {
+        android.util.Log.d("MainActivity", "detectAndSaveSession called")
+        
         // Extrahiere Access Token aus LocalStorage
         webView.evaluateJavascript(
             """
@@ -155,11 +253,14 @@ class MainActivity : AppCompatActivity() {
             """.trimIndent()
         ) { tokenResult ->
             val token = tokenResult?.trim('"')
+            android.util.Log.d("MainActivity", "Token from localStorage: $token")
             
             if (!token.isNullOrEmpty() && token != "null") {
                 // Dekodiere Token und extrahiere Rolle & Username
                 val username = JwtDecoder.extractUsername(token)
                 val role = JwtDecoder.extractRole(token)
+                
+                android.util.Log.d("MainActivity", "Extracted username: $username, role: $role")
                 
                 if (!username.isNullOrEmpty()) {
                     sessionManager.saveSession(username, role)
@@ -171,22 +272,48 @@ class MainActivity : AppCompatActivity() {
                         }
                         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     }
+                } else {
+                    android.util.Log.d("MainActivity", "Username is empty, trying fallback")
+                    tryFallbackSession()
                 }
             } else {
-                // Fallback: Versuche Username aus DOM zu extrahieren
-                webView.evaluateJavascript(
-                    "(function() { " +
-                    "  var authElement = document.querySelector('[sec\\\\:authentication=\"name\"]');" +
-                    "  return authElement ? authElement.textContent.trim() : null;" +
-                    "})();"
-                ) { result ->
-                    val username = result?.trim('"')
-                    if (!username.isNullOrEmpty() && username != "null") {
-                        sessionManager.saveSession(username, null)
-                        runOnUiThread {
-                            Toast.makeText(this, getString(R.string.toast_logged_in_as, username), Toast.LENGTH_SHORT).show()
-                        }
+                android.util.Log.d("MainActivity", "No token found, trying fallback")
+                tryFallbackSession()
+            }
+        }
+    }
+    
+    private fun tryFallbackSession() {
+        // Fallback 1: Versuche Username aus DOM zu extrahieren
+        webView.evaluateJavascript(
+            "(function() { " +
+            "  var authElement = document.querySelector('[sec\\\\:authentication=\"name\"]');" +
+            "  return authElement ? authElement.textContent.trim() : null;" +
+            "})();"
+        ) { result ->
+            val username = result?.trim('"')
+            android.util.Log.d("MainActivity", "Username from DOM: $username")
+            
+            if (!username.isNullOrEmpty() && username != "null") {
+                sessionManager.saveSession(username, null)
+                runOnUiThread {
+                    Toast.makeText(this, getString(R.string.toast_logged_in_as, username), Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                // Fallback 2: Einfach Cookies speichern mit Dummy-Username
+                android.util.Log.d("MainActivity", "Using dummy session for cookie storage")
+                val cookieManager = CookieManager.getInstance()
+                cookieManager.flush()
+                val cookies = cookieManager.getCookie(sessionManager.getServerUrl())
+                
+                if (!cookies.isNullOrEmpty()) {
+                    android.util.Log.d("MainActivity", "Cookies found, saving session with dummy user")
+                    sessionManager.saveSession("user", null)
+                    runOnUiThread {
+                        Toast.makeText(this, getString(R.string.toast_logged_in_as, "user"), Toast.LENGTH_SHORT).show()
                     }
+                } else {
+                    android.util.Log.d("MainActivity", "No cookies found at all")
                 }
             }
         }
@@ -197,7 +324,8 @@ class MainActivity : AppCompatActivity() {
             .setTitle(getString(R.string.dialog_server_config_title))
             .setMessage(getString(R.string.dialog_server_config_message))
             .setPositiveButton(getString(R.string.dialog_button_settings)) { _, _ ->
-                startActivity(Intent(this, SettingsActivity::class.java))
+                val intent = Intent(this, SettingsActivity::class.java)
+                settingsLauncher.launch(intent)
             }
             .setCancelable(false)
             .show()
@@ -270,6 +398,15 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         webView.onPause()
+        
+        // Speichere aktuelle Cookies beim Verlassen der App
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.flush()
+        
+        // Aktualisiere gespeicherte Cookies in SharedPreferences
+        if (sessionManager.hasValidSession()) {
+            sessionManager.refreshSession()
+        }
     }
 
     override fun onDestroy() {

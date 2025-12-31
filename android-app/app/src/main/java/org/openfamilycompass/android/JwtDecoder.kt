@@ -1,4 +1,4 @@
-package com.family.kidschores
+package org.openfamilycompass.android
 
 import android.util.Base64
 import org.json.JSONObject

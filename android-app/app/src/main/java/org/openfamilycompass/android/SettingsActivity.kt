@@ -1,4 +1,4 @@
-package com.family.kidschores
+package org.openfamilycompass.android
 
 import android.os.Bundle
 import android.view.MenuItem
@@ -59,10 +59,24 @@ class SettingsActivity : AppCompatActivity() {
 
         // Remove trailing slash
         val cleanUrl = url.trimEnd('/')
+        
+        // Prüfe, ob sich die URL geändert hat
+        val oldUrl = sessionManager.getServerUrl()
+        val urlChanged = oldUrl != cleanUrl
 
         // Save URL
         sessionManager.saveServerUrl(cleanUrl)
-        Toast.makeText(this, getString(R.string.toast_settings_saved), Toast.LENGTH_SHORT).show()
+        
+        // Wenn URL geändert wurde, Session löschen und MainActivity neu laden
+        if (urlChanged) {
+            sessionManager.clearSession()
+            Toast.makeText(this, getString(R.string.toast_settings_saved), Toast.LENGTH_SHORT).show()
+            
+            // Setze Result, damit MainActivity neu lädt
+            setResult(RESULT_OK)
+        } else {
+            Toast.makeText(this, getString(R.string.toast_settings_saved), Toast.LENGTH_SHORT).show()
+        }
 
         // Go back
         finish()
