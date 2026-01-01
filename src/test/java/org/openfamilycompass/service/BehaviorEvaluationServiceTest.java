@@ -79,8 +79,8 @@ class BehaviorEvaluationServiceTest {
         void updateEvaluation_ShouldCreateNewEvaluation_WhenNotExists() {
                 // Given
                 when(behaviorRepository.findById(1L)).thenReturn(Optional.of(testBehavior));
-                when(evaluationRepository.findByUserAndBehaviorAndWeekStartDateAndCommittedFalse(
-                                any(), any(), any())).thenReturn(Optional.empty());
+                when(evaluationRepository.findByUserAndBehaviorAndCommittedFalse(
+                                any(), any())).thenReturn(Optional.empty());
                 when(evaluationRepository.save(any(BehaviorEvaluation.class))).thenReturn(testEvaluation);
 
                 // When
@@ -96,8 +96,8 @@ class BehaviorEvaluationServiceTest {
         void updateEvaluation_ShouldUpdateExisting_WhenExists() {
                 // Given
                 when(behaviorRepository.findById(1L)).thenReturn(Optional.of(testBehavior));
-                when(evaluationRepository.findByUserAndBehaviorAndWeekStartDateAndCommittedFalse(
-                                any(), any(), any())).thenReturn(Optional.of(testEvaluation));
+                when(evaluationRepository.findByUserAndBehaviorAndCommittedFalse(
+                                any(), any())).thenReturn(Optional.of(testEvaluation));
                 when(evaluationRepository.save(any(BehaviorEvaluation.class))).thenReturn(testEvaluation);
 
                 // When
@@ -150,8 +150,8 @@ class BehaviorEvaluationServiceTest {
         void getCurrentWeekEvaluations_ShouldReturnEvaluations() {
                 // Given
                 List<BehaviorEvaluation> evaluations = Arrays.asList(testEvaluation);
-                when(evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(
-                                any(), any())).thenReturn(evaluations);
+                when(evaluationRepository.findByUserAndCommittedFalse(testUserChild))
+                                .thenReturn(evaluations);
 
                 // When
                 List<BehaviorEvaluation> result = evaluationService.getCurrentWeekEvaluations(testUserChild);
@@ -165,14 +165,14 @@ class BehaviorEvaluationServiceTest {
         void commitWeeklyEvaluations_ShouldAddPointsAndMarkCommitted() {
                 // Given
                 List<BehaviorEvaluation> evaluations = Arrays.asList(testEvaluation);
-                when(evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(
-                                any(), any())).thenReturn(evaluations);
+                when(evaluationRepository.findByUserAndCommittedFalse(testUserChild))
+                                .thenReturn(evaluations);
                 when(evaluationRepository.save(any(BehaviorEvaluation.class))).thenReturn(testEvaluation);
 
                 // When
                 evaluationService.commitWeeklyEvaluations(testUserChild, testUser);
 
-                // Then
+                // Then - verify points were credited
                 verify(pointService).addPointsWithRemarks(
                                 eq(testUserChild),
                                 eq(8),
@@ -181,14 +181,22 @@ class BehaviorEvaluationServiceTest {
                                 anyLong(),
                                 any(),
                                 eq(testUser));
+
+                // Verify that current evaluation was marked as committed
                 verify(evaluationRepository).save(argThat(eval -> eval.isCommitted()));
+
+                // Verify that a new uncommitted evaluation was created with maximum points
+                verify(evaluationRepository).save(argThat(eval -> !eval.isCommitted() &&
+                                eval.getCurrentPoints() == testBehavior.getPoints() &&
+                                eval.getUser().equals(testUserChild) &&
+                                eval.getBehavior().equals(testBehavior)));
         }
 
         @Test
         void commitWeeklyEvaluations_ShouldThrowException_WhenNoEvaluations() {
                 // Given
-                when(evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(
-                                any(), any())).thenReturn(Arrays.asList());
+                when(evaluationRepository.findByUserAndCommittedFalse(testUserChild))
+                                .thenReturn(Arrays.asList());
 
                 // When/Then
                 assertThatThrownBy(() -> evaluationService.commitWeeklyEvaluations(testUserChild, testUser))
@@ -224,8 +232,8 @@ class BehaviorEvaluationServiceTest {
                 BehaviorEvaluation eval2 = new BehaviorEvaluation();
                 eval2.setCurrentPoints(7);
 
-                when(evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(
-                                any(), any())).thenReturn(Arrays.asList(eval1, eval2));
+                when(evaluationRepository.findByUserAndCommittedFalse(testUserChild))
+                                .thenReturn(Arrays.asList(eval1, eval2));
 
                 // When
                 int total = evaluationService.calculateWeeklyTotal(testUserChild);

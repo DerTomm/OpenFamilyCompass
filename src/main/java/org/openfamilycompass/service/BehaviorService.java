@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Objects;
 
 import org.openfamilycompass.model.Behavior;
+import org.openfamilycompass.model.BehaviorEvaluation;
 import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.User;
+import org.openfamilycompass.repository.BehaviorEvaluationRepository;
 import org.openfamilycompass.repository.BehaviorRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class BehaviorService {
 
     private final BehaviorRepository behaviorRepository;
+    private final BehaviorEvaluationRepository behaviorEvaluationRepository;
     private final PointService pointService;
 
     @Transactional
@@ -30,6 +33,43 @@ public class BehaviorService {
         behavior.setActive(true);
 
         return behaviorRepository.save(behavior);
+    }
+
+    @Transactional
+    public Behavior editBehavior(@NonNull Long behaviorId, @NonNull String title, @NonNull String guideline,
+            int newPoints, User user) {
+        Behavior behavior = behaviorRepository.findById(behaviorId)
+                .orElseThrow(() -> new IllegalArgumentException("Behavior not found"));
+
+        int oldPoints = behavior.getPoints();
+
+        // Update all properties
+        behavior.setTitle(title);
+        behavior.setGuideline(guideline);
+        behavior.setPoints(newPoints);
+        behavior.setUser(user);
+
+        // If points were reduced, cap existing evaluations in the current week
+        if (newPoints < oldPoints) {
+            capPointsInCurrentWeek(behavior, newPoints);
+        }
+
+        return behaviorRepository.save(behavior);
+    }
+
+    /**
+     * Caps all uncommitted evaluations of a behavior to the new maximum points
+     */
+    private void capPointsInCurrentWeek(@NonNull Behavior behavior, int newMaxPoints) {
+        List<BehaviorEvaluation> evaluations = behaviorEvaluationRepository
+                .findByBehaviorAndCommittedFalse(behavior);
+
+        for (BehaviorEvaluation evaluation : evaluations) {
+            if (evaluation.getCurrentPoints() > newMaxPoints) {
+                evaluation.setCurrentPoints(newMaxPoints);
+                behaviorEvaluationRepository.save(evaluation);
+            }
+        }
     }
 
     @Transactional
@@ -59,6 +99,10 @@ public class BehaviorService {
 
     public List<Behavior> findAllActive() {
         return behaviorRepository.findByActiveTrue();
+    }
+
+    public java.util.Optional<Behavior> findById(@NonNull Long id) {
+        return behaviorRepository.findById(id);
     }
 
     public List<Behavior> findByUser(@NonNull User user) {

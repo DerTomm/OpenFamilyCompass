@@ -1,6 +1,5 @@
 package org.openfamilycompass.repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,10 +14,9 @@ public interface BehaviorEvaluationRepository extends JpaRepository<BehaviorEval
 
     List<BehaviorEvaluation> findByUserAndCommittedFalse(User user);
 
-    List<BehaviorEvaluation> findByUserAndWeekStartDateAndCommittedFalse(User user, LocalDateTime weekStartDate);
+    Optional<BehaviorEvaluation> findByUserAndBehaviorAndCommittedFalse(User user, Behavior behavior);
 
-    Optional<BehaviorEvaluation> findByUserAndBehaviorAndWeekStartDateAndCommittedFalse(
-            User user, Behavior behavior, LocalDateTime weekStartDate);
+    List<BehaviorEvaluation> findByCommittedFalse();
 
-    List<BehaviorEvaluation> findByWeekStartDateAndCommittedFalse(LocalDateTime weekStartDate);
+    List<BehaviorEvaluation> findByBehaviorAndCommittedFalse(Behavior behavior);
 }

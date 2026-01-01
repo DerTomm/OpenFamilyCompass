@@ -1,8 +1,5 @@
 package org.openfamilycompass.service;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,18 +24,6 @@ public class BehaviorEvaluationService {
     private final PointService pointService;
 
     /**
-     * Determines the start of the current week (Monday 00:00)
-     */
-    private LocalDateTime getCurrentWeekStart() {
-        return LocalDateTime.now()
-                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                .withHour(0)
-                .withMinute(0)
-                .withSecond(0)
-                .withNano(0);
-    }
-
-    /**
      * Updates or creates an evaluation for a behavior
      */
     @Transactional
@@ -60,16 +45,13 @@ public class BehaviorEvaluationService {
                     "Points must be between 0 and " + behavior.getPoints());
         }
 
-        LocalDateTime weekStart = getCurrentWeekStart();
-
-        // Find existing evaluation or create new one
+        // Find existing uncommitted evaluation or create new one
         BehaviorEvaluation evaluation = evaluationRepository
-                .findByUserAndBehaviorAndWeekStartDateAndCommittedFalse(user, behavior, weekStart)
+                .findByUserAndBehaviorAndCommittedFalse(user, behavior)
                 .orElseGet(() -> {
                     BehaviorEvaluation newEval = new BehaviorEvaluation();
                     newEval.setBehavior(behavior);
                     newEval.setUser(user);
-                    newEval.setWeekStartDate(weekStart);
                     newEval.setCreatedBy(updatedBy);
                     return newEval;
                 });
@@ -81,12 +63,11 @@ public class BehaviorEvaluationService {
     }
 
     /**
-     * Loads all uncommitted evaluations for a child of the current week
+     * Loads all uncommitted evaluations for a child
      */
     @Transactional(readOnly = true)
     public List<BehaviorEvaluation> getCurrentWeekEvaluations(@NonNull User user) {
-        LocalDateTime weekStart = getCurrentWeekStart();
-        return evaluationRepository.findByUserAndWeekStartDateAndCommittedFalse(user, weekStart);
+        return evaluationRepository.findByUserAndCommittedFalse(user);
     }
 
     /**
@@ -98,23 +79,22 @@ public class BehaviorEvaluationService {
     }
 
     /**
-     * Commits all evaluations of a child for the current week
+     * Commits all uncommitted evaluations of a child and resets them with maximum
+     * points
      */
     @Transactional
     public void commitWeeklyEvaluations(@NonNull User user, @NonNull User committedBy) {
-        LocalDateTime weekStart = getCurrentWeekStart();
-        List<BehaviorEvaluation> evaluations = evaluationRepository
-                .findByUserAndWeekStartDateAndCommittedFalse(user, weekStart);
+        List<BehaviorEvaluation> evaluations = evaluationRepository.findByUserAndCommittedFalse(user);
 
         if (evaluations.isEmpty()) {
-            throw new IllegalStateException("No evaluations to commit for this week");
+            throw new IllegalStateException("No evaluations to commit");
         }
 
-        // Create a separate transaction for each evaluation
+        // Process each evaluation
         for (BehaviorEvaluation evaluation : evaluations) {
             if (evaluation.getCurrentPoints() > 0) {
                 // Credit points
-                String description = "Weekly behavior: " + evaluation.getBehavior().getTitle();
+                String description = "Behavior: " + evaluation.getBehavior().getTitle();
 
                 pointService.addPointsWithRemarks(
                         user,
@@ -129,6 +109,17 @@ public class BehaviorEvaluationService {
             // Mark evaluation as committed
             evaluation.setCommitted(true);
             evaluationRepository.save(evaluation);
+
+            // Create new evaluation with maximum points for next period
+            BehaviorEvaluation nextEvaluation = new BehaviorEvaluation();
+            nextEvaluation.setUser(user);
+            nextEvaluation.setBehavior(evaluation.getBehavior());
+            nextEvaluation.setCurrentPoints(evaluation.getBehavior().getPoints()); // Initialize with maximum points
+            nextEvaluation.setCommitted(false);
+            nextEvaluation.setCreatedBy(committedBy);
+            nextEvaluation.setRemarks(null);
+
+            evaluationRepository.save(nextEvaluation);
         }
     }
 

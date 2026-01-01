@@ -323,6 +323,28 @@ public class ParentController {
         return "redirect:/parent/behaviors/manage";
     }
 
+    @GetMapping("/behaviors/{id}/edit")
+    public String editBehaviorForm(@PathVariable Long id, Model model) {
+        Behavior behavior = behaviorService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Behavior not found"));
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
+        model.addAttribute("behavior", behavior);
+        model.addAttribute("children", children);
+        return "parent/behavior-edit";
+    }
+
+    @PostMapping("/behaviors/{id}/edit")
+    public String editBehavior(@PathVariable Long id,
+            @RequestParam String title,
+            @RequestParam String guideline,
+            @RequestParam int points,
+            @RequestParam(required = false) Long childId) {
+        User child = childId != null ? userService.findById(childId).orElse(null) : null;
+
+        behaviorService.editBehavior(id, title, guideline, points, child);
+        return "redirect:/parent/behaviors/manage";
+    }
+
     @PostMapping("/behaviors/{id}/deactivate")
     public String deactivateBehavior(@PathVariable Long id) {
         behaviorService.deactivateBehavior(id);

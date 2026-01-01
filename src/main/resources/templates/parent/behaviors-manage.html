@@ -46,15 +46,20 @@
                                                 th:classappend="${behavior.active} ? 'bg-success' : 'bg-secondary'"
                                                 th:text="${behavior.active} ? #{status.active} : #{status.inactive}">Status</span>
                                         </td>
-                                        <form th:if="${behavior.active}"
-                                            th:action="@{/parent/behaviors/{id}/deactivate(id=${behavior.id})}"
-                                            method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-danger"
-                                                th:attr="onclick='return confirm(\'' + #{behavior.deactivate.confirm} + '\');'">
-                                                <i class="fas fa-ban"></i> <span
-                                                    th:text="#{behavior.deactivate}">Deactivate</span>
-                                            </button>
-                                        </form>
+                                        <td th:if="${behavior.active}">
+                                            <a th:href="@{/parent/behaviors/{id}/edit(id=${behavior.id})}"
+                                                class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i> <span th:text="#{behavior.edit}">Edit</span>
+                                            </a>
+                                            <form th:action="@{/parent/behaviors/{id}/deactivate(id=${behavior.id})}"
+                                                method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                    th:attr="onclick='return confirm(\'' + #{behavior.deactivate.confirm} + '\');'">
+                                                    <i class="fas fa-ban"></i> <span
+                                                        th:text="#{behavior.deactivate}">Deactivate</span>
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                     <tr th:if="${behaviors.isEmpty()}">
                                         <td colspan="6" class="text-center text-muted" th:text="#{behavior.none}">
