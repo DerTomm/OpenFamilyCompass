@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}"
+    th:attr="data-bs-theme=${userTheme}">
 
 <head>
     <title th:text="#{child.dashboard.title}">My Dashboard</title>
     <th:block layout:fragment="styles">
         <style>
+            /* Light mode - default background */
             body {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 min-height: 100vh;
@@ -15,6 +17,7 @@
                 background: white;
                 border-radius: 20px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                color: inherit;
             }
 
             .points-badge {
@@ -33,6 +36,72 @@
 
             .task-card:hover {
                 transform: translateX(5px);
+            }
+
+            /* Dark mode support */
+            [data-bs-theme="dark"] body {
+                background: linear-gradient(135deg, #1a1f3a 0%, #2d1b4e 100%);
+            }
+
+            [data-bs-theme="dark"] .child-card {
+                background: var(--bs-dark-bg-subtle);
+                border: 1px solid var(--bs-border-color);
+            }
+
+            [data-bs-theme="dark"] .card {
+                background-color: var(--bs-dark-bg-subtle);
+                border-color: var(--bs-border-color);
+                color: var(--bs-body-color);
+            }
+
+            [data-bs-theme="dark"] .card-body {
+                color: var(--bs-body-color);
+            }
+
+            [data-bs-theme="dark"] .card-title {
+                color: var(--bs-body-color);
+            }
+
+            [data-bs-theme="dark"] h2,
+            [data-bs-theme="dark"] h3,
+            [data-bs-theme="dark"] h4 {
+                color: var(--bs-body-color);
+            }
+
+            [data-bs-theme="dark"] .text-muted {
+                color: var(--bs-secondary-color) !important;
+            }
+
+            [data-bs-theme="dark"] .alert-info {
+                background-color: var(--bs-info-bg-subtle);
+                border-color: var(--bs-info-border-subtle);
+                color: var(--bs-body-color);
+            }
+
+            /* Mobile optimizations */
+            @media (max-width: 768px) {
+                .child-card {
+                    border-radius: 10px;
+                    padding: 1rem !important;
+                }
+
+                .points-badge {
+                    padding: 15px;
+                    font-size: 1.5rem;
+                }
+
+                h2 {
+                    font-size: 1.35rem !important;
+                }
+
+                h3 {
+                    font-size: 1.15rem !important;
+                }
+
+                .btn {
+                    min-height: 44px;
+                    font-size: 0.95rem;
+                }
             }
         </style>
     </th:block>

@@ -26,6 +26,167 @@
             font-size: 1.5rem;
             font-weight: bold;
         }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem !important;
+            }
+
+            h2 {
+                font-size: 1.5rem !important;
+            }
+
+            .card {
+                border: none !important;
+                border-radius: 0.25rem !important;
+                margin-bottom: 1rem !important;
+            }
+
+            .card-header {
+                padding: 1rem !important;
+            }
+
+            .card-body {
+                padding: 1rem !important;
+            }
+
+            /* Table as Cards on Mobile */
+            .behavior-table {
+                display: none !important;
+            }
+
+            .behavior-cards {
+                display: block !important;
+            }
+
+            .behavior-card {
+                border: 1px solid var(--bs-border-color);
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                background: var(--bs-card-bg);
+            }
+
+            .behavior-card-title {
+                font-size: 1rem;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+            }
+
+            .behavior-card-subtitle {
+                font-size: 0.875rem;
+                color: var(--bs-secondary);
+                margin-bottom: 0.5rem;
+            }
+
+            .behavior-card-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid var(--bs-border-color);
+            }
+
+            .behavior-card-row:last-child {
+                border-bottom: none;
+            }
+
+            .behavior-card-label {
+                font-size: 0.875rem;
+                color: var(--bs-secondary);
+            }
+
+            .behavior-card-value {
+                font-weight: 600;
+            }
+
+            .btn {
+                padding: 0.75rem 1rem !important;
+                font-size: 1rem !important;
+                min-height: 44px;
+                min-width: 44px;
+                border-radius: 0.375rem !important;
+            }
+
+            .btn-sm {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.875rem !important;
+                min-height: 40px;
+            }
+
+            .d-flex {
+                flex-direction: column !important;
+            }
+
+            .d-flex.justify-content-between {
+                align-items: flex-start !important;
+            }
+
+            .finalize-section {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .finalize-info {
+                order: 2;
+            }
+
+            .finalize-button {
+                order: 1;
+                width: 100% !important;
+            }
+
+            .modal-dialog {
+                margin: 0.5rem !important;
+            }
+
+            .form-label {
+                font-size: 1rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .form-control,
+            .form-range {
+                font-size: 1rem !important;
+                padding: 0.75rem !important;
+            }
+
+            textarea.form-control {
+                min-height: 120px !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            h2 {
+                font-size: 1.25rem !important;
+            }
+
+            .btn-lg {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.95rem !important;
+            }
+
+            .behavior-card {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .badge {
+                font-size: 0.875rem !important;
+                padding: 0.35rem 0.65rem !important;
+            }
+
+            .points-badge {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.95rem !important;
+            }
+
+            .weekly-total {
+                font-size: 1.25rem !important;
+            }
+        }
     </style>
 </div>
 
@@ -33,18 +194,18 @@
     <div layout:fragment="content" class="container my-4">
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="flex-grow-1">
                         <h2><i class="fas fa-star"></i> <span
                                 th:text="#{behavior.evaluate.title(${child.firstName})}">Evaluate Behavior -
                                 Child</span></h2>
-                        <p class="text-muted" th:text="#{behavior.evaluate.subtitle}">Evaluate the behavior of the
+                        <p class="text-muted mb-0" th:text="#{behavior.evaluate.subtitle}">Evaluate the behavior of the
                             current week</p>
                     </div>
-                    <a th:href="@{/parent/behaviors}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> <span th:text="#{button.back}">Back</span>
-                    </a>
                 </div>
+                <a th:href="@{/parent/behaviors}" class="btn btn-secondary btn-sm w-100">
+                    <i class="fas fa-arrow-left"></i> <span th:text="#{button.back}">Back</span>
+                </a>
             </div>
         </div>
 
@@ -54,7 +215,8 @@
                 </h5>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <!-- Desktop Table View -->
+                <div class="table-responsive d-none d-md-block">
                     <table class="table table-hover behavior-table mb-0">
                         <thead>
                             <tr>
@@ -107,21 +269,64 @@
                         </tfoot>
                     </table>
                 </div>
+
+                <!-- Mobile Card View -->
+                <div class="behavior-cards d-md-none">
+                    <div th:each="behavior : ${behaviors}" class="behavior-card"
+                        th:id="'behavior-card-' + ${behavior.id}">
+                        <div class="behavior-card-title" th:text="${behavior.title}">Verhalten</div>
+                        <div class="behavior-card-subtitle" th:text="${behavior.guideline}">Leitsatz</div>
+
+                        <small class="text-muted d-block mb-2" th:if="${behavior.user == null}">
+                            <i class="fas fa-users"></i> Für alle Kinder
+                        </small>
+
+                        <div class="behavior-card-row">
+                            <span class="behavior-card-label" th:text="#{behavior.max.points}">Max. Points</span>
+                            <span class="badge bg-secondary" th:text="${behavior.points}">0</span>
+                        </div>
+
+                        <div class="behavior-card-row">
+                            <span class="behavior-card-label" th:text="#{behavior.current.points}">Current Points</span>
+                            <span class="badge bg-success points-badge" th:id="'mobile-points-' + ${behavior.id}"
+                                th:attr="data-behavior-id=${behavior.id}"
+                                th:text="${evaluationMap.containsKey(behavior.id) ? evaluationMap.get(behavior.id).currentPoints : 0}">0</span>
+                        </div>
+
+                        <div class="mt-3">
+                            <button class="btn btn-primary w-100"
+                                th:attr="data-behavior-id=${behavior.id},data-behavior-title=${behavior.title},data-max-points=${behavior.points}"
+                                onclick="openEvaluationDialog(this.dataset.behaviorId, this.dataset.behaviorTitle, this.dataset.maxPoints)">
+                                <i class="fas fa-edit"></i> <span th:text="#{behavior.evaluate.rule}">Evaluate</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Weekly Total -->
+                    <div class="behavior-card bg-light border-primary border-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong th:text="#{behavior.finalize}">Wochensumme</strong>
+                            <span class="badge bg-primary weekly-total" id="mobile-weekly-total"
+                                th:text="${weeklyTotal}">0</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
+                <div class="finalize-section">
+                    <div class="finalize-info">
                         <h5><i class="fas fa-check-circle"></i> <span th:text="#{behavior.finalize}">Credit
                                 Points</span></h5>
                         <p class="text-muted mb-0" th:text="#{behavior.finalize.desc(${child.firstName})}">Credit this
                             week's points to the account.</p>
                     </div>
                     <form th:action="@{/parent/behaviors/evaluate/{childId}/commit(childId=${child.id})}" method="post"
-                        th:attr="onsubmit='return confirm(' + #{behavior.finalize.confirm} + ');'">
-                        <button type="submit" class="btn btn-success btn-lg">
+                        th:attr="onsubmit='return confirm(' + #{behavior.finalize.confirm} + ');'"
+                        class="finalize-button">
+                        <button type="submit" class="btn btn-success btn-lg w-100">
                             <i class="fas fa-save"></i> <span th:text="#{behavior.finalize.button}">Credit Points</span>
                         </button>
                     </form>
@@ -247,10 +452,16 @@
                     if (response.ok) {
                         const evaluation = await response.json();
 
-                        // Aktualisiere die Tabelle
+                        // Aktualisiere die Tabelle (Desktop)
                         const pointsBadge = document.getElementById('current-points-' + behaviorId);
                         if (pointsBadge) {
                             pointsBadge.textContent = currentPoints;
+                        }
+
+                        // Aktualisiere die Mobile-Cards
+                        const mobilePointsBadge = document.getElementById('mobile-points-' + behaviorId);
+                        if (mobilePointsBadge) {
+                            mobilePointsBadge.textContent = currentPoints;
                         }
 
                         // Aktualisiere die Wochensumme
@@ -283,6 +494,12 @@
                     total += points;
                 });
                 document.getElementById('weekly-total').textContent = total;
+
+                // Aktualisiere auch das Mobile-Total
+                const mobileTotal = document.getElementById('mobile-weekly-total');
+                if (mobileTotal) {
+                    mobileTotal.textContent = total;
+                }
             }
             /*]]>*/
         </script>
