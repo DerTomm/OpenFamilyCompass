@@ -1,38 +1,45 @@
 package org.openfamilycompass.integration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.openfamilycompass.dto.LoginRequest;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+/**
+ * Integration-Tests für die formularbasierte Web-Authentifizierung.
+ * 
+ * Hinweis: Die Anwendung verwendet derzeit Session-basierte Authentifizierung
+ * für die Web-UI. Eine REST API mit JWT/OIDC-Authentifizierung ist noch nicht
+ * implementiert. Diese Tests validieren die vorhandene formularbasierte
+ * Authentifizierung.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@ActiveProfiles("test")
+@DisplayName("Web-Authentifizierung Integration Tests")
 class AuthenticationIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Autowired
     private UserRepository userRepository;
@@ -42,7 +49,6 @@ class AuthenticationIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Create test user
         User testUser = new User();
         testUser.setUsername("testparent");
         testUser.setFirstName("Test Parent");
@@ -52,61 +58,49 @@ class AuthenticationIntegrationTest {
     }
 
     @Test
-    void loginAndRefresh_ShouldWorkEndToEnd() throws Exception {
-        // Login request
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername("testparent");
-        loginRequest.setPassword("testpassword");
-
-        // Perform login
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").exists())
-                .andExpect(jsonPath("$.refreshToken").exists())
-                .andReturn();
-
-        // Extract tokens from response
-        String responseBody = loginResult.getResponse().getContentAsString();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
-        String accessToken = jsonNode.get("accessToken").asText();
-        String refreshToken = jsonNode.get("refreshToken").asText();
-
-        assertThat(accessToken).isNotEmpty();
-        assertThat(refreshToken).isNotEmpty();
-
-        // Use refresh token to get new access token
-        mockMvc.perform(post("/api/auth/refresh")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper
-                        .writeValueAsString(new org.openfamilycompass.dto.RefreshTokenRequest(refreshToken))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").exists())
-                .andExpect(jsonPath("$.refreshToken").exists());
+    @DisplayName("Login sollte mit gültigen Zugangsdaten erfolgreich sein")
+    void login_WithValidCredentials_ShouldSucceed() throws Exception {
+        mockMvc.perform(formLogin("/perform_login")
+                .user("username", "testparent")
+                .password("password", "testpassword"))
+                .andExpect(authenticated())
+                .andExpect(redirectedUrlPattern("/**/dashboard"));
     }
 
     @Test
-    void login_ShouldFail_WithInvalidCredentials() throws Exception {
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername("testparent");
-        loginRequest.setPassword("wrongpassword");
-
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isUnauthorized());
+    @DisplayName("Login sollte mit ungültigem Passwort fehlschlagen")
+    void login_WithInvalidPassword_ShouldFail() throws Exception {
+        mockMvc.perform(formLogin("/perform_login")
+                .user("username", "testparent")
+                .password("password", "wrongpassword"))
+                .andExpect(unauthenticated())
+                .andExpect(redirectedUrlPattern("/**/login?error*"));
     }
 
     @Test
-    void login_ShouldFail_WithNonExistentUser() throws Exception {
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername("nonexistent");
-        loginRequest.setPassword("password");
+    @DisplayName("Login sollte mit nicht existierendem Benutzer fehlschlagen")
+    void login_WithNonExistentUser_ShouldFail() throws Exception {
+        mockMvc.perform(formLogin("/perform_login")
+                .user("username", "nonexistent")
+                .password("password", "password"))
+                .andExpect(unauthenticated())
+                .andExpect(redirectedUrlPattern("/**/login?error*"));
+    }
 
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isUnauthorized());
+    @Test
+    @DisplayName("Zugriff auf geschützte Ressource ohne Authentifizierung sollte zur Login-Seite umleiten")
+    void accessProtectedResource_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
+        mockMvc.perform(get("/admin/users"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
+    @WithMockUser(username = "testparent", roles = "PARENT")
+    @DisplayName("Zugriff auf Dashboard mit Authentifizierung sollte erfolgreich sein")
+    void accessDashboard_WithAuthentication_ShouldSucceed() throws Exception {
+        mockMvc.perform(get("/dashboard"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/parent/dashboard"));
     }
 }

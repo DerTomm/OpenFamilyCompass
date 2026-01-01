@@ -124,16 +124,16 @@ class BehaviorServiceTest {
     }
 
     @Test
-    void deactivateBehavior_ShouldSetActiveToFalse() {
+    void deleteBehavior_ShouldDeleteBehaviorAndEvaluations() {
         // Given
         when(behaviorRepository.findById(1L)).thenReturn(Optional.of(testBehavior));
-        when(behaviorRepository.save(any(Behavior.class))).thenReturn(testBehavior);
 
         // When
-        behaviorService.deactivateBehavior(1L);
+        behaviorService.deleteBehavior(1L);
 
         // Then
-        verify(behaviorRepository).save(any(Behavior.class));
+        verify(behaviorEvaluationRepository).deleteByBehavior(testBehavior);
+        verify(behaviorRepository).delete(testBehavior);
     }
 
     @Test
