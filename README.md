@@ -6,9 +6,9 @@ An open-source web application for organizing family tasks, behavior rules, and 
 
 ## 📋 Overview
 
-This application enables parents to define tasks for their children and reward them with a points system. Children can redeem their points for predefined rewards.
+OpenFamilyCompass is an open-source solution designed for parents to manage kids chores and promote good behavior and habbits. It combines task management, behavior points, and a plus/minus system in a child-friendly, intuitive interface. The development is transparent and community-driven.
 
-OpenFamilyCompass is an open-source tool designed for families to promote cooperation and transparency. It combines task management, behavior points, and a plus/minus system in a child-friendly, intuitive interface. The development is transparent and community-driven.
+This project is in a very early stage. User experiences, feature and process ideas and collaboration is highly appreciated.
 
 ### Key Features
 
@@ -23,8 +23,8 @@ OpenFamilyCompass is an open-source tool designed for families to promote cooper
 
 ## 🛠️ Technology Stack
 
-- **Backend:** Java 21 (LTS), Spring Boot 3.5.9
-- **Frontend:** Thymeleaf, Bootstrap 5, Font Awesome
+- **Backend:** Java + Spring
+- **Frontend:** Thymeleaf, Bootstrap
 - **Security:** Spring Security with password-based authentication
 - **Database:** PostgreSQL 16
 - **Build Tool:** Maven
@@ -72,31 +72,27 @@ The application will be available at: **http://localhost:8080**
 After the first startup, an admin account is automatically created:
 
 - **Username:** `admin`
-- **Password:** `admin123`
+- **Password:** `admin`
 
 ⚠️ **Important:** Please change the admin password after the first login!
 
 ## 👥 User Roles
 
 ### Admin
-- Full access to all features
-- User and child management
-- Task, reward, and habit management
-- Access: `/admin/dashboard`
+- User management
 
 ### Parents
+- Task, reward, and habit management
 - Approve/reject tasks
 - Approve reward requests
 - Record positive habits
-- Assign penalty points
-- Access: `/parent/dashboard`
+- Assign bonus and penalty points
 
 ### Children
 - View tasks and mark as completed
 - View points balance
 - Redeem rewards in shop
 - View points history
-- Access: `/child/dashboard`
 
 ## 📁 Project Structure
 
@@ -182,9 +178,9 @@ The most important settings in `application.yml`:
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/kidschores
-    username: kidschores_user
-    password: kidschores_password
+    url: jdbc:postgresql://localhost:5432/openfamilycompass_db
+    username: openfamilycompass_user
+    password: openfamilycompass_password
 
 server:
   port: 8080
@@ -192,7 +188,7 @@ server:
 app:
   admin:
     default-username: admin
-    default-password: "admin123"
+    default-password: "admin"
   avatars:
     upload-dir: uploads/avatars
 ```
@@ -221,23 +217,10 @@ Possible future features:
 
 - Image upload for rewards not yet implemented
 - No email notifications
-- No API endpoints (web UI only)
 
 ## 📄 License
 
 This project is intended for private use.
-
-## 👨‍💻 Developer
-
-Created with GitHub Copilot for better family organization! 🏠
-
-## 🆘 Support
-
-For problems or questions:
-
-1. Check database logs: `docker-compose logs postgres`
-2. Check application logs: Console output
-3. Reset database: `docker-compose down -v && docker-compose up -d`
 
 ---
 

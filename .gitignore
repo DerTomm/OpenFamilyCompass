@@ -37,3 +37,8 @@ build/
 ### OS ###
 .DS_Store
 Thumbs.db
+
+### Maven ###
+
+### Others ###
+*.keystore
