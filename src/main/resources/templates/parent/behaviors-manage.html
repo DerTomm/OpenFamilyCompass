@@ -82,7 +82,7 @@
 
             .behavior-card-actions {
                 display: flex;
-                flex-direction: column;
+                flex-direction: row;
                 gap: 0.5rem;
                 margin-top: 1rem;
             }
@@ -147,12 +147,13 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2><i class="fas fa-star"></i> <span th:text="#{behavior.manage.title}">Manage Behavior</span></h2>
+                    <h2><i class="fas fa-star"></i> <span th:text="#{behavior.manage.title}">Manage
+                            Behavior</span></h2>
                 </div>
-                <a href="/parent/behaviors/create" class="btn btn-primary btn-new d-none d-md-inline-block">
+                <a href="/parent/behaviors/create" class="btn btn-primary btn-new d-none d-lg-inline-block">
                     <i class="fas fa-plus"></i> <span th:text="#{behavior.create}">New Behavior</span>
                 </a>
-                <a href="/parent/behaviors/create" class="btn btn-primary w-100 d-md-none">
+                <a href="/parent/behaviors/create" class="btn btn-primary w-100 d-lg-none">
                     <i class="fas fa-plus"></i> <span th:text="#{behavior.create}">New Behavior</span>
                 </a>
             </div>
@@ -171,7 +172,7 @@
                                 <thead>
                                     <tr>
                                         <th th:text="#{behavior.title.label}">Title</th>
-                                        <th th:text="#{behavior.mantra.label}">Mantra</th>
+                                        <th th:text="#{behavior.guidelines.label}">Guidelines</th>
                                         <th th:text="#{tasks.points}">Points</th>
                                         <th th:text="#{behavior.child.specific}">Child</th>
                                         <th th:text="#{tasks.actions}">Actions</th>
@@ -181,22 +182,21 @@
                                     <tr th:each="behavior : ${behaviors}">
                                         <td><strong th:text="${behavior.title}">Titel</strong></td>
                                         <td th:text="${behavior.guideline}">Leitsatz</td>
-                                        <td><span class="badge bg-success"
-                                                th:text="${behavior.points} + ' ' + #{tasks.points}">0</span></td>
+                                        <td th:text="${behavior.points} + ' ' + #{tasks.points}">0</td>
                                         <td
                                             th:text="${behavior.user != null ? behavior.user.firstName : #messages.msg('children.all')}">
                                             Kind</td>
                                         <td>
                                             <a th:href="@{/parent/behaviors/{id}/edit(id=${behavior.id})}"
-                                                class="btn btn-sm btn-primary">
-                                                <i class="fas fa-edit"></i> <span th:text="#{behavior.edit}">Edit</span>
+                                                class="btn btn-link text-primary p-0" th:title="#{behavior.edit}">
+                                                <i class="fas fa-edit"></i>
                                             </a>
                                             <form th:action="@{/parent/behaviors/{id}/delete(id=${behavior.id})}"
                                                 method="post" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-danger"
-                                                    th:attr="onclick='return confirm(\'' + #{behavior.delete.confirm} + '\');'">
-                                                    <i class="fas fa-trash"></i> <span
-                                                        th:text="#{behavior.delete}">Delete</span>
+                                                <button type="submit" class="btn btn-link text-danger p-0"
+                                                    th:attr="onclick='return confirm(\'' + #{behavior.delete.confirm} + '\');'"
+                                                    th:title="#{behavior.delete}">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
                                         </td>
@@ -218,13 +218,14 @@
                                 </div>
 
                                 <div class="behavior-card-row">
-                                    <span class="behavior-card-label" th:text="#{behavior.mantra.label}">Mantra</span>
+                                    <span class="behavior-card-label"
+                                        th:text="#{behavior.guidelines.label}">Guidelines</span>
                                     <span class="behavior-card-value" th:text="${behavior.guideline}">Leitsatz</span>
                                 </div>
 
                                 <div class="behavior-card-row">
                                     <span class="behavior-card-label" th:text="#{tasks.points}">Points</span>
-                                    <span class="badge bg-success"
+                                    <span class="behavior-card-value"
                                         th:text="${behavior.points} + ' ' + #{tasks.points}">0</span>
                                 </div>
 
@@ -237,14 +238,15 @@
 
                                 <div class="behavior-card-actions">
                                     <a th:href="@{/parent/behaviors/{id}/edit(id=${behavior.id})}"
-                                        class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i> <span th:text="#{behavior.edit}">Edit</span>
+                                        class="btn btn-link text-primary p-0 me-2" th:title="#{behavior.edit}">
+                                        <i class="fas fa-edit"></i>
                                     </a>
-                                    <form th:action="@{/parent/behaviors/{id}/delete(id=${behavior.id})}" method="post">
-                                        <button type="submit" class="btn btn-sm btn-danger w-100"
-                                            th:attr="onclick='return confirm(\'' + #{behavior.delete.confirm} + '\');'">
-                                            <i class="fas fa-trash"></i> <span
-                                                th:text="#{behavior.delete}">Delete</span>
+                                    <form th:action="@{/parent/behaviors/{id}/delete(id=${behavior.id})}" method="post"
+                                        class="d-inline-block">
+                                        <button type="submit" class="btn btn-link text-danger p-0"
+                                            th:attr="onclick='return confirm(\'' + #{behavior.delete.confirm} + '\');'"
+                                            th:title="#{behavior.delete}">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
                                 </div>

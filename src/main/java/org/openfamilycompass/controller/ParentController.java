@@ -316,10 +316,25 @@ public class ParentController {
     public String createBehavior(@RequestParam String title,
             @RequestParam String guideline,
             @RequestParam int points,
-            @RequestParam(required = false) Long childId) {
+            @RequestParam(required = false) Long childId,
+            Authentication authentication) {
         User child = childId != null ? userService.findById(childId).orElse(null) : null;
+        User currentUser = (User) authentication.getPrincipal();
 
-        behaviorService.createBehavior(title, guideline, points, child);
+        Behavior behavior = behaviorService.createBehavior(title, guideline, points, child);
+
+        // Create initial evaluations with maximum points for applicable children
+        List<User> applicableChildren;
+        if (child != null) {
+            applicableChildren = List.of(child);
+        } else {
+            applicableChildren = userService.findAllByRole(UserRole.CHILD);
+        }
+
+        for (User applicableChild : applicableChildren) {
+            behaviorEvaluationService.updateEvaluation(behavior.getId(), applicableChild, points, null, currentUser);
+        }
+
         return "redirect:/parent/behaviors/manage";
     }
 

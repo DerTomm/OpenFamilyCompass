@@ -102,6 +102,65 @@
                     min-height: 44px;
                     font-size: 0.95rem;
                 }
+
+                /* Responsive table for behaviors */
+                .behavior-table {
+                    font-size: 0.85rem;
+                }
+
+                .behavior-table th,
+                .behavior-table td {
+                    padding: 0.5rem 0.25rem !important;
+                }
+
+                .behavior-icon-btn {
+                    padding: 0.25rem 0.5rem;
+                    font-size: 0.8rem;
+                }
+            }
+
+            /* Behavior evaluation table styles */
+            .behavior-table {
+                margin-bottom: 0;
+            }
+
+            .behavior-table thead {
+                background-color: #f8f9fa;
+            }
+
+            .behavior-table tbody tr:hover {
+                background-color: #f8f9fa;
+            }
+
+            .progress-bar-behavior {
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            }
+
+            .behavior-icon-btn {
+                cursor: pointer;
+                background: none;
+                border: none;
+                color: #667eea;
+                font-size: 1.1rem;
+                padding: 0.25rem 0.5rem;
+                transition: transform 0.2s;
+            }
+
+            .behavior-icon-btn:hover {
+                transform: scale(1.2);
+            }
+
+            /* Dark mode support for table */
+            [data-bs-theme="dark"] .behavior-table thead {
+                background-color: var(--bs-tertiary-bg);
+            }
+
+            [data-bs-theme="dark"] .behavior-table tbody tr:hover {
+                background-color: var(--bs-tertiary-bg);
+            }
+
+            [data-bs-theme="dark"] .behavior-icon-btn {
+                color: var(--bs-info);
             }
         </style>
     </th:block>
@@ -165,6 +224,65 @@
                 </div>
             </div>
 
+            <!-- Behavior Evaluations -->
+            <div class="row mb-4" th:if="${behaviorEvaluations.size() > 0}">
+                <div class="col-12">
+                    <div class="child-card p-4">
+                        <h3 class="mb-4"><i class="fas fa-heart"></i> <span>Mein Verhalten</span></h3>
+                        <div class="table-responsive">
+                            <table class="table behavior-table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Verhaltenziel</th>
+                                        <th style="width: 40px;" class="text-center">ℹ️</th>
+                                        <th class="text-center" style="width: 60px;">Max</th>
+                                        <th class="text-center" style="width: 60px;">Aktuell</th>
+                                        <th style="width: 40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="behavior : ${behaviorEvaluations}">
+                                        <td>
+                                            <strong th:text="${behavior.behaviorTitle}">Behavior Title</strong><br>
+                                            <small class="text-muted">
+                                                <div class="progress mt-1" style="height: 8px;">
+                                                    <div class="progress-bar progress-bar-behavior" role="progressbar"
+                                                        th:style="'width: ' + ${behavior.progressPercentage} + '%'"
+                                                        th:attr="aria-valuenow=${behavior.progressPercentage}, aria-valuemin=0, aria-valuemax=100">
+                                                    </div>
+                                                </div>
+                                            </small>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
+                                                th:data-guideline="${behavior.guideline}"
+                                                th:data-title="${behavior.behaviorTitle}"
+                                                onclick="showGuidelineModal(this)">
+                                                ℹ️
+                                            </button>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary" th:text="${behavior.maxPoints}">0</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success" th:text="${behavior.currentPoints}">0</span>
+                                        </td>
+                                        <td class="text-center" th:if="${behavior.hasRemarks}">
+                                            <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
+                                                th:data-remarks="${behavior.remarks}"
+                                                th:data-title="${behavior.behaviorTitle}"
+                                                onclick="showRemarksModal(this)">
+                                                💬
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Pending Tasks -->
             <div class="row" th:if="${pendingTasks.size() > 0}">
                 <div class="col-12">
@@ -221,6 +339,68 @@
             </div>
         </div>
     </div>
+
+    <!-- Guideline Modal -->
+    <div class="modal fade" id="guidelineModal" tabindex="-1" aria-labelledby="guidelineModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="guidelineModalTitle">Verhaltenziel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="guidelineModalContent"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remarks Modal -->
+    <div class="modal fade" id="remarksModal" tabindex="-1" aria-labelledby="remarksModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="remarksModalTitle">Bemerkungen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="remarksModalContent"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script>
+            function showGuidelineModal(button) {
+                const title = button.getAttribute('data-title');
+                const guideline = button.getAttribute('data-guideline');
+
+                document.getElementById('guidelineModalTitle').textContent = title;
+                document.getElementById('guidelineModalContent').textContent = guideline;
+
+                const modal = new bootstrap.Modal(document.getElementById('guidelineModal'));
+                modal.show();
+            }
+
+            function showRemarksModal(button) {
+                const title = button.getAttribute('data-title');
+                const remarks = button.getAttribute('data-remarks');
+
+                document.getElementById('remarksModalTitle').textContent = title + ' - Bemerkungen';
+                document.getElementById('remarksModalContent').textContent = remarks;
+
+                const modal = new bootstrap.Modal(document.getElementById('remarksModal'));
+                modal.show();
+            }
+        </script>
+    </th:block>
 </body>
 
 </html>

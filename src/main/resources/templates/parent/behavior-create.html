@@ -117,24 +117,22 @@
                             <div class="mb-3">
                                 <label for="title" class="form-label"
                                     th:text="#{behavior.title.label} + ' *'">Title</label>
-                                <input type="text" class="form-control" id="title" name="title"
-                                    th:placeholder="#{behavior.title.hint}" required>
+                                <input type="text" class="form-control" id="title" name="title" required>
                                 <div class="form-text" th:text="#{behavior.title.hint}">A short, concise title</div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="guideline" class="form-label"
-                                    th:text="#{behavior.mantra.label} + ' *'">Mantra</label>
+                                    th:text="#{behavior.guidelines.label} + ' *'">Mantra</label>
                                 <textarea class="form-control" id="guideline" name="guideline" rows="3"
-                                    th:placeholder="#{behavior.mantra.hint}" required></textarea>
-                                <div class="form-text" th:text="#{behavior.mantra.hint}">A guiding principle</div>
+                                    required></textarea>
+                                <div class="form-text" th:text="#{behavior.guidelines.hint}">A guiding principle</div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="points" class="form-label"
                                     th:text="#{behavior.points.label} + ' *'">Points</label>
-                                <input type="number" class="form-control" id="points" name="points" min="1" value="10"
-                                    required>
+                                <input type="number" class="form-control" id="points" name="points" min="1" required>
                                 <div class="form-text" th:text="#{behavior.points.hint}">How many points</div>
                             </div>
 
@@ -144,13 +142,9 @@
                                 <select class="form-select" id="childId" name="childId">
                                     <option value="" th:text="#{children.all}">All Children</option>
                                     <option th:each="child : ${children}" th:value="${child.id}"
-                                        th:text="${child.firstName}">Kind</option>
+                                        th:text="${child.firstName}">
+                                        Kind</option>
                                 </select>
-                                <div class="form-text" th:text="#{behavior.child.hint}">Leave empty for all</div>
-                            </div>
-
-                            <div class="alert alert-info" th:utext="#{behavior.note}">
-                                <i class="fas fa-info-circle"></i> Note
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">

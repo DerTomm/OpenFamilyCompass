@@ -116,19 +116,21 @@
                         <form th:action="@{/parent/behaviors/{id}/edit(id=${behavior.id})}" method="post">
                             <div class="mb-3">
                                 <label for="title" class="form-label"
-                                    th:text="#{behavior.title.label} + ' *'">Title</label>
+                                    th:text="#{behavior.evaluate.title} + ' *'">Title</label>
                                 <input type="text" class="form-control" id="title" name="title"
-                                    th:value="${behavior.title}" th:placeholder="#{behavior.title.hint}" required>
-                                <div class="form-text" th:text="#{behavior.title.hint}">A short, concise title</div>
+                                    th:value="${behavior.evaluate.title}"
+                                    th:placeholder="#{behavior.evaluate.title.hint}" required>
+                                <div class="form-text" th:text="#{behavior.evaluate.title.hint}">A short, concise title
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="guideline" class="form-label"
-                                    th:text="#{behavior.mantra.label} + ' *'">Mantra</label>
+                                    th:text="#{behavior.guidelines.label} + ' *'">Mantra</label>
                                 <textarea class="form-control" id="guideline" name="guideline" rows="3"
-                                    th:placeholder="#{behavior.mantra.hint}" required
+                                    th:placeholder="#{behavior.guidelines.hint}" required
                                     th:text="${behavior.guideline}"></textarea>
-                                <div class="form-text" th:text="#{behavior.mantra.hint}">A guiding principle</div>
+                                <div class="form-text" th:text="#{behavior.guidelines.hint}">A guiding principle</div>
                             </div>
 
                             <div class="mb-3">
@@ -149,11 +151,6 @@
                                         th:selected="${behavior.user != null && behavior.user.id == child.id}">Kind
                                     </option>
                                 </select>
-                                <div class="form-text" th:text="#{behavior.child.hint}">Leave empty for all</div>
-                            </div>
-
-                            <div class="alert alert-info" th:utext="#{behavior.note}">
-                                <i class="fas fa-info-circle"></i> Note
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">

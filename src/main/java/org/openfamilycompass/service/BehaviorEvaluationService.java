@@ -2,7 +2,9 @@ package org.openfamilycompass.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.openfamilycompass.dto.BehaviorEvaluationDTO;
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
 import org.openfamilycompass.model.PointTransactionType;
@@ -139,6 +141,50 @@ public class BehaviorEvaluationService {
     public int calculateWeeklyTotal(@NonNull User user) {
         return getCurrentWeekEvaluations(user).stream()
                 .mapToInt(BehaviorEvaluation::getCurrentPoints)
+                .sum();
+    }
+
+    /**
+     * Get all current behavior evaluations for a child as DTOs.
+     * Returns active behavior evaluations that are not yet committed.
+     * 
+     * @param user The child user
+     * @return List of DTOs with current evaluation data
+     */
+    @Transactional(readOnly = true)
+    public List<BehaviorEvaluationDTO> getCurrentBehaviorEvaluationsForChild(@NonNull User user) {
+        List<BehaviorEvaluation> evaluations = evaluationRepository.findByUserAndCommittedFalse(user);
+
+        return evaluations.stream()
+                .filter(eval -> eval.getBehavior().isActive())
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Convert a BehaviorEvaluation entity to a DTO for display.
+     */
+    private BehaviorEvaluationDTO convertToDTO(BehaviorEvaluation evaluation) {
+        BehaviorEvaluationDTO dto = new BehaviorEvaluationDTO();
+        dto.setBehaviorId(evaluation.getBehavior().getId());
+        dto.setBehaviorTitle(evaluation.getBehavior().getTitle());
+        dto.setGuideline(evaluation.getBehavior().getGuideline());
+        dto.setMaxPoints(evaluation.getBehavior().getPoints());
+        dto.setCurrentPoints(evaluation.getCurrentPoints());
+        dto.setRemarks(evaluation.getRemarks());
+        dto.setHasRemarks(evaluation.getRemarks() != null && !evaluation.getRemarks().trim().isEmpty());
+
+        return dto;
+    }
+
+    /**
+     * Get total current points from all active behavior evaluations.
+     */
+    @Transactional(readOnly = true)
+    public int getTotalCurrentPointsForChild(@NonNull User user) {
+        return getCurrentBehaviorEvaluationsForChild(user)
+                .stream()
+                .mapToInt(BehaviorEvaluationDTO::getCurrentPoints)
                 .sum();
     }
 }

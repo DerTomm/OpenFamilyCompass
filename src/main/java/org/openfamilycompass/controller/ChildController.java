@@ -2,11 +2,13 @@ package org.openfamilycompass.controller;
 
 import java.util.List;
 
+import org.openfamilycompass.dto.BehaviorEvaluationDTO;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
 import org.openfamilycompass.model.Task;
 import org.openfamilycompass.model.TaskStatus;
 import org.openfamilycompass.model.User;
+import org.openfamilycompass.service.BehaviorEvaluationService;
 import org.openfamilycompass.service.PointService;
 import org.openfamilycompass.service.PointTransactionWithBalance;
 import org.openfamilycompass.service.RewardRedemptionService;
@@ -33,6 +35,7 @@ public class ChildController {
     private final RewardRedemptionService redemptionService;
     private final PointService pointService;
     private final UserService userService;
+    private final BehaviorEvaluationService behaviorEvaluationService;
 
     @GetMapping("/dashboard")
     public String dashboard(Authentication authentication, Model model) {
@@ -44,11 +47,14 @@ public class ChildController {
 
         List<Task> pendingTasks = taskService.findPendingForUser(freshUser);
         List<Task> completedTasks = taskService.findByUserAndStatus(freshUser, TaskStatus.CHILD_COMPLETED);
+        List<BehaviorEvaluationDTO> behaviorEvaluations = behaviorEvaluationService
+                .getCurrentBehaviorEvaluationsForChild(freshUser);
 
         model.addAttribute("user", freshUser);
         model.addAttribute("pendingTasks", pendingTasks);
         model.addAttribute("completedTasks", completedTasks);
         model.addAttribute("totalPoints", freshUser.getTotalPoints());
+        model.addAttribute("behaviorEvaluations", behaviorEvaluations);
 
         return "child/dashboard";
     }

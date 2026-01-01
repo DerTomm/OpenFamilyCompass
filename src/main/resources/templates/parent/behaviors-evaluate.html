@@ -221,9 +221,7 @@
                         <thead>
                             <tr>
                                 <th th:text="#{behavior.rule}">Behavior</th>
-                                <th th:text="#{behavior.mantra.label}">Mantra</th>
-                                <th class="text-center" th:text="#{behavior.max.points}">Max. Points</th>
-                                <th class="text-center" th:text="#{behavior.current.points}">Current Points</th>
+                                <th class="text-center" th:text="#{behavior.points}">Punkte</th>
                                 <th class="text-center">Aktion</th>
                             </tr>
                         </thead>
@@ -237,17 +235,27 @@
                                         <i class="fas fa-users"></i> Für alle Kinder
                                     </small>
                                 </td>
-                                <td th:text="${behavior.guideline}">Leitsatz</td>
                                 <td class="text-center">
-                                    <span class="badge bg-secondary" th:text="${behavior.points}">0</span>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar"
+                                            style="width: 100%; background-color: #e9ecef; position: relative;"
+                                            th:attr="data-behavior-id=${behavior.id}">
+                                            <div
+                                                th:style="'width: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points) : 100}) + '%; height: 100%; background-color: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 80 ? '#198754' : (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 50 ? '#ffc107' : '#dc3545')) : '#198754'}) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
+                                            </div>
+                                            <span
+                                                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; z-index: 2;"
+                                                th:text="${evaluationMap.containsKey(behavior.id) ? evaluationMap.get(behavior.id).currentPoints + ' von ' + behavior.points : behavior.points + ' von ' + behavior.points}">
+                                            </span>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-success points-badge"
-                                        th:id="'current-points-' + ${behavior.id}"
-                                        th:attr="data-behavior-id=${behavior.id}"
-                                        th:text="${evaluationMap.containsKey(behavior.id) ? evaluationMap.get(behavior.id).currentPoints : 0}">0</span>
-                                </td>
-                                <td class="text-center">
+                                    <button class="btn btn-outline-info btn-sm me-2"
+                                        th:attr="data-behavior-id=${behavior.id},data-behavior-title=${behavior.title},data-behavior-guideline=${behavior.guideline}"
+                                        onclick="openGuidelinesModal(this.dataset.behaviorId, this.dataset.behaviorTitle, this.dataset.behaviorGuideline)">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
                                     <button class="btn btn-primary btn-sm"
                                         th:attr="data-behavior-id=${behavior.id},data-behavior-title=${behavior.title},data-max-points=${behavior.points}"
                                         onclick="openEvaluationDialog(this.dataset.behaviorId, this.dataset.behaviorTitle, this.dataset.maxPoints)">
@@ -259,12 +267,11 @@
                         </tbody>
                         <tfoot>
                             <tr class="table-light">
-                                <td colspan="3" class="text-end"><strong>Wochensumme:</strong></td>
+                                <td colspan="2" class="text-end"><strong>Wochensumme:</strong></td>
                                 <td class="text-center">
                                     <span class="badge bg-primary weekly-total" id="weekly-total"
                                         th:text="${weeklyTotal}">0</span>
                                 </td>
-                                <td></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -274,23 +281,34 @@
                 <div class="behavior-cards d-md-none">
                     <div th:each="behavior : ${behaviors}" class="behavior-card"
                         th:id="'behavior-card-' + ${behavior.id}">
-                        <div class="behavior-card-title" th:text="${behavior.title}">Verhalten</div>
-                        <div class="behavior-card-subtitle" th:text="${behavior.guideline}">Leitsatz</div>
+                        <div class="behavior-card-title d-flex justify-content-between align-items-center">
+                            <span th:text="${behavior.title}">Verhalten</span>
+                            <button class="btn btn-outline-info btn-sm"
+                                th:attr="data-behavior-id=${behavior.id},data-behavior-title=${behavior.title},data-behavior-guideline=${behavior.guideline}"
+                                onclick="openGuidelinesModal(this.dataset.behaviorId, this.dataset.behaviorTitle, this.dataset.behaviorGuideline)">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
 
                         <small class="text-muted d-block mb-2" th:if="${behavior.user == null}">
                             <i class="fas fa-users"></i> Für alle Kinder
                         </small>
 
                         <div class="behavior-card-row">
-                            <span class="behavior-card-label" th:text="#{behavior.max.points}">Max. Points</span>
-                            <span class="badge bg-secondary" th:text="${behavior.points}">0</span>
-                        </div>
-
-                        <div class="behavior-card-row">
-                            <span class="behavior-card-label" th:text="#{behavior.current.points}">Current Points</span>
-                            <span class="badge bg-success points-badge" th:id="'mobile-points-' + ${behavior.id}"
-                                th:attr="data-behavior-id=${behavior.id}"
-                                th:text="${evaluationMap.containsKey(behavior.id) ? evaluationMap.get(behavior.id).currentPoints : 0}">0</span>
+                            <span class="behavior-card-label" th:text="#{behavior.points}">Punkte</span>
+                            <div class="progress" style="height: 20px; width: 100px;">
+                                <div class="progress-bar"
+                                    style="width: 100%; background-color: #e9ecef; position: relative;"
+                                    th:attr="data-behavior-id=${behavior.id}">
+                                    <div
+                                        th:style="'width: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points) : 100}) + '%; height: 100%; background-color: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 80 ? '#198754' : (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 50 ? '#ffc107' : '#dc3545')) : '#198754'}) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
+                                    </div>
+                                    <span
+                                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; font-size: 12px; z-index: 2;"
+                                        th:text="${evaluationMap.containsKey(behavior.id) ? evaluationMap.get(behavior.id).currentPoints + ' von ' + behavior.points : behavior.points + ' von ' + behavior.points}">
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mt-3">
@@ -352,7 +370,8 @@
 
                         <div class="mb-4">
                             <label class="form-label">
-                                <strong th:text="#{behavior.modal.points.label(0)}">Points (0 to 0):</strong>
+                                <strong>Punkte (<span id="slider-min">0</span> bis <span
+                                        id="slider-max-label">0</span>):</strong>
                                 <span id="slider-value" class="text-primary fs-4">0</span> /
                                 <span id="slider-max">0</span> <span th:text="#{tasks.points}">Points</span>
                             </label>
@@ -384,6 +403,32 @@
                 </div>
             </div>
         </div>
+
+        <!-- Guidelines Modal -->
+        <div class="modal fade" id="guidelinesModal" tabindex="-1" aria-labelledby="guidelinesModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title" id="guidelinesModalLabel">
+                            <i class="fas fa-info-circle"></i> <span
+                                th:text="#{behavior.guidelines.label}">Leitsätze</span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6 id="guidelines-behavior-title" class="mb-3"></h6>
+                        <p id="guidelines-content" class="mb-0"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> <span th:text="#{button.close}">Schließen</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div layout:fragment="scripts">
@@ -399,6 +444,7 @@
                 document.getElementById('modal-behavior-title').textContent = behaviorTitle;
                 document.getElementById('points-slider').max = maxPoints;
                 document.getElementById('slider-max').textContent = maxPoints;
+                document.getElementById('slider-max-label').textContent = maxPoints;
 
                 // Lade bestehende Bewertung, falls vorhanden
                 const existingEval = evaluations.find(e => e.behavior.id === behaviorId);
@@ -413,6 +459,14 @@
                 updateSliderValue();
 
                 const modal = new bootstrap.Modal(document.getElementById('evaluationModal'));
+                modal.show();
+            }
+
+            function openGuidelinesModal(behaviorId, behaviorTitle, behaviorGuideline) {
+                document.getElementById('guidelines-behavior-title').textContent = behaviorTitle;
+                document.getElementById('guidelines-content').textContent = behaviorGuideline;
+
+                const modal = new bootstrap.Modal(document.getElementById('guidelinesModal'));
                 modal.show();
             }
 
@@ -452,24 +506,38 @@
                     if (response.ok) {
                         const evaluation = await response.json();
 
-                        // Aktualisiere die Tabelle (Desktop)
-                        const pointsBadge = document.getElementById('current-points-' + behaviorId);
-                        if (pointsBadge) {
-                            pointsBadge.textContent = currentPoints;
-                        }
+                        // Aktualisiere die Progress-Bar (Desktop und Mobile)
+                        const progressBars = document.querySelectorAll(`.progress-bar[data-behavior-id="${behaviorId}"]`);
+                        progressBars.forEach(progressBar => {
+                            const maxPoints = parseInt(document.getElementById('points-slider').max);
+                            const currentPoints = evaluation.currentPoints;
+                            const percentage = (currentPoints / maxPoints) * 100;
 
-                        // Aktualisiere die Mobile-Cards
-                        const mobilePointsBadge = document.getElementById('mobile-points-' + behaviorId);
-                        if (mobilePointsBadge) {
-                            mobilePointsBadge.textContent = currentPoints;
-                        }
+                            // Aktualisiere das innere div für die Breite und Farbe
+                            const innerDiv = progressBar.querySelector('div');
+                            if (innerDiv) {
+                                innerDiv.style.width = percentage + '%';
+                                innerDiv.style.backgroundColor = percentage > 80 ? '#198754' : percentage > 50 ? '#ffc107' : '#dc3545';
+                            }
+
+                            // Aktualisiere den Text im span
+                            const textSpan = progressBar.querySelector('span');
+                            if (textSpan) {
+                                textSpan.textContent = currentPoints + ' von ' + maxPoints;
+                            }
+                        });
 
                         // Aktualisiere die Wochensumme
                         updateWeeklyTotal();
 
                         // Schließe den Dialog
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('evaluationModal'));
-                        modal.hide();
+                        const modalElement = document.getElementById('evaluationModal');
+                        if (modalElement) {
+                            const modal = bootstrap.Modal.getInstance(modalElement);
+                            if (modal) {
+                                modal.hide();
+                            }
+                        }
 
                         // Aktualisiere die evaluations-Liste
                         const existingIndex = evaluations.findIndex(e => e.behavior.id === evaluation.behavior.id);
@@ -488,12 +556,27 @@
             }
 
             function updateWeeklyTotal() {
+                // Berechne die Wochengesamtpunktzahl aus den progress-bar span textContent
                 let total = 0;
-                document.querySelectorAll('.points-badge').forEach(badge => {
-                    const points = parseInt(badge.textContent) || 0;
-                    total += points;
+
+                // Sammle alle Progress-Balken und extrahiere die Punkte aus dem span textContent
+                document.querySelectorAll('.progress-bar[data-behavior-id]').forEach(progressBar => {
+                    const textSpan = progressBar.querySelector('span');
+                    if (textSpan) {
+                        const text = textSpan.textContent; // z.B. "10 von 10"
+                        if (text) {
+                            const currentPoints = parseInt(text.split(' ')[0]);
+                            if (!isNaN(currentPoints)) {
+                                total += currentPoints;
+                            }
+                        }
+                    }
                 });
-                document.getElementById('weekly-total').textContent = total;
+
+                const weeklyTotalElement = document.getElementById('weekly-total');
+                if (weeklyTotalElement) {
+                    weeklyTotalElement.textContent = total;
+                }
 
                 // Aktualisiere auch das Mobile-Total
                 const mobileTotal = document.getElementById('mobile-weekly-total');
@@ -501,6 +584,7 @@
                     mobileTotal.textContent = total;
                 }
             }
+
             /*]]>*/
         </script>
     </div>
