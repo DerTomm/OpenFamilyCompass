@@ -345,9 +345,9 @@ public class ParentController {
         return "redirect:/parent/behaviors/manage";
     }
 
-    @PostMapping("/behaviors/{id}/deactivate")
-    public String deactivateBehavior(@PathVariable Long id) {
-        behaviorService.deactivateBehavior(id);
+    @PostMapping("/behaviors/{id}/delete")
+    public String deleteBehavior(@PathVariable Long id) {
+        behaviorService.deleteBehavior(id);
         return "redirect:/parent/behaviors/manage";
     }
 

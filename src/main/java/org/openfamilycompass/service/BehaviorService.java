@@ -89,12 +89,15 @@ public class BehaviorService {
     }
 
     @Transactional
-    public void deactivateBehavior(@NonNull Long behaviorId) {
+    public void deleteBehavior(@NonNull Long behaviorId) {
         Behavior behavior = behaviorRepository.findById(behaviorId)
                 .orElseThrow(() -> new IllegalArgumentException("Behavior not found"));
 
-        behavior.setActive(false);
-        behaviorRepository.save(behavior);
+        // Delete all associated behavior evaluations first
+        behaviorEvaluationRepository.deleteByBehavior(behavior);
+
+        // Then delete the behavior itself
+        behaviorRepository.delete(behavior);
     }
 
     public List<Behavior> findAllActive() {

@@ -59,10 +59,6 @@
                 flex: 1;
             }
 
-            .behavior-card-status {
-                flex-shrink: 0;
-            }
-
             .behavior-card-row {
                 display: flex;
                 justify-content: space-between;
@@ -143,7 +139,6 @@
                 font-size: 0.8rem !important;
                 padding: 0.35rem 0.65rem !important;
             }
-        }
     </style>
 </div>
 
@@ -179,7 +174,6 @@
                                         <th th:text="#{behavior.mantra.label}">Mantra</th>
                                         <th th:text="#{tasks.points}">Points</th>
                                         <th th:text="#{behavior.child.specific}">Child</th>
-                                        <th>Status</th>
                                         <th th:text="#{tasks.actions}">Actions</th>
                                     </tr>
                                 </thead>
@@ -193,27 +187,22 @@
                                             th:text="${behavior.user != null ? behavior.user.firstName : #messages.msg('children.all')}">
                                             Kind</td>
                                         <td>
-                                            <span class="badge"
-                                                th:classappend="${behavior.active} ? 'bg-success' : 'bg-secondary'"
-                                                th:text="${behavior.active} ? #{status.active} : #{status.inactive}">Status</span>
-                                        </td>
-                                        <td th:if="${behavior.active}">
                                             <a th:href="@{/parent/behaviors/{id}/edit(id=${behavior.id})}"
                                                 class="btn btn-sm btn-primary">
                                                 <i class="fas fa-edit"></i> <span th:text="#{behavior.edit}">Edit</span>
                                             </a>
-                                            <form th:action="@{/parent/behaviors/{id}/deactivate(id=${behavior.id})}"
+                                            <form th:action="@{/parent/behaviors/{id}/delete(id=${behavior.id})}"
                                                 method="post" class="d-inline">
                                                 <button type="submit" class="btn btn-sm btn-danger"
-                                                    th:attr="onclick='return confirm(\'' + #{behavior.deactivate.confirm} + '\');'">
-                                                    <i class="fas fa-ban"></i> <span
-                                                        th:text="#{behavior.deactivate}">Deactivate</span>
+                                                    th:attr="onclick='return confirm(\'' + #{behavior.delete.confirm} + '\');'">
+                                                    <i class="fas fa-trash"></i> <span
+                                                        th:text="#{behavior.delete}">Delete</span>
                                                 </button>
                                             </form>
                                         </td>
                                     </tr>
                                     <tr th:if="${behaviors.isEmpty()}">
-                                        <td colspan="6" class="text-center text-muted" th:text="#{behavior.none}">
+                                        <td colspan="5" class="text-center text-muted" th:text="#{behavior.none}">
                                             No behavior rules
                                         </td>
                                     </tr>
@@ -226,9 +215,6 @@
                             <div th:each="behavior : ${behaviors}" class="behavior-card-item">
                                 <div class="behavior-card-header">
                                     <div class="behavior-card-title" th:text="${behavior.title}">Titel</div>
-                                    <span class="badge behavior-card-status"
-                                        th:classappend="${behavior.active} ? 'bg-success' : 'bg-secondary'"
-                                        th:text="${behavior.active} ? #{status.active} : #{status.inactive}">Status</span>
                                 </div>
 
                                 <div class="behavior-card-row">
@@ -249,17 +235,16 @@
                                         Kind</span>
                                 </div>
 
-                                <div class="behavior-card-actions" th:if="${behavior.active}">
+                                <div class="behavior-card-actions">
                                     <a th:href="@{/parent/behaviors/{id}/edit(id=${behavior.id})}"
                                         class="btn btn-sm btn-primary">
                                         <i class="fas fa-edit"></i> <span th:text="#{behavior.edit}">Edit</span>
                                     </a>
-                                    <form th:action="@{/parent/behaviors/{id}/deactivate(id=${behavior.id})}"
-                                        method="post">
+                                    <form th:action="@{/parent/behaviors/{id}/delete(id=${behavior.id})}" method="post">
                                         <button type="submit" class="btn btn-sm btn-danger w-100"
-                                            th:attr="onclick='return confirm(\'' + #{behavior.deactivate.confirm} + '\');'">
-                                            <i class="fas fa-ban"></i> <span
-                                                th:text="#{behavior.deactivate}">Deactivate</span>
+                                            th:attr="onclick='return confirm(\'' + #{behavior.delete.confirm} + '\');'">
+                                            <i class="fas fa-trash"></i> <span
+                                                th:text="#{behavior.delete}">Delete</span>
                                         </button>
                                     </form>
                                 </div>

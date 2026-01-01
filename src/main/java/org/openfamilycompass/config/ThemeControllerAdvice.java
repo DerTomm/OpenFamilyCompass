@@ -5,7 +5,6 @@ import java.util.List;
 import org.openfamilycompass.model.Notification;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.service.NotificationService;
-import org.openfamilycompass.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
@@ -19,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 public class ThemeControllerAdvice {
 
     private final NotificationService notificationService;
-    private final UserService userService;
 
     @ModelAttribute
     public void addThemeToModel(Model model) {
