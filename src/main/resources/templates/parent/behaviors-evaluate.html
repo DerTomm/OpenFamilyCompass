@@ -23,7 +23,7 @@
         }
 
         .weekly-total {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: bold;
         }
 
@@ -208,7 +208,7 @@
             }
 
             .weekly-total {
-                font-size: 1.25rem !important;
+                font-size: 1.5rem !important;
             }
         }
     </style>
@@ -254,13 +254,9 @@
                                 class="behavior-row">
                                 <td>
                                     <strong th:text="${behavior.title}">Verhalten</strong>
-                                    <br>
-                                    <small class="text-muted" th:if="${behavior.user == null}">
-                                        <i class="fas fa-users"></i> Für alle Kinder
-                                    </small>
                                 </td>
                                 <td class="text-center">
-                                    <div class="progress" style="height: 20px;">
+                                    <div class="progress" style="height: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                         <div class="progress-bar"
                                             style="width: 100%; background-color: #e9ecef; position: relative;"
                                             th:attr="data-behavior-id=${behavior.id}">
@@ -268,7 +264,7 @@
                                                 th:style="'width: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points) : 100}) + '%; height: 100%; background-color: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 80 ? '#198754' : (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 50 ? '#ffc107' : '#dc3545')) : '#198754'}) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
                                             </div>
                                             <span
-                                                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; z-index: 2;"
+                                                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; font-size: 14px; z-index: 2;"
                                                 th:text="${evaluationMap.containsKey(behavior.id) ? evaluationMap.get(behavior.id).currentPoints + ' von ' + behavior.points : behavior.points + ' von ' + behavior.points}">
                                             </span>
                                         </div>
@@ -290,10 +286,10 @@
                             </tr>
                         </tbody>
                         <tfoot>
-                            <tr class="table-light">
+                            <tr>
                                 <td colspan="2" class="text-end"><strong>Wochensumme:</strong></td>
                                 <td class="text-center">
-                                    <span id="weekly-total" th:text="${weeklyTotal}">0</span>
+                                    <span id="weekly-total" class="fs-5 fw-bold" th:text="${weeklyTotal}">0</span>
                                 </td>
                             </tr>
                         </tfoot>
@@ -308,13 +304,10 @@
                             <span class="title-text" th:text="${behavior.title}">Verhalten</span>
                         </div>
 
-                        <small class="text-muted d-block mb-3" th:if="${behavior.user == null}">
-                            <i class="fas fa-users"></i> Für alle Kinder
-                        </small>
-
                         <div class="behavior-card-row">
                             <span class="behavior-card-label" th:text="#{behavior.points}">Punkte</span>
-                            <div class="progress" style="height: 20px; width: 100px;">
+                            <div class="progress"
+                                style="height: 30px; width: 120px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                 <div class="progress-bar"
                                     style="width: 100%; background-color: #e9ecef; position: relative;"
                                     th:attr="data-behavior-id=${behavior.id}">
@@ -345,12 +338,12 @@
                     </div>
 
                     <!-- Mobile Weekly Total -->
-                    <div class="behavior-card bg-light border-primary border-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong th:text="#{behavior.finalize}">Wochensumme</strong>
-                            <span class="badge bg-primary weekly-total" id="mobile-weekly-total"
-                                th:text="${weeklyTotal}">0</span>
-                        </div>
+                    <div class="text-center mt-3">
+                        <strong>
+                            <span th:text="#{behavior.weekly.total}"></span>:
+                            <span th:text="${weeklyTotal}">0</span>
+                            <span th:text="#{behavior.points}"></span>
+                        </strong>
                     </div>
                 </div>
             </div>
@@ -394,10 +387,10 @@
 
                         <div class="mb-4">
                             <label class="form-label">
-                                <strong>Punkte (<span id="slider-min">0</span> bis <span
-                                        id="slider-max-label">0</span>):</strong>
+                                <span id="points-label"><strong><span
+                                            th:text="#{tasks.points}">Points</span>:</strong></span>
                                 <span id="slider-value" class="text-primary fs-4">0</span> /
-                                <span id="slider-max">0</span> <span th:text="#{tasks.points}">Points</span>
+                                <span id="slider-max">0</span>
                             </label>
                             <input type="range" class="form-range" id="points-slider" min="0" max="100" value="0"
                                 oninput="updateSliderValue()">
@@ -468,7 +461,6 @@
                 document.getElementById('modal-behavior-title').textContent = behaviorTitle;
                 document.getElementById('points-slider').max = maxPoints;
                 document.getElementById('slider-max').textContent = maxPoints;
-                document.getElementById('slider-max-label').textContent = maxPoints;
 
                 // Lade bestehende Bewertung, falls vorhanden
                 const existingEval = evaluations.find(e => e.behavior.id === behaviorId);
@@ -592,10 +584,6 @@
                         const weeklyTotalElement = document.getElementById('weekly-total');
                         if (weeklyTotalElement) {
                             weeklyTotalElement.textContent = data.weeklyTotal;
-                        }
-                        const mobileTotal = document.getElementById('mobile-weekly-total');
-                        if (mobileTotal) {
-                            mobileTotal.textContent = data.weeklyTotal;
                         }
                     })
                     .catch(error => {
