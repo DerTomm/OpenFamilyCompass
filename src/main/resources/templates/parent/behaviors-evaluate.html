@@ -269,8 +269,7 @@
                             <tr class="table-light">
                                 <td colspan="2" class="text-end"><strong>Wochensumme:</strong></td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary weekly-total" id="weekly-total"
-                                        th:text="${weeklyTotal}">0</span>
+                                    <span id="weekly-total" th:text="${weeklyTotal}">0</span>
                                 </td>
                             </tr>
                         </tfoot>
@@ -527,8 +526,8 @@
                             }
                         });
 
-                        // Aktualisiere die Wochensumme
-                        updateWeeklyTotal();
+                        // Aktualisiere die Wochensumme vom Service
+                        updateWeeklyTotalFromService();
 
                         // Schließe den Dialog
                         const modalElement = document.getElementById('evaluationModal');
@@ -555,34 +554,28 @@
                 }
             }
 
-            function updateWeeklyTotal() {
-                // Berechne die Wochengesamtpunktzahl aus den progress-bar span textContent
-                let total = 0;
-
-                // Sammle alle Progress-Balken und extrahiere die Punkte aus dem span textContent
-                document.querySelectorAll('.progress-bar[data-behavior-id]').forEach(progressBar => {
-                    const textSpan = progressBar.querySelector('span');
-                    if (textSpan) {
-                        const text = textSpan.textContent; // z.B. "10 von 10"
-                        if (text) {
-                            const currentPoints = parseInt(text.split(' ')[0]);
-                            if (!isNaN(currentPoints)) {
-                                total += currentPoints;
-                            }
-                        }
+            function updateWeeklyTotalFromService() {
+                const childId = document.getElementById('current-child-id').value;
+                fetch('/parent/behaviors/evaluate/weekly-total?childId=' + childId, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-Token': document.querySelector('meta[name="_csrf"]')?.getAttribute('content')
                     }
-                });
-
-                const weeklyTotalElement = document.getElementById('weekly-total');
-                if (weeklyTotalElement) {
-                    weeklyTotalElement.textContent = total;
-                }
-
-                // Aktualisiere auch das Mobile-Total
-                const mobileTotal = document.getElementById('mobile-weekly-total');
-                if (mobileTotal) {
-                    mobileTotal.textContent = total;
-                }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        const weeklyTotalElement = document.getElementById('weekly-total');
+                        if (weeklyTotalElement) {
+                            weeklyTotalElement.textContent = data.weeklyTotal;
+                        }
+                        const mobileTotal = document.getElementById('mobile-weekly-total');
+                        if (mobileTotal) {
+                            mobileTotal.textContent = data.weeklyTotal;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching weekly total:', error);
+                    });
             }
 
             /*]]>*/

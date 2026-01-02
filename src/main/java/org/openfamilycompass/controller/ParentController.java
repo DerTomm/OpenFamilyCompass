@@ -284,6 +284,19 @@ public class ParentController {
                 behaviorId, child, currentPoints, remarks, currentUser);
     }
 
+    @GetMapping("/behaviors/evaluate/weekly-total")
+    @ResponseBody
+    public Map<String, Integer> getWeeklyTotal(@RequestParam Long childId) {
+        User child = userService.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        int weeklyTotal = behaviorEvaluationService.calculateWeeklyTotal(child);
+
+        Map<String, Integer> response = new HashMap<>();
+        response.put("weeklyTotal", weeklyTotal);
+        return response;
+    }
+
     @PostMapping("/behaviors/evaluate/{childId}/commit")
     public String commitWeeklyEvaluations(@PathVariable Long childId,
             Authentication authentication) {

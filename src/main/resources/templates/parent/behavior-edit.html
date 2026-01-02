@@ -116,11 +116,10 @@
                         <form th:action="@{/parent/behaviors/{id}/edit(id=${behavior.id})}" method="post">
                             <div class="mb-3">
                                 <label for="title" class="form-label"
-                                    th:text="#{behavior.evaluate.title} + ' *'">Title</label>
+                                    th:text="#{behavior.title.label} + ' *'">Title</label>
                                 <input type="text" class="form-control" id="title" name="title"
-                                    th:value="${behavior.evaluate.title}"
-                                    th:placeholder="#{behavior.evaluate.title.hint}" required>
-                                <div class="form-text" th:text="#{behavior.evaluate.title.hint}">A short, concise title
+                                    th:value="${behavior.title}" th:placeholder="#{behavior.title.hint}" required>
+                                <div class="form-text" th:text="#{behavior.title.hint}">A short, concise title
                                 </div>
                             </div>
 
