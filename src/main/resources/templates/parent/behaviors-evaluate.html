@@ -341,7 +341,7 @@
                     <div class="text-center mt-3">
                         <strong>
                             <span th:text="#{behavior.weekly.total}"></span>:
-                            <span th:text="${weeklyTotal}">0</span>
+                            <span id="weekly-total-mobile" th:text="${weeklyTotal}">0</span>
                             <span th:text="#{behavior.points}"></span>
                         </strong>
                     </div>
@@ -581,9 +581,15 @@
                 })
                     .then(response => response.json())
                     .then(data => {
+                        // Aktualisiere Desktop-Summe
                         const weeklyTotalElement = document.getElementById('weekly-total');
                         if (weeklyTotalElement) {
                             weeklyTotalElement.textContent = data.weeklyTotal;
+                        }
+                        // Aktualisiere Mobile-Summe
+                        const weeklyTotalMobileElement = document.getElementById('weekly-total-mobile');
+                        if (weeklyTotalMobileElement) {
+                            weeklyTotalMobileElement.textContent = data.weeklyTotal;
                         }
                     })
                     .catch(error => {
