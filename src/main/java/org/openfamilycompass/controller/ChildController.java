@@ -50,13 +50,35 @@ public class ChildController {
         List<BehaviorEvaluationDTO> behaviorEvaluations = behaviorEvaluationService
                 .getCurrentBehaviorEvaluationsForChild(freshUser);
 
+        int totalBehaviorPoints = behaviorEvaluations.stream()
+                .mapToInt(BehaviorEvaluationDTO::getCurrentPoints)
+                .sum();
+
         model.addAttribute("user", freshUser);
         model.addAttribute("pendingTasks", pendingTasks);
         model.addAttribute("completedTasks", completedTasks);
         model.addAttribute("totalPoints", freshUser.getTotalPoints());
+        model.addAttribute("totalBehaviorPoints", totalBehaviorPoints);
         model.addAttribute("behaviorEvaluations", behaviorEvaluations);
 
         return "child/dashboard";
+    }
+
+    @GetMapping("/behaviors")
+    public String behaviors(Authentication authentication, Model model) {
+        User currentUser = (User) authentication.getPrincipal();
+
+        // Load fresh user data from database to get updated points
+        User freshUser = userService.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<BehaviorEvaluationDTO> behaviorEvaluations = behaviorEvaluationService
+                .getCurrentBehaviorEvaluationsForChild(freshUser);
+
+        model.addAttribute("user", freshUser);
+        model.addAttribute("behaviorEvaluations", behaviorEvaluations);
+
+        return "child/behaviors";
     }
 
     @GetMapping("/tasks")

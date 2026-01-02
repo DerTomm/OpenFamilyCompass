@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}"
+    th:attr="data-bs-theme=${userTheme}">
+
+<head>
+    <title th:text="#{child.behaviors.title}">My Behaviors</title>
+    <th:block layout:fragment="styles">
+        <style>
+            /* Light mode - default background */
+            body {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+
+            .child-card {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                color: inherit;
+            }
+
+            .task-card {
+                border-left: 5px solid #667eea;
+                transition: transform 0.2s;
+            }
+
+            .task-card:hover {
+                transform: translateX(5px);
+            }
+
+            /* Dark mode support */
+            [data-bs-theme="dark"] body {
+                background: linear-gradient(135deg, #1a1f3a 0%, #2d1b4e 100%);
+            }
+
+            [data-bs-theme="dark"] .child-card {
+                background: var(--bs-dark-bg-subtle);
+                border: 1px solid var(--bs-border-color);
+            }
+
+            [data-bs-theme="dark"] .card {
+                background-color: var(--bs-dark-bg-subtle);
+                border-color: var(--bs-border-color);
+                color: var(--bs-body-color);
+            }
+
+            [data-bs-theme="dark"] .card-body {
+                color: var(--bs-body-color);
+            }
+
+            [data-bs-theme="dark"] .card-title {
+                color: var(--bs-body-color);
+            }
+
+            [data-bs-theme="dark"] h2,
+            [data-bs-theme="dark"] h3,
+            [data-bs-theme="dark"] h4 {
+                color: var(--bs-body-color);
+            }
+
+            [data-bs-theme="dark"] .text-muted {
+                color: var(--bs-secondary-color) !important;
+            }
+
+            [data-bs-theme="dark"] .alert-info {
+                background-color: var(--bs-info-bg-subtle);
+                border-color: var(--bs-info-border-subtle);
+                color: var(--bs-body-color);
+            }
+
+            /* Mobile optimizations */
+            @media (max-width: 768px) {
+                .child-card {
+                    border-radius: 10px;
+                    padding: 1rem !important;
+                }
+
+                h2 {
+                    font-size: 1.35rem !important;
+                }
+
+                h3 {
+                    font-size: 1.15rem !important;
+                }
+
+                .btn {
+                    min-height: 44px;
+                    font-size: 0.95rem;
+                }
+
+                /* Responsive table for behaviors */
+                .behavior-table {
+                    font-size: 0.85rem;
+                }
+
+                .behavior-table th,
+                .behavior-table td {
+                    padding: 0.5rem 0.25rem !important;
+                }
+
+                .behavior-icon-btn {
+                    padding: 0.25rem 0.5rem;
+                    font-size: 0.8rem;
+                }
+            }
+
+            /* Behavior evaluation table styles */
+            .behavior-table {
+                margin-bottom: 0;
+            }
+
+            .behavior-table thead {
+                background-color: #f8f9fa;
+            }
+
+            .behavior-table tbody tr:hover {
+                background-color: #f8f9fa;
+            }
+
+            .progress-bar-behavior {
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            }
+
+            .behavior-icon-btn {
+                cursor: pointer;
+                background: none;
+                border: none;
+                color: #667eea;
+                font-size: 1.1rem;
+                padding: 0.25rem 0.5rem;
+                transition: transform 0.2s;
+            }
+
+            .behavior-icon-btn:hover {
+                transform: scale(1.2);
+            }
+
+            [data-bs-theme="dark"] .behavior-table thead {
+                background-color: var(--bs-dark-bg-subtle);
+            }
+
+            [data-bs-theme="dark"] .behavior-table tbody tr:hover {
+                background-color: var(--bs-dark-bg-subtle);
+            }
+
+            [data-bs-theme="dark"] .behavior-icon-btn {
+                color: var(--bs-primary);
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content" class="container my-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="flex-grow-1">
+                        <h2><i class="fas fa-heart"></i> <span th:text="#{child.behaviors.title}">My Behaviors</span>
+                        </h2>
+                        <p class="text-muted mb-0" th:text="#{child.behaviors.subtitle}">Track your weekly behavior
+                            progress</p>
+                    </div>
+                </div>
+                <a th:href="@{/child/dashboard}" class="btn btn-secondary btn-sm w-100">
+                    <i class="fas fa-arrow-left"></i> <span th:text="#{button.back}">Back</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Behavior Evaluations -->
+        <div class="row mb-4" th:if="${behaviorEvaluations.size() > 0}">
+            <div class="col-12">
+                <div class="child-card p-4">
+                    <h3 class="mb-4"><i class="fas fa-heart"></i> <span th:text="#{child.behaviors.current}">Current
+                            Week Behaviors</span></h3>
+                    <div class="table-responsive">
+                        <table class="table behavior-table table-hover">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{behavior.rule}">Behavior Goal</th>
+                                    <th style="width: 40px;" class="text-center">ℹ️</th>
+                                    <th class="text-center" style="width: 60px;" th:text="#{behavior.points}">Max</th>
+                                    <th class="text-center" style="width: 60px;" th:text="#{behavior.current}">Current
+                                    </th>
+                                    <th style="width: 40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="behavior : ${behaviorEvaluations}">
+                                    <td>
+                                        <strong th:text="${behavior.behaviorTitle}">Behavior Title</strong><br>
+                                        <small class="text-muted">
+                                            <div class="progress mt-1" style="height: 8px;">
+                                                <div class="progress-bar progress-bar-behavior" role="progressbar"
+                                                    th:style="'width: ' + ${behavior.progressPercentage} + '%'"
+                                                    th:attr="aria-valuenow=${behavior.progressPercentage}, aria-valuemin=0, aria-valuemax=100">
+                                                </div>
+                                            </div>
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
+                                            th:data-guideline="${behavior.guideline}"
+                                            th:data-title="${behavior.behaviorTitle}"
+                                            onclick="showGuidelineModal(this)">
+                                            ℹ️
+                                        </button>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary" th:text="${behavior.maxPoints}">0</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success" th:text="${behavior.currentPoints}">0</span>
+                                    </td>
+                                    <td class="text-center" th:if="${behavior.hasRemarks}">
+                                        <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
+                                            th:data-remarks="${behavior.remarks}"
+                                            th:data-title="${behavior.behaviorTitle}" onclick="showRemarksModal(this)">
+                                            💬
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No behaviors message -->
+        <div class="row" th:if="${behaviorEvaluations.size() == 0}">
+            <div class="col-12">
+                <div class="child-card p-4 text-center">
+                    <i class="fas fa-heart fa-4x text-muted mb-3"></i>
+                    <h3 th:text="#{child.behaviors.no.behaviors}">No Behaviors Yet</h3>
+                    <p class="text-muted" th:text="#{child.behaviors.no.behaviors.desc}">Your parents haven't set up any
+                        behavior goals for this week yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            function showGuidelineModal(button) {
+                const title = button.getAttribute('data-title');
+                const guideline = button.getAttribute('data-guideline');
+
+                // Create modal HTML
+                const modalHtml = `
+                    <div class="modal fade" id="guidelineModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">${title}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>${guideline}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{button.close}">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Remove existing modal if present
+                const existingModal = document.getElementById('guidelineModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('guidelineModal'));
+                modal.show();
+            }
+
+            function showRemarksModal(button) {
+                const title = button.getAttribute('data-title');
+                const remarks = button.getAttribute('data-remarks');
+
+                // Create modal HTML
+                const modalHtml = `
+                    <div class="modal fade" id="remarksModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">${title} - Remarks</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>${remarks}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{button.close}">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Remove existing modal if present
+                const existingModal = document.getElementById('remarksModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('remarksModal'));
+                modal.show();
+            }
+            /*]]>*/
+        </script>
+    </div>
+</body>
+
+</html>

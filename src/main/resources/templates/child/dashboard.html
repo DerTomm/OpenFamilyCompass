@@ -18,10 +18,19 @@
                 border-radius: 20px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
                 color: inherit;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            /* Ensure all quick action cards have the same height */
+            .quick-action-card {
+                min-height: 220px;
             }
 
             .points-badge {
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                background: blue;
                 padding: 20px;
                 border-radius: 15px;
                 color: white;
@@ -80,6 +89,10 @@
 
             /* Mobile optimizations */
             @media (max-width: 768px) {
+                .quick-action-card {
+                    min-height: auto;
+                }
+
                 .child-card {
                     border-radius: 10px;
                     padding: 1rem !important;
@@ -192,20 +205,32 @@
 
             <!-- Quick Actions -->
             <div class="row mb-4">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
+                    <a href="/child/behaviors" class="text-decoration-none">
+                        <div class="child-card quick-action-card p-4 text-center">
+                            <i class="fas fa-heart fa-4x text-danger mb-3"></i>
+                            <h4 th:text="#{child.behaviors.title}">Mein Verhalten</h4>
+                            <p class="mb-0 bg-warning text-dark"
+                                th:text="${totalBehaviorPoints} + ' ' + #{child.behaviors.points.available}">0 points
+                                available</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-3 mb-3">
                     <a href="/child/tasks" class="text-decoration-none">
-                        <div class="child-card p-4 text-center">
+                        <div class="child-card quick-action-card p-4 text-center">
                             <i class="fas fa-tasks fa-4x text-primary mb-3"></i>
                             <h4 th:text="#{tasks.my.title}">My Tasks</h4>
-                            <p class="mb-0 badge bg-warning text-dark"
+                            <p class="mb-0 bg-warning text-dark"
                                 th:text="${pendingTasks.size()} + ' ' + #{tasks.available}">0 available</p>
                         </div>
                     </a>
                 </div>
 
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <a href="/child/shop" class="text-decoration-none">
-                        <div class="child-card p-4 text-center">
+                        <div class="child-card quick-action-card p-4 text-center">
                             <i class="fas fa-shopping-cart fa-4x text-success mb-3"></i>
                             <h4 th:text="#{child.dashboard.shop.title}">Reward Shop</h4>
                             <p class="mb-0 text-muted" th:text="#{child.dashboard.shop.subtitle}">Redeem points</p>
@@ -213,73 +238,14 @@
                     </a>
                 </div>
 
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <a href="/child/history" class="text-decoration-none">
-                        <div class="child-card p-4 text-center">
+                        <div class="child-card quick-action-card p-4 text-center">
                             <i class="fas fa-history fa-4x text-info mb-3"></i>
                             <h4 th:text="#{history.title}">My History</h4>
                             <p class="mb-0 text-muted">Punkte-Verlauf</p>
                         </div>
                     </a>
-                </div>
-            </div>
-
-            <!-- Behavior Evaluations -->
-            <div class="row mb-4" th:if="${behaviorEvaluations.size() > 0}">
-                <div class="col-12">
-                    <div class="child-card p-4">
-                        <h3 class="mb-4"><i class="fas fa-heart"></i> <span>Mein Verhalten</span></h3>
-                        <div class="table-responsive">
-                            <table class="table behavior-table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Verhaltenziel</th>
-                                        <th style="width: 40px;" class="text-center">ℹ️</th>
-                                        <th class="text-center" style="width: 60px;">Max</th>
-                                        <th class="text-center" style="width: 60px;">Aktuell</th>
-                                        <th style="width: 40px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="behavior : ${behaviorEvaluations}">
-                                        <td>
-                                            <strong th:text="${behavior.behaviorTitle}">Behavior Title</strong><br>
-                                            <small class="text-muted">
-                                                <div class="progress mt-1" style="height: 8px;">
-                                                    <div class="progress-bar progress-bar-behavior" role="progressbar"
-                                                        th:style="'width: ' + ${behavior.progressPercentage} + '%'"
-                                                        th:attr="aria-valuenow=${behavior.progressPercentage}, aria-valuemin=0, aria-valuemax=100">
-                                                    </div>
-                                                </div>
-                                            </small>
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
-                                                th:data-guideline="${behavior.guideline}"
-                                                th:data-title="${behavior.behaviorTitle}"
-                                                onclick="showGuidelineModal(this)">
-                                                ℹ️
-                                            </button>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-secondary" th:text="${behavior.maxPoints}">0</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-success" th:text="${behavior.currentPoints}">0</span>
-                                        </td>
-                                        <td class="text-center" th:if="${behavior.hasRemarks}">
-                                            <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
-                                                th:data-remarks="${behavior.remarks}"
-                                                th:data-title="${behavior.behaviorTitle}"
-                                                onclick="showRemarksModal(this)">
-                                                💬
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
 
