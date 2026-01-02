@@ -75,8 +75,13 @@ public class ChildController {
         List<BehaviorEvaluationDTO> behaviorEvaluations = behaviorEvaluationService
                 .getCurrentBehaviorEvaluationsForChild(freshUser);
 
+        int totalBehaviorPoints = behaviorEvaluations.stream()
+                .mapToInt(BehaviorEvaluationDTO::getCurrentPoints)
+                .sum();
+
         model.addAttribute("user", freshUser);
         model.addAttribute("behaviorEvaluations", behaviorEvaluations);
+        model.addAttribute("totalBehaviorPoints", totalBehaviorPoints);
 
         return "child/behaviors";
     }

@@ -89,19 +89,71 @@
                     font-size: 0.95rem;
                 }
 
-                /* Responsive table for behaviors */
+                /* Table as Cards on Mobile */
                 .behavior-table {
-                    font-size: 0.85rem;
+                    display: none !important;
                 }
 
-                .behavior-table th,
-                .behavior-table td {
-                    padding: 0.5rem 0.25rem !important;
+                .behavior-cards {
+                    display: block !important;
                 }
 
-                .behavior-icon-btn {
-                    padding: 0.25rem 0.5rem;
-                    font-size: 0.8rem;
+                .behavior-card {
+                    border: 1px solid var(--bs-border-color);
+                    border-radius: 0.5rem;
+                    padding: 1rem;
+                    margin-bottom: 1rem;
+                    background: var(--bs-card-bg);
+                }
+
+                .behavior-card-title {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    margin-bottom: 0.75rem;
+                    line-height: 1.5;
+                }
+
+                .behavior-card-title .title-text {
+                    display: inline;
+                }
+
+                .behavior-card-title .btn-icon {
+                    vertical-align: middle;
+                    margin-left: 0.25rem;
+                }
+
+                .behavior-card-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0.5rem 0;
+                    border-bottom: 1px solid var(--bs-border-color);
+                }
+
+                .behavior-card-label {
+                    font-size: 0.875rem;
+                    color: var(--bs-secondary);
+                }
+
+                .progress {
+                    height: 30px;
+                    width: 120px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+
+                .progress-bar {
+                    position: relative;
+                }
+
+                .progress-text {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    color: #000;
+                    font-weight: 600;
+                    font-size: 12px;
+                    z-index: 2;
                 }
             }
 
@@ -172,58 +224,104 @@
         <!-- Behavior Evaluations -->
         <div class="row mb-4" th:if="${behaviorEvaluations.size() > 0}">
             <div class="col-12">
-                <div class="child-card p-4">
-                    <h3 class="mb-4"><i class="fas fa-heart"></i> <span th:text="#{child.behaviors.current}">Current
-                            Week Behaviors</span></h3>
-                    <div class="table-responsive">
-                        <table class="table behavior-table table-hover">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{behavior.rule}">Behavior Goal</th>
-                                    <th style="width: 40px;" class="text-center">ℹ️</th>
-                                    <th class="text-center" style="width: 60px;" th:text="#{behavior.points}">Max</th>
-                                    <th class="text-center" style="width: 60px;" th:text="#{behavior.current}">Current
-                                    </th>
-                                    <th style="width: 40px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="behavior : ${behaviorEvaluations}">
-                                    <td>
-                                        <strong th:text="${behavior.behaviorTitle}">Behavior Title</strong><br>
-                                        <small class="text-muted">
-                                            <div class="progress mt-1" style="height: 8px;">
-                                                <div class="progress-bar progress-bar-behavior" role="progressbar"
-                                                    th:style="'width: ' + ${behavior.progressPercentage} + '%'"
-                                                    th:attr="aria-valuenow=${behavior.progressPercentage}, aria-valuemin=0, aria-valuemax=100">
-                                                </div>
+
+                <div class="table-responsive">
+                    <table class="table behavior-table table-hover">
+                        <thead>
+                            <tr>
+                                <th th:text="#{behavior.rule}">Behavior Goal</th>
+                                <th class="text-center" th:text="#{behavior.progress}">Progress</th>
+                                <th style="width: 40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="behavior : ${behaviorEvaluations}">
+                                <td>
+                                    <strong th:text="${behavior.behaviorTitle}"
+                                        th:data-guideline="${behavior.guideline}"
+                                        th:data-title="${behavior.behaviorTitle}" onclick="showGuidelineModal(this)"
+                                        style="cursor: pointer; color: #667eea;">Behavior Title</strong>
+                                </td>
+                                <td class="text-center">
+                                    <div class="progress mb-2" style="height: 30px;">
+                                        <div class="progress-bar" role="progressbar"
+                                            style="width: 100%; background-color: #e9ecef; position: relative;"
+                                            th:attr="aria-valuenow=${behavior.progressPercentage}, aria-valuemin=0, aria-valuemax=100">
+                                            <div
+                                                th:style="'width: ' + ${behavior.progressPercentage} + '%; height: 100%; background-color: ' + (${behavior.progressPercentage} > 80 ? '#198754' : (${behavior.progressPercentage} > 50 ? '#ffc107' : '#dc3545')) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
                                             </div>
-                                        </small>
-                                    </td>
-                                    <td class="text-center">
-                                        <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
-                                            th:data-guideline="${behavior.guideline}"
-                                            th:data-title="${behavior.behaviorTitle}"
-                                            onclick="showGuidelineModal(this)">
-                                            ℹ️
-                                        </button>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-secondary" th:text="${behavior.maxPoints}">0</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-success" th:text="${behavior.currentPoints}">0</span>
-                                    </td>
-                                    <td class="text-center" th:if="${behavior.hasRemarks}">
-                                        <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
-                                            th:data-remarks="${behavior.remarks}"
-                                            th:data-title="${behavior.behaviorTitle}" onclick="showRemarksModal(this)">
-                                            💬
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                            <span
+                                                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; font-size: 12px; z-index: 2;"
+                                                th:text="${behavior.currentPoints} + ' von ' + ${behavior.maxPoints} + ' Punkten'">0
+                                                von 0 Punkten</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center" th:if="${behavior.hasRemarks}">
+                                    <button type="button" class="behavior-icon-btn" data-bs-toggle="modal"
+                                        th:data-remarks="${behavior.remarks}" th:data-title="${behavior.behaviorTitle}"
+                                        onclick="showRemarksModal(this)">
+                                        💬
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Desktop Weekly Total -->
+                    <div class="text-center mt-3 d-none d-md-block">
+                        <strong>
+                            <span th:text="#{child.behaviors.points.total}">Gesamtpunkte</span>:
+                            <span th:text="${totalBehaviorPoints}">0</span>
+                            <span th:text="#{behavior.points}">Punkte</span>
+                        </strong>
+                    </div>
+
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="behavior-cards d-md-none">
+                    <div th:each="behavior : ${behaviorEvaluations}" class="behavior-card">
+                        <div class="behavior-card-title">
+                            <span class="title-text" th:text="${behavior.behaviorTitle}"
+                                th:data-guideline="${behavior.guideline}" th:data-title="${behavior.behaviorTitle}"
+                                onclick="showGuidelineModal(this)"
+                                style="cursor: pointer; color: #667eea;">Verhalten</span>
+                        </div>
+
+                        <div class="behavior-card-row">
+                            <span class="behavior-card-label" th:text="#{behavior.points}">Punkte</span>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar"
+                                    style="width: 100%; background-color: #e9ecef; position: relative;"
+                                    th:attr="aria-valuenow=${behavior.progressPercentage}, aria-valuemin=0, aria-valuemax=100">
+                                    <div
+                                        th:style="'width: ' + ${behavior.progressPercentage} + '%; height: 100%; background-color: ' + (${behavior.progressPercentage} > 80 ? '#198754' : (${behavior.progressPercentage} > 50 ? '#ffc107' : '#dc3545')) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
+                                    </div>
+                                    <span
+                                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; font-size: 12px; z-index: 2;"
+                                        th:text="${behavior.currentPoints} + ' von ' + ${behavior.maxPoints} + ' Punkten'">0
+                                        von 0 Punkten</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${behavior.hasRemarks}" class="mt-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100" data-bs-toggle="modal"
+                                th:data-remarks="${behavior.remarks}" th:data-title="${behavior.behaviorTitle}"
+                                onclick="showRemarksModal(this)">
+                                <i class="fas fa-comment"></i> <span th:text="#{behavior.remarks}">Bemerkungen</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Weekly Total -->
+                    <div class="text-center mt-3">
+                        <strong>
+                            <span th:text="#{child.behaviors.points.total}">Gesamtpunkte</span>:
+                            <span th:text="${totalBehaviorPoints}">0</span>
+                            <span th:text="#{behavior.points}">Punkte</span>
+                        </strong>
                     </div>
                 </div>
             </div>
