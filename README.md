@@ -218,9 +218,49 @@ Possible future features:
 - Image upload for rewards not yet implemented
 - No email notifications
 
+## � Security
+
+For security considerations, deployment guidelines, and best practices, please refer to [SECURITY.md](SECURITY.md).
+
+**Important:** Before deploying to production, ensure you have read and implemented all security recommendations.
+
 ## 📄 License
 
-This project is intended for private use.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See [LICENSE](LICENSE) for details.
+
+### What does AGPL mean?
+
+The AGPL is a **strong copyleft license** that ensures this software remains free and open source:
+
+- ✅ **Free to use** - for personal, educational, and non-profit use
+- ✅ **Modification allowed** - you can adapt it to your needs
+- ✅ **Distribution allowed** - share it with others
+- ⚠️ **Network use = distribution** - if you run a modified version on a server, you must share the source code
+- ⚠️ **Share-alike** - derivatives must use the same license
+- ⚠️ **No proprietary forks** - you cannot make closed-source versions
+
+### Why AGPL?
+
+We chose AGPL to ensure that:
+1. **Open Source stays open** - improvements benefit everyone
+2. **No proprietary SaaS** - companies can't create closed commercial products without sharing back
+3. **Community collaboration** - all users can see and improve the code
+4. **Fair use** - if you use it, you contribute back
+
+### Commercial Use
+
+If you want to use OpenFamilyCompass in a commercial product **without** releasing your source code, please contact us about a commercial license.
+
+## 👥 Contributing
+
+We welcome contributions! Please see [AUTHORS](AUTHORS) for guidelines on how to contribute to this project.
+
+### Development
+
+This project follows these principles:
+- **Transparent development** - all changes are tracked in git history
+- **Security first** - especially for data handling
+- **Community-driven** - your feedback and ideas are welcome
 
 ---
 

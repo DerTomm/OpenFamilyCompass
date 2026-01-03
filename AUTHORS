@@ -1,0 +1,41 @@
+# OpenFamilyCompass Contributors
+
+## Original Authors
+
+OpenFamilyCompass was created to help families manage tasks, behavior, and rewards in a transparent, community-driven way.
+
+## How to Contribute
+
+We welcome contributions from the community! If you'd like to contribute to this project:
+
+1. Check out our [SECURITY.md](SECURITY.md) for security guidelines
+2. Submit a Pull Request with a clear description of your changes
+3. Ensure your code follows the project's style guidelines
+4. Add yourself to this file when your contribution is merged
+
+## Contributors
+
+Add your name here when your first contribution is merged:
+
+- [Your Name/GitHub Handle] - [Brief description of contribution]
+
+---
+
+## Acknowledgments
+
+- Built with [Spring Boot](https://spring.io/projects/spring-boot)
+- Frontend with [Thymeleaf](https://www.thymeleaf.org/) and [Bootstrap](https://getbootstrap.com/)
+- Mobile app with [Android/Kotlin](https://kotlinlang.org/)
+- Database: [PostgreSQL](https://www.postgresql.org/)
+- Containerization: [Docker](https://www.docker.com/)
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See [LICENSE](LICENSE) file for details.
+
+### What this means for contributors:
+
+- All contributions are licensed under AGPL v3.0
+- Your code will remain free and open source
+- Commercial use without sharing source code is not allowed
+- Network use of modified versions requires source code disclosure
