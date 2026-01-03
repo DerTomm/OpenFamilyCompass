@@ -1,3 +1,11 @@
+# ⚠️ SECURITY WARNING FOR PRODUCTION DEPLOYMENTS:
+# DO NOT use these default passwords in production!
+# Override them using a .env file or environment variables:
+#   POSTGRES_PASSWORD=your_secure_db_password
+#   SPRING_DATASOURCE_PASSWORD=your_secure_db_password
+#   SPRING_SECURITY_OAUTH2_CLIENT_SECRET=your_secure_oauth_secret
+#   APP_ADMIN_DEFAULT_PASSWORD=your_secure_admin_password
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -5,7 +13,7 @@ services:
     environment:
       POSTGRES_DB: openfamilycompass_db
       POSTGRES_USER: openfamilycompass_user
-      POSTGRES_PASSWORD: openfamilycompass_password
+      POSTGRES_PASSWORD: openfamilycompass_password  # ⚠️ CHANGE IN PRODUCTION!
     ports:
       - "5432:5432"
     volumes:
@@ -30,9 +38,11 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/openfamilycompass_db
       SPRING_DATASOURCE_USERNAME: openfamilycompass_user
-      SPRING_DATASOURCE_PASSWORD: openfamilycompass_password
+      SPRING_DATASOURCE_PASSWORD: openfamilycompass_password  # ⚠️ CHANGE IN PRODUCTION!
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_FLYWAY_ENABLED: true
+      # SPRING_SECURITY_OAUTH2_CLIENT_SECRET: change-me-in-production  # Uncomment and set in production!
+      # APP_ADMIN_DEFAULT_PASSWORD: your_secure_password  # Uncomment and set in production!
     ports:
       - "8080:8080"
     networks:

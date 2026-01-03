@@ -3,9 +3,12 @@ spring:
     name: OpenFamilyCompass
 
   datasource:
+    # ⚠️ SECURITY WARNING: Change these credentials in production!
+    # Use environment variables or external configuration for production deployments
+    # Example: SPRING_DATASOURCE_PASSWORD=your_secure_password
     url: jdbc:postgresql://localhost:5432/openfamilycompass_db
     username: openfamilycompass_user
-    password: openfamilycompass_password
+    password: openfamilycompass_password # ⚠️ CHANGE IN PRODUCTION!
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -43,8 +46,15 @@ spring:
 
   security:
     user:
+      # ⚠️ SECURITY WARNING: These are default credentials for development only!
+      # The application creates a proper admin user (see app.admin below)
       name: admin
-      password: admin
+      password: admin # ⚠️ FOR DEVELOPMENT ONLY!
+    oauth2:
+      client:
+        # ⚠️ SECURITY WARNING: Change this secret in production!
+        # Use environment variable: SPRING_SECURITY_OAUTH2_CLIENT_SECRET=your_secure_secret
+        secret: change-me-in-production # ⚠️ CHANGE IN PRODUCTION!
 
 server:
   port: 8080
@@ -70,5 +80,8 @@ app:
       - panda.png
       - unicorn.png
   admin:
+    # ⚠️ SECURITY WARNING: These are default credentials for first-time setup only!
+    # IMMEDIATELY change the admin password after first login in production!
+    # Or set via environment: APP_ADMIN_DEFAULT_PASSWORD=your_secure_password
     default-username: admin
-    default-password: "admin"
+    default-password: "admin" # ⚠️ CHANGE AFTER FIRST LOGIN!

@@ -6,6 +6,15 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Security & Secrets ###
+.env
+.env.local
+.env.*.local
+keystore.properties
+android-app/keystore.properties
+android-app/local.properties
+local.properties
+
 ### STS ###
 .apt_generated
 .classpath

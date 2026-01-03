@@ -19,10 +19,30 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('release.keystore')
-            storePassword 'openfamilycompass'
-            keyAlias 'openfamilycompass'
-            keyPassword 'openfamilycompass'
+            // Keystore configuration should be provided via gradle.properties or environment variables
+            // Create a file 'keystore.properties' in the android-app directory with:
+            // RELEASE_STORE_FILE=path/to/your.keystore
+            // RELEASE_STORE_PASSWORD=your_store_password
+            // RELEASE_KEY_ALIAS=your_key_alias
+            // RELEASE_KEY_PASSWORD=your_key_password
+            
+            def keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                def keystoreProperties = new Properties()
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+                
+                storeFile file(keystoreProperties['RELEASE_STORE_FILE'] ?: 'release.keystore')
+                storePassword keystoreProperties['RELEASE_STORE_PASSWORD'] ?: ''
+                keyAlias keystoreProperties['RELEASE_KEY_ALIAS'] ?: ''
+                keyPassword keystoreProperties['RELEASE_KEY_PASSWORD'] ?: ''
+            } else {
+                // Fallback for development (DO NOT use in production!)
+                println "WARNING: keystore.properties not found. Using unsafe default values for development only!"
+                storeFile file('release.keystore')
+                storePassword System.getenv('RELEASE_STORE_PASSWORD') ?: 'change-me'
+                keyAlias System.getenv('RELEASE_KEY_ALIAS') ?: 'change-me'
+                keyPassword System.getenv('RELEASE_KEY_PASSWORD') ?: 'change-me'
+            }
         }
     }
 
