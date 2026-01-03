@@ -28,9 +28,13 @@ services:
       retries: 5
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Use pre-built image from GitHub Container Registry for production/releases
+    # For development, uncomment the 'build' section below
+    image: ghcr.io/openfamilycompass/openfamilycompass:latest
+    # Alternatively, build locally during development:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: ofc-app
     depends_on:
       postgres:

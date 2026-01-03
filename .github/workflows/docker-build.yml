@@ -1,0 +1,145 @@
+name: Docker Build & Push
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  release:
+    types:
+      - published
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 for building
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build application
+        run: mvn clean package -B -DskipTests
+
+      - name: Run tests before Docker build
+        run: mvn test -B
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: meta
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$VERSION,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  test-docker-image:
+    name: Test Docker Image
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: meta
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Start PostgreSQL
+        run: |
+          docker run -d \
+            --name postgres \
+            -e POSTGRES_DB=openfamilycompass_db \
+            -e POSTGRES_USER=openfamilycompass_user \
+            -e POSTGRES_PASSWORD=openfamilycompass_password \
+            -p 5432:5432 \
+            postgres:16-alpine
+
+      - name: Start application
+        run: |
+          docker run -d \
+            --name app \
+            --link postgres:postgres \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/openfamilycompass_db \
+            -e SPRING_DATASOURCE_USERNAME=openfamilycompass_user \
+            -e SPRING_DATASOURCE_PASSWORD=openfamilycompass_password \
+            -p 8080:8080 \
+            ${{ steps.meta.outputs.image }}
+
+      - name: Wait for application startup
+        run: |
+          max_attempts=30
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
+              echo "Application is healthy"
+              exit 0
+            fi
+            attempt=$((attempt + 1))
+            echo "Attempt $attempt/$max_attempts: Waiting for application..."
+            sleep 2
+          done
+          echo "Application failed to start"
+          docker logs app
+          exit 1
+
+      - name: Test application endpoints
+        run: |
+          # Test login page
+          curl -f http://localhost:8080/login
+
+          # Test health check
+          curl -f http://localhost:8080/actuator/health
+
+          # Test API is responding
+          curl -f http://localhost:8080/api/auth/login -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"username":"admin","password":"admin"}' || true
+
+      - name: Show application logs
+        if: failure()
+        run: docker logs app

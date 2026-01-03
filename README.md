@@ -39,29 +39,48 @@ This project is in a very early stage. User experiences, feature and process ide
 
 ## 🚀 Installation & Startup
 
-### 1. Clone Repository (if available)
+### Option 1: Using Docker (Recommended for Production)
+
+**Prerequisites:** Docker & Docker Compose
 
 ```bash
-cd C:\Development\OpenFamilyCompass
-```
+# Clone repository
+git clone https://github.com/openfamilycompass/openfamilycompass.git
+cd openfamilycompass
 
-### 2. Start Database
+# Copy environment template (optional, for custom credentials)
+cp .env.example .env
 
-```bash
+# Start services
 docker-compose up -d
 ```
 
-This starts a PostgreSQL instance on port 5432.
+The application will be available at: **http://localhost:8080**
 
-### 3. Compile Application
+**Latest Release Image:** `ghcr.io/openfamilycompass/openfamilycompass:latest`
 
-```bash
-mvn clean install
+To use a specific version:
+```yaml
+# In docker-compose.yml
+image: ghcr.io/openfamilycompass/openfamilycompass:1.0.0-alpha
 ```
 
-### 4. Start Application
+### Option 2: Local Development
+
+**Prerequisites:** Java 21+, Maven 3.6+, Docker (for PostgreSQL)
 
 ```bash
+# Clone repository
+git clone https://github.com/openfamilycompass/openfamilycompass.git
+cd openfamilycompass
+
+# Start PostgreSQL
+docker-compose up -d postgres
+
+# Build application
+mvn clean install
+
+# Run application
 mvn spring-boot:run
 ```
 
@@ -75,6 +94,49 @@ After the first startup, an admin account is automatically created:
 - **Password:** `admin`
 
 ⚠️ **Important:** Please change the admin password after the first login!
+
+## 🐳 Docker Image
+
+Official Docker images are available at GitHub Container Registry (GHCR):
+
+```bash
+# Pull latest image
+docker pull ghcr.io/openfamilycompass/openfamilycompass:latest
+
+# Pull specific version
+docker pull ghcr.io/openfamilycompass/openfamilycompass:1.0.0-alpha
+```
+
+Docker images are built automatically for each release with:
+- ✅ Full Maven build & test suite
+- ✅ Docker health checks
+- ✅ Multi-layer caching for fast builds
+
+## 🔄 CI/CD Pipeline
+
+This project uses GitHub Actions for:
+
+- **Build & Test**: Runs on every push to detect issues early
+- **Docker Build & Push**: Automatically builds and pushes images on release tags
+- **Health Checks**: Verifies Docker container startup and basic functionality
+
+### Creating a Release
+
+To create a new release and build Docker image:
+
+1. Go to **Actions** → **Create Release** (or trigger manually)
+2. Enter version in semantic format (e.g., `1.0.0-alpha`, `1.0.0`)
+3. Workflow will:
+   - Create git tag
+   - Build & test application
+   - Build & push Docker image to GHCR
+   - Create GitHub Release
+
+```bash
+# Or create tag manually
+git tag -a v1.0.0-alpha -m "Release version 1.0.0-alpha"
+git push origin v1.0.0-alpha
+```
 
 ## 👥 User Roles
 

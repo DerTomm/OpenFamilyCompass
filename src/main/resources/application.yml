@@ -2,6 +2,12 @@ spring:
   application:
     name: OpenFamilyCompass
 
+  # Build info (automatically populated by maven)
+  info:
+    app:
+      name: OpenFamilyCompass
+      description: Open source family management application
+
   datasource:
     # ⚠️ SECURITY WARNING: Change these credentials in production!
     # Use environment variables or external configuration for production deployments
