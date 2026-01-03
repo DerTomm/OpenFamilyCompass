@@ -35,7 +35,7 @@ jobs:
         run: mvn clean package -B -DskipTests
 
       - name: Run tests before Docker build
-        run: mvn test -B
+        run: mvn test -B -DforkCount=1 -DreuseForks=false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
