@@ -17,6 +17,7 @@ import org.openfamilycompass.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @Transactional
 @ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 @DisplayName("Web-Authentifizierung Integration Tests")
 class AuthenticationIntegrationTest {
 
@@ -49,12 +51,16 @@ class AuthenticationIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        User testUser = new User();
-        testUser.setUsername("testparent");
-        testUser.setFirstName("Test Parent");
-        testUser.setPassword(passwordEncoder.encode("testpassword"));
-        testUser.setRole(UserRole.PARENT);
-        userRepository.save(testUser);
+        // Find or create test user
+        User testUser = userRepository.findByUsername("testparent").orElse(null);
+        if (testUser == null) {
+            testUser = new User();
+            testUser.setUsername("testparent");
+            testUser.setFirstName("Test Parent");
+            testUser.setPassword(passwordEncoder.encode("testpassword"));
+            testUser.setRole(UserRole.PARENT);
+            userRepository.save(testUser);
+        }
     }
 
     @Test

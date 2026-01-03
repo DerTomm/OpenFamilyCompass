@@ -27,10 +27,10 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        run: mvn clean package -B
+        run: mvn clean package -DskipTests -B
 
       - name: Run tests
-        run: mvn test -B
+        run: mvn test -B -DforkCount=1 -DreuseForks=false
 
       - name: Upload test results
         if: always()
@@ -38,10 +38,3 @@ jobs:
         with:
           name: test-results
           path: target/surefire-reports/
-
-      - name: Publish test results
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: target/surefire-reports/*.xml
-          check_name: Test Results
