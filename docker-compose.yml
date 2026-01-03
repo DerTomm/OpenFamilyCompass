@@ -30,7 +30,7 @@ services:
   app:
     # Use pre-built image from GitHub Container Registry for production/releases
     # For development, uncomment the 'build' section below
-    image: ghcr.io/openfamilycompass/openfamilycompass:latest
+    image: ghcr.io/dertomm/openfamilycompass:latest
     # Alternatively, build locally during development:
     # build:
     #   context: .

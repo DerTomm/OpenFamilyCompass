@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.9</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <groupId>com.family</groupId>
     <artifactId>open-family-compass</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>OpenFamilyCompass</name>
-    <description>Open source family management application for organizing tasks, behaviors and rewards</description>
+    <description>Open source family management application for organizing tasks, behaviors and
+        rewards</description>
 
     <properties>
         <java.version>21</java.version>
@@ -132,31 +132,6 @@
 
     <build>
         <plugins>
-            <!-- Git Commit ID Plugin -->
-            <plugin>
-                <groupId>io.github.git-commit-id</groupId>
-                <artifactId>git-commit-id-maven-plugin</artifactId>
-                <version>5.0.0</version>
-                <executions>
-                    <execution>
-                        <id>get-the-git-infos</id>
-                        <goals>
-                            <goal>revision</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
-                    <gitDescribe>
-                        <skip>false</skip>
-                        <always>true</always>
-                        <abbrev>7</abbrev>
-                    </gitDescribe>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -171,4 +146,48 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Profile for local development with Git information -->
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Git Commit ID Plugin - only for local builds -->
+                    <plugin>
+                        <groupId>io.github.git-commit-id</groupId>
+                        <artifactId>git-commit-id-maven-plugin</artifactId>
+                        <version>5.0.0</version>
+                        <executions>
+                            <execution>
+                                <id>get-the-git-infos</id>
+                                <goals>
+                                    <goal>revision</goal>
+                                </goals>
+                                <phase>initialize</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                            <generateGitPropertiesFilename>
+                                ${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                            <gitDescribe>
+                                <skip>false</skip>
+                                <always>true</always>
+                                <abbrev>7</abbrev>
+                            </gitDescribe>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile for Docker builds where .git directory is not available -->
+        <profile>
+            <id>docker</id>
+        </profile>
+    </profiles>
 </project>

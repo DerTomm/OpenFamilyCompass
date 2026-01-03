@@ -13,7 +13,7 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 
 # Build der Anwendung (skippt Tests für schnelleren Build)
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B -Pdocker
 
 # Stage 2: Runtime Stage
 FROM eclipse-temurin:21-jre-alpine
