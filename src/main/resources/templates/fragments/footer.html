@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<footer th:fragment="footer" class="footer mt-auto py-3 bg-light border-top">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <span class="text-muted small">
+                    © 2025 OpenFamilyCompass
+                    <span class="ms-2" th:if="${appVersion}">
+                        • <strong th:text="${appVersion}"></strong>
+                    </span>
+                </span>
+                <br th:if="${appBuildInfo}">
+                <span class="text-muted small" th:if="${appBuildInfo}" th:title="${appBuildInfo}"></span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</html>
