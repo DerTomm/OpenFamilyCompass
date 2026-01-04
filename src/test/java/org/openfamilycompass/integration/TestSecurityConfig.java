@@ -49,9 +49,7 @@ public class TestSecurityConfig {
                                                 .permitAll())
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                                .sessionFixation().migrateSession()
-                                                .maximumSessions(1)
-                                                .maxSessionsPreventsLogin(false));
+                                                .sessionFixation().migrateSession());
 
                 return http.build();
         }

@@ -69,8 +69,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/child/**").hasRole("CHILD")
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                                .maximumSessions(1))
+                                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                                 .formLogin(form -> form
                                                 .loginPage("/login")
                                                 .loginProcessingUrl("/perform_login")
