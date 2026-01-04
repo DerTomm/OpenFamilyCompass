@@ -39,9 +39,13 @@ document.addEventListener('DOMContentLoaded', function () {
     completeTaskButtons.forEach(button => {
         if (button.textContent.toLowerCase().includes('erledigt')) {
             button.addEventListener('click', function (e) {
-                // Optional: Add visual feedback
+                // Add visual feedback and submit the form
                 this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Wird gespeichert...';
                 this.disabled = true;
+                // Submit the form after a short delay to show the feedback
+                setTimeout(() => {
+                    this.closest('form').submit();
+                }, 100);
             });
         }
     });

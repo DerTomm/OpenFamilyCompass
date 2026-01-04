@@ -7,36 +7,35 @@
         <div class="row">
             <div class="col-md-8 offset-md-2">
                 <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-plus"></i> <span th:text="#{task.create.title}">Create New
-                                Task</span></h5>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-edit"></i> Aufgabe bearbeiten</h5>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/parent/tasks/create}" method="post">
+                        <form th:action="@{'/parent/tasks/' + ${task.id} + '/edit'}" method="post">
                             <div class="mb-3">
-                                <label for="title" class="form-label" th:text="#{task.name}">Task Name</label>
-                                <input type="text" class="form-control" id="title" name="title" required>
+                                <label for="title" class="form-label">Titel</label>
+                                <input type="text" class="form-control" id="title" name="title" th:value="${task.title}"
+                                    required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="description" class="form-label"
-                                    th:text="#{task.description}">Description</label>
-                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                <label for="description" class="form-label">Beschreibung</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"
+                                    th:text="${task.description}"></textarea>
                             </div>
 
                             <div class="mb-3">
-                                <label for="basePoints" class="form-label" th:text="#{task.points.label}">Reward
-                                    Points</label>
+                                <label for="basePoints" class="form-label">Punkte</label>
                                 <input type="number" class="form-control" id="basePoints" name="basePoints" min="1"
-                                    value="1" required>
+                                    th:value="${task.basePoints}" required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="childId" class="form-label" th:text="#{task.assign.child}">Assign to
-                                    Child</label>
+                                <label for="childId" class="form-label">Kind zuweisen</label>
                                 <select class="form-select" id="childId" name="userId">
-                                    <option value="" th:text="#{children.all}">All Children</option>
+                                    <option value="" th:text="'Alle Kinder'">Alle Kinder</option>
                                     <option th:each="child : ${children}" th:value="${child.id}"
+                                        th:selected="${task.assignedUser != null and task.assignedUser.id == child.id}"
                                         th:text="${child.firstName}">Kind</option>
                                 </select>
                             </div>
@@ -44,23 +43,23 @@
                             <div class="mb-3">
                                 <label for="recurrenceType" class="form-label">Wiederholung</label>
                                 <select class="form-select" id="recurrenceType" name="recurrenceType" required>
-                                    <option th:each="type : ${recurrenceTypes}" th:value="${type}" th:text="${type}">
+                                    <option th:each="type : ${recurrenceTypes}" th:value="${type}"
+                                        th:selected="${task.recurrenceType == type}" th:text="${type}">
                                         Type</option>
                                 </select>
                             </div>
 
                             <div class="mb-3" id="dueDateField">
-                                <label for="dueDate" class="form-label" th:text="#{task.deadline}">Deadline
-                                    (optional)</label>
-                                <input type="date" class="form-control" id="dueDate" name="dueDate">
+                                <label for="dueDate" class="form-label">Fällig am (optional)</label>
+                                <input type="date" class="form-control" id="dueDate" name="dueDate"
+                                    th:value="${task.dueDate != null ? #temporals.format(task.dueDate, 'yyyy-MM-dd') : ''}">
                             </div>
 
                             <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-success btn-lg">
-                                    <i class="fas fa-save"></i> <span th:text="#{task.create.button}">Create Task</span>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save"></i> Speichern
                                 </button>
-                                <a href="/parent/tasks" class="btn btn-outline-secondary"
-                                    th:text="#{button.cancel}">Cancel</a>
+                                <a href="/parent/tasks" class="btn btn-outline-secondary">Abbrechen</a>
                             </div>
                         </form>
                     </div>

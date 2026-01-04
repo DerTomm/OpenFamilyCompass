@@ -81,8 +81,8 @@ public class ParentController {
     // Task Management
     @GetMapping("/tasks")
     public String listTasks(Model model) {
-        List<Task> templates = taskService.findTemplates();
-        model.addAttribute("templates", templates);
+        List<Task> tasks = taskService.findAll();
+        model.addAttribute("tasks", tasks);
         return "parent/tasks";
     }
 
@@ -95,14 +95,38 @@ public class ParentController {
     }
 
     @PostMapping("/tasks/create")
-    public String createTask(@ModelAttribute TaskForm form) {
+    public String createTask(@ModelAttribute TaskController form) {
         User child = form.getUserId() != null ? userService.findById(form.getUserId()).orElse(null) : null;
 
         taskService.createTask(form.getTitle(), form.getDescription(),
                 form.getBasePoints(), child,
-                form.getRecurrenceType(), form.getDueDate(),
-                form.isTemplate());
+                form.getRecurrenceType(), form.getDueDate());
 
+        return "redirect:/parent/tasks";
+    }
+
+    @GetMapping("/tasks/{id}/edit")
+    public String editTaskForm(@PathVariable Long id, Model model) {
+        Task task = taskService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
+        model.addAttribute("task", task);
+        model.addAttribute("children", children);
+        model.addAttribute("recurrenceTypes", RecurrenceType.values());
+        return "parent/task-edit";
+    }
+
+    @PostMapping("/tasks/{id}/edit")
+    public String editTask(@PathVariable Long id, @ModelAttribute TaskController form) {
+        User child = form.getUserId() != null ? userService.findById(form.getUserId()).orElse(null) : null;
+        taskService.updateTask(id, form.getTitle(), form.getDescription(),
+                form.getBasePoints(), child, form.getRecurrenceType(), form.getDueDate());
+        return "redirect:/parent/tasks";
+    }
+
+    @PostMapping("/tasks/{id}/delete")
+    public String deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
         return "redirect:/parent/tasks";
     }
 

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.openfamilycompass.model.NotificationType;
 import org.openfamilycompass.model.PointTransactionType;
@@ -35,7 +36,7 @@ public class TaskService {
     @Transactional
     public Task createTask(@NonNull String title, String description, int basePoints,
             User assignedUser, @NonNull RecurrenceType recurrenceType,
-            LocalDate dueDate, boolean isTemplate) {
+            LocalDate dueDate) {
         Task task = new Task();
         task.setTitle(title);
         task.setDescription(description);
@@ -44,7 +45,6 @@ public class TaskService {
         task.setRecurrenceType(recurrenceType);
         task.setDueDate(dueDate);
         task.setStatus(TaskStatus.PENDING);
-        task.setTemplate(isTemplate);
 
         return taskRepository.save(task);
     }
@@ -150,21 +150,14 @@ public class TaskService {
         LocalDate nextDueDate = calculateNextDueDate(originalTask.getDueDate(),
                 originalTask.getRecurrenceType());
 
-        Task template = originalTask.isTemplate() ? originalTask : originalTask.getTemplateTask();
-        if (template == null) {
-            template = originalTask;
-        }
-
         Task nextTask = new Task();
-        nextTask.setTitle(template.getTitle());
-        nextTask.setDescription(template.getDescription());
-        nextTask.setBasePoints(template.getBasePoints());
-        nextTask.setAssignedUser(template.getAssignedUser());
-        nextTask.setRecurrenceType(template.getRecurrenceType());
+        nextTask.setTitle(originalTask.getTitle());
+        nextTask.setDescription(originalTask.getDescription());
+        nextTask.setBasePoints(originalTask.getBasePoints());
+        nextTask.setAssignedUser(originalTask.getAssignedUser());
+        nextTask.setRecurrenceType(originalTask.getRecurrenceType());
         nextTask.setDueDate(nextDueDate);
         nextTask.setStatus(TaskStatus.PENDING);
-        nextTask.setTemplate(false);
-        nextTask.setTemplateTask(template);
 
         taskRepository.save(nextTask);
     }
@@ -184,47 +177,12 @@ public class TaskService {
     public void generateRecurringTasks() {
         log.info("Checking for recurring tasks to generate...");
 
-        List<Task> templates = taskRepository.findByIsTemplateTrue();
-        LocalDate today = LocalDate.now();
-
-        for (Task template : templates) {
-            if (template.getRecurrenceType() != RecurrenceType.ONCE) {
-                // Check if a task for today already exists
-                List<Task> todayTasks = taskRepository.findByDueDate(today);
-                boolean exists = todayTasks.stream()
-                        .anyMatch(t -> t.getTemplateTask() != null &&
-                                t.getTemplateTask().getId().equals(template.getId()));
-
-                if (!exists) {
-                    createTaskFromTemplate(template, today);
-                }
-            }
-        }
+        // This functionality has been removed - templates are no longer supported
+        log.info("Template functionality removed - no recurring tasks generated");
     }
 
-    @Transactional
-    protected void createTaskFromTemplate(Task template, LocalDate dueDate) {
-        Task task = new Task();
-        task.setTitle(template.getTitle());
-        task.setDescription(template.getDescription());
-        task.setBasePoints(template.getBasePoints());
-        task.setAssignedUser(template.getAssignedUser());
-        task.setRecurrenceType(template.getRecurrenceType());
-        task.setDueDate(dueDate);
-        task.setStatus(TaskStatus.PENDING);
-        task.setTemplate(false);
-        task.setTemplateTask(template);
-
-        taskRepository.save(task);
-        log.info("Created task from template: {}", template.getTitle());
-    }
-
-    public List<Task> findByUser(@NonNull User user) {
-        return taskRepository.findByAssignedUser(user);
-    }
-
-    public List<Task> findByUserAndStatus(@NonNull User user, @NonNull TaskStatus status) {
-        return taskRepository.findByAssignedUserAndStatus(user, status);
+    public List<Task> findPendingApproval() {
+        return taskRepository.findByStatus(TaskStatus.CHILD_COMPLETED);
     }
 
     public List<Task> findPendingForUser(@NonNull User user) {
@@ -232,11 +190,41 @@ public class TaskService {
                 List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS));
     }
 
-    public List<Task> findPendingApproval() {
-        return taskRepository.findByStatus(TaskStatus.CHILD_COMPLETED);
+    public List<Task> findByUserAndStatus(@NonNull User user, @NonNull TaskStatus status) {
+        return taskRepository.findByAssignedUserAndStatus(user, status);
     }
 
-    public List<Task> findTemplates() {
-        return taskRepository.findByIsTemplateTrue();
+    public List<Task> findByUser(@NonNull User user) {
+        return taskRepository.findByAssignedUser(user);
+    }
+
+    public List<Task> findAll() {
+        return taskRepository.findAll();
+    }
+
+    public Optional<Task> findById(@NonNull Long id) {
+        return taskRepository.findById(id);
+    }
+
+    @Transactional
+    public void updateTask(@NonNull Long id, @NonNull String title, String description, int basePoints,
+            User assignedUser, @NonNull RecurrenceType recurrenceType, LocalDate dueDate) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+        task.setTitle(title);
+        task.setDescription(description);
+        task.setBasePoints(basePoints);
+        task.setAssignedUser(assignedUser);
+        task.setRecurrenceType(recurrenceType);
+        task.setDueDate(dueDate);
+        taskRepository.save(task);
+    }
+
+    @Transactional
+    public void deleteTask(@NonNull Long id) {
+        if (!taskRepository.existsById(id)) {
+            throw new IllegalArgumentException("Task not found");
+        }
+        taskRepository.deleteById(id);
     }
 }

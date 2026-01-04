@@ -110,6 +110,8 @@
                                             </span>
                                         </div>
                                         <form th:action="@{/child/tasks/{id}/complete(id=${task.id})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                th:value="${_csrf.token}" />
                                             <button type="submit" class="btn btn-primary" th:text="#{tasks.completed}">
                                                 Completed!
                                             </button>

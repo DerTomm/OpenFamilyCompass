@@ -2,285 +2,224 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layout}" th:attr="data-bs-theme=${userTheme}">
 
-<div layout:fragment="styles">
-    <style>
-        /* Mobile dashboard optimizations */
-        @media (max-width: 768px) {
-            .container {
-                padding: 0.5rem !important;
+<head>
+    <title th:text="#{dashboard.title}">Dashboard</title>
+    <th:block layout:fragment="styles">
+        <style>
+            /* Light mode - default background */
+            body {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
             }
 
-            h2 {
-                font-size: 1.5rem !important;
-                margin-bottom: 1.5rem !important;
+            .parent-card {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                color: inherit;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                transition: transform 0.2s;
             }
 
-            h4 {
-                font-size: 1.1rem !important;
-                margin-bottom: 1rem !important;
+            .parent-card:hover {
+                transform: translateY(-5px);
             }
 
-            .card {
-                border: none !important;
-                border-radius: 0.25rem !important;
-                margin-bottom: 0.75rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            /* Ensure all quick action cards have the same height */
+            .quick-action-card {
+                min-height: 220px;
             }
 
-            .card-header {
-                padding: 0.75rem !important;
-                border-radius: 0 !important;
+            .child-overview-card {
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                color: inherit;
+                transition: transform 0.2s;
             }
 
-            .card-header h5 {
-                font-size: 0.95rem !important;
-                margin-bottom: 0 !important;
+            .child-overview-card:hover {
+                transform: translateY(-3px);
             }
 
-            .card-body {
-                padding: 0.75rem !important;
+            /* Dark mode support */
+            [data-bs-theme="dark"] body {
+                background: linear-gradient(135deg, #1a1f3a 0%, #2d1b4e 100%);
             }
 
-            .btn {
-                padding: 0.65rem 1rem !important;
-                font-size: 0.9rem !important;
-                min-height: 40px;
-                border-radius: 0.3rem !important;
-                width: 100%;
+            [data-bs-theme="dark"] .parent-card {
+                background: var(--bs-dark-bg-subtle);
+                border: 1px solid var(--bs-border-color);
             }
 
-            .btn-sm {
-                padding: 0.5rem 0.75rem !important;
-                font-size: 0.8rem !important;
-                min-height: 36px;
+            [data-bs-theme="dark"] .child-overview-card {
+                background: var(--bs-dark-bg-subtle);
+                border: 1px solid var(--bs-border-color);
             }
 
-            /* Quick actions cards responsive */
-            .col-md-3 {
-                min-width: 100%;
+            [data-bs-theme="dark"] .card {
+                background-color: var(--bs-dark-bg-subtle);
+                border-color: var(--bs-border-color);
+                color: var(--bs-body-color);
             }
 
-            .row>.col-md-3 {
-                flex: 0 0 100%;
-                max-width: 100%;
+            [data-bs-theme="dark"] .card-body {
+                color: var(--bs-body-color);
             }
 
-            /* Children overview responsive */
-            .col-md-6.col-lg-4 {
-                flex: 0 0 100%;
-                max-width: 100%;
+            [data-bs-theme="dark"] .card-title {
+                color: var(--bs-body-color);
             }
 
-            /* Avatar sizing */
-            img.rounded-circle {
-                width: 70px !important;
-                height: 70px !important;
+            [data-bs-theme="dark"] h2,
+            [data-bs-theme="dark"] h3,
+            [data-bs-theme="dark"] h4 {
+                color: var(--bs-body-color);
             }
 
-            .rounded-circle {
-                width: 70px !important;
-                height: 70px !important;
+            [data-bs-theme="dark"] .text-muted {
+                color: var(--bs-secondary-color) !important;
             }
 
-            .card h5 {
-                font-size: 1.1rem !important;
-            }
+            /* Mobile optimizations */
+            @media (max-width: 768px) {
+                .quick-action-card {
+                    min-height: auto;
+                }
 
-            .card p {
-                margin-bottom: 0.5rem;
-                font-size: 0.9rem;
-            }
+                .parent-card {
+                    border-radius: 10px;
+                    padding: 1rem !important;
+                }
 
-            .card-body p {
-                margin-bottom: 1rem;
-            }
+                .child-overview-card {
+                    border-radius: 10px;
+                    padding: 1rem !important;
+                }
 
-            .text-center {
-                text-align: center;
-            }
+                h2 {
+                    font-size: 1.35rem !important;
+                }
 
-            .mb-3 {
-                margin-bottom: 0.75rem !important;
-            }
+                h3 {
+                    font-size: 1.15rem !important;
+                }
 
-            .mb-2 {
-                margin-bottom: 0.5rem !important;
-            }
-        }
+                .btn {
+                    min-height: 44px;
+                    font-size: 0.95rem;
+                }
 
-        @media (max-width: 576px) {
-            h2 {
-                font-size: 1.25rem !important;
-            }
+                /* Avatar sizing */
+                img.rounded-circle {
+                    width: 70px !important;
+                    height: 70px !important;
+                }
 
-            h4 {
-                font-size: 1rem !important;
+                .rounded-circle {
+                    width: 70px !important;
+                    height: 70px !important;
+                }
             }
-
-            .card-header h5 {
-                font-size: 0.9rem !important;
-            }
-
-            .btn {
-                padding: 0.6rem 0.8rem !important;
-                font-size: 0.85rem !important;
-            }
-
-            .card h5 {
-                font-size: 1rem !important;
-            }
-
-            img.rounded-circle {
-                width: 60px !important;
-                height: 60px !important;
-            }
-
-            .rounded-circle {
-                width: 60px !important;
-                height: 60px !important;
-            }
-
-            .card-body {
-                padding: 0.5rem !important;
-            }
-        }
-
-        /* Improved spacing for touch targets */
-        @media (max-width: 768px) {
-            .btn-outline-success {
-                font-size: 0.9rem !important;
-                width: 100% !important;
-            }
-        }
-    </style>
-</div>
+        </style>
+    </th:block>
+</head>
 
 <body>
-    <div layout:fragment="content" class="container my-4">
-        <h2 class="mb-4"><i class="fas fa-home"></i> <span th:text="#{dashboard.title}">Dashboard</span></h2>
+    <div layout:fragment="content">
+        <div class="container my-4">
+            <h2 class="mb-4 text-white text-center"><i class="fas fa-home"></i> <span
+                    th:text="#{dashboard.title}">Dashboard</span></h2>
 
-        <!-- Quick Actions -->
-        <div class="row mb-4">
-            <div class="col-12 mb-3">
-                <h4><i class="fas fa-bolt"></i> <span th:text="#{dashboard.quick.actions}">Quick Actions</span></h4>
-            </div>
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <a href="/parent/tasks/pending" class="text-decoration-none">
+                        <div class="parent-card quick-action-card p-4 text-center">
+                            <i class="fas fa-check-circle fa-4x text-warning mb-3"></i>
+                            <h4 th:text="#{dashboard.approve.tasks}">Approve Tasks</h4>
+                            <p class="mb-0 text-muted"
+                                th:text="#{dashboard.approve.tasks.pending(${pendingApprovals.size()})}">0
+                                pending</p>
+                        </div>
+                    </a>
+                </div>
 
-            <div class="col-md-3 mb-3">
-                <div class="card border-warning">
-                    <div class="card-header bg-warning text-white">
-                        <h5 class="mb-0"><i class="fas fa-check-circle"></i> <span
-                                th:text="#{dashboard.approve.tasks}">Approve Tasks</span></h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2" th:text="#{dashboard.approve.tasks.pending(${pendingApprovals.size()})}">
-                            Awaiting approval: 0</p>
-                        <a href="/parent/tasks/pending" class="btn btn-warning"
-                            th:text="#{dashboard.approve.tasks.button}">Check Tasks</a>
-                    </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/parent/redemptions/pending" class="text-decoration-none">
+                        <div class="parent-card quick-action-card p-4 text-center">
+                            <i class="fas fa-gift fa-4x text-info mb-3"></i>
+                            <h4 th:text="#{dashboard.approve.rewards}">Approve Rewards</h4>
+                            <p class="mb-0 text-muted"
+                                th:text="#{dashboard.approve.rewards.pending(${pendingRedemptions.size()})}">0
+                                pending</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <a href="/parent/behaviors" class="text-decoration-none">
+                        <div class="parent-card quick-action-card p-4 text-center">
+                            <i class="fas fa-star fa-4x text-success mb-3"></i>
+                            <h4 th:text="#{dashboard.evaluate.behavior}">Evaluate Behavior</h4>
+                            <p class="mb-0 text-muted" th:text="#{dashboard.evaluate.behavior.desc}">Reward positive
+                                behavior</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <a href="/parent/points" class="text-decoration-none">
+                        <div class="parent-card quick-action-card p-4 text-center">
+                            <i class="fas fa-coins fa-4x text-primary mb-3"></i>
+                            <h4 th:text="#{dashboard.manage.points}">Bonus and Penalty Points</h4>
+                            <p class="mb-0 text-muted" th:text="#{dashboard.manage.points.desc}">Manage points</p>
+                        </div>
+                    </a>
                 </div>
             </div>
 
-            <div class="col-md-3 mb-3">
-                <div class="card border-info">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-gift"></i> <span
-                                th:text="#{dashboard.approve.rewards}">Approve Rewards</span></h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2" th:text="#{dashboard.approve.rewards.pending(${pendingRedemptions.size()})}">
-                            Awaiting approval: 0</p>
-                        <a href="/parent/redemptions/pending" class="btn btn-info text-white"
-                            th:text="#{dashboard.approve.rewards.button}">Check Rewards</a>
-                    </div>
+            <!-- Children Overview -->
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <h3 class="text-white text-center"><i class="fas fa-users"></i> <span
+                            th:text="#{dashboard.children.overview}">Children Overview</span></h3>
                 </div>
-            </div>
+                <div class="col-md-6 col-lg-4 mb-3" th:each="child : ${children}">
+                    <a th:href="@{/parent/children/{id}(id=${child.id})}" class="text-decoration-none">
+                        <div class="child-overview-card p-3 text-center">
+                            <!-- Avatar Display -->
+                            <div class="mb-2">
+                                <!-- Photo Avatar -->
+                                <img th:if="${child.avatarType == 'PHOTO'}"
+                                    th:src="@{/avatar/{userId}(userId=${child.id})}" class="rounded-circle"
+                                    style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745;"
+                                    alt="Avatar">
 
-            <div class="col-md-3 mb-3">
-                <div class="card border-success">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-star"></i> <span
-                                th:text="#{dashboard.evaluate.behavior}">Evaluate Behavior</span></h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2" th:text="#{dashboard.evaluate.behavior.desc}">Reward your children's positive
-                            behavior</p>
-                        <a href="/parent/behaviors" class="btn btn-success"
-                            th:text="#{dashboard.evaluate.behavior.button}">Evaluate Behavior</a>
-                    </div>
-                </div>
-            </div>
+                                <!-- Icon Avatar -->
+                                <img th:if="${child.avatarType == 'ICON' and child.avatarIconName != null}"
+                                    th:src="@{/images/avatars/{icon}.svg(icon=${child.avatarIconName})}"
+                                    class="rounded-circle"
+                                    style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745; padding: 10px; background: white;"
+                                    alt="Avatar">
 
-            <div class="col-md-3 mb-3">
-                <div class="card border-primary">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-coins"></i> <span th:text="#{dashboard.manage.points}">Bonus
-                                and Penalty Points</span></h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2" th:text="#{dashboard.manage.points.desc}">Give bonus or penalty points to your
-                            children</p>
-                        <a href="/parent/points" class="btn btn-primary"
-                            th:text="#{dashboard.manage.points.button}">Bonus and Penalty Points</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Children Overview -->
-        <div class="row mt-5">
-            <div class="col-12 mb-3">
-                <h4><i class="fas fa-users"></i> <span th:text="#{dashboard.children.overview}">Children Overview</span>
-                </h4>
-            </div>
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 col-lg-4 mb-3" th:each="child : ${children}">
-                                <div class="card border-success h-100">
-                                    <div class="card-body">
-                                        <!-- Avatar Display -->
-                                        <div class="text-center mb-2">
-                                            <!-- Photo Avatar -->
-                                            <img th:if="${child.avatarType == 'PHOTO'}"
-                                                th:src="@{/avatar/{userId}(userId=${child.id})}" class="rounded-circle"
-                                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745;"
-                                                alt="Avatar">
-
-                                            <!-- Icon Avatar -->
-                                            <img th:if="${child.avatarType == 'ICON' and child.avatarIconName != null}"
-                                                th:src="@{/images/avatars/{icon}.svg(icon=${child.avatarIconName})}"
-                                                class="rounded-circle"
-                                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745; padding: 10px; background: white;"
-                                                alt="Avatar">
-
-                                            <!-- Default Avatar -->
-                                            <div th:if="${child.avatarType == 'DEFAULT' or (child.avatarType == 'ICON' and child.avatarIconName == null)}"
-                                                class="rounded-circle bg-secondary mx-auto d-inline-flex align-items-center justify-content-center"
-                                                style="width: 80px; height: 80px; border: 3px solid #28a745;">
-                                                <i class="fas fa-user fa-2x text-white"></i>
-                                            </div>
-                                        </div>
-
-                                        <h5 class="text-center mb-1" th:text="${child.firstName}">Kind</h5>
-                                        <p class="text-center mb-3">
-                                            ⭐ <span
-                                                th:text="${child.totalPoints != null ? child.totalPoints : 0}">0</span>
-                                            Punkte
-                                        </p>
-
-                                        <div class="text-center">
-                                            <a th:href="@{/parent/children/{id}(id=${child.id})}"
-                                                class="btn btn-outline-success btn-sm">
-                                                <i class="fas fa-info-circle"></i> <span
-                                                    th:text="#{children.details}">Details</span>
-                                            </a>
-                                        </div>
-                                    </div>
+                                <!-- Default Avatar -->
+                                <div th:if="${child.avatarType == 'DEFAULT' or (child.avatarType == 'ICON' and child.avatarIconName == null)}"
+                                    class="rounded-circle bg-secondary mx-auto d-inline-flex align-items-center justify-content-center"
+                                    style="width: 80px; height: 80px; border: 3px solid #28a745;">
+                                    <i class="fas fa-user fa-2x text-white"></i>
                                 </div>
                             </div>
+
+                            <h5 class="mb-1" th:text="${child.firstName}">Kind</h5>
+                            <p class="mb-0">
+                                ⭐ <span th:text="${child.totalPoints != null ? child.totalPoints : 0}">0</span> Punkte
+                            </p>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
         </div>

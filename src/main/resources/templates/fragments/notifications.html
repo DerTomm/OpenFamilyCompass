@@ -102,17 +102,17 @@
         fetch('/notifications/unread/count')
             .then(response => response.json())
             .then(count => {
-                const badge = document.querySelector('.badge');
+                const notificationIcon = document.querySelector('#notificationDropdown');
+                const badge = notificationIcon ? notificationIcon.querySelector('.badge') : null;
                 if (count > 0) {
                     if (badge) {
                         badge.textContent = count;
                     } else {
                         // Badge hinzufügen falls nicht vorhanden
-                        const icon = document.querySelector('#notificationDropdown');
                         const newBadge = document.createElement('span');
                         newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
                         newBadge.textContent = count;
-                        icon.appendChild(newBadge);
+                        notificationIcon.appendChild(newBadge);
                     }
                 } else {
                     if (badge) badge.remove();

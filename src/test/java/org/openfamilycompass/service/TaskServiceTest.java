@@ -86,8 +86,7 @@ class TaskServiceTest {
                 10,
                 testChildUser,
                 RecurrenceType.ONCE,
-                LocalDate.now(),
-                false);
+                LocalDate.now());
 
         // Then
         assertThat(result).isNotNull();

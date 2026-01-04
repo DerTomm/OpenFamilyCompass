@@ -69,13 +69,6 @@ public class Task {
     @Column(name = "parent_notes", columnDefinition = "TEXT")
     private String parentNotes; // Notes from parents
 
-    @Column(name = "is_template")
-    private boolean isTemplate = false; // For recurring tasks
-
-    @ManyToOne
-    @JoinColumn(name = "template_id")
-    private Task templateTask; // Reference to original template
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

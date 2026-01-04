@@ -14,7 +14,7 @@
             <div class="col-12" th:each="task : ${tasks}">
                 <div class="card mb-3">
                     <div class="card-header bg-warning">
-                        <h5 class="mb-0" th:text="${task.assignedChild.firstName} + ': ' + ${task.title}">Kind: Aufgabe
+                        <h5 class="mb-0" th:text="${task.assignedUser.firstName + ': ' + task.title}">Kind: Aufgabe
                         </h5>
                     </div>
                     <div class="card-body">

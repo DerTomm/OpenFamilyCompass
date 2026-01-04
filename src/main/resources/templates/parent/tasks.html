@@ -22,44 +22,66 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-success text-white">
-                        <h5 class="mb-0" th:text="#{tasks.templates}">Task Templates</h5>
+                        <h5 class="mb-0">Aufgabenverwaltung</h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th th:text="#{tasks.name}">Name</th>
-                                        <th th:text="#{tasks.description}">Description</th>
-                                        <th th:text="#{tasks.points}">Points</th>
-                                        <th th:text="#{behavior.child}">Child</th>
-                                        <th>Wiederholung</th>
-                                        <th th:text="#{tasks.actions}">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="task : ${templates}">
-                                        <td th:text="${task.title}">Titel</td>
-                                        <td th:text="${task.description}">Beschreibung</td>
-                                        <td><span class="badge bg-success" th:text="${task.basePoints}">0</span></td>
-                                        <td
-                                            th:text="${task.assignedChild != null ? task.assignedChild.firstName : #messages.msg('children.all')}">
-                                            Kind</td>
-                                        <td>
-                                            <span class="badge bg-info" th:text="${task.recurrenceType}">Type</span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" disabled>
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr th:if="${templates.isEmpty()}">
-                                        <td colspan="6" class="text-center text-muted" th:text="#{rewards.none}">No
-                                            tasks available</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div th:if="${#lists.isEmpty(tasks)}" class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Es wurden noch keine Aufgaben erstellt.
+                        </div>
+                        <div th:if="${not #lists.isEmpty(tasks)}">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Titel</th>
+                                            <th>Beschreibung</th>
+                                            <th>Punkte</th>
+                                            <th>Kind</th>
+                                            <th>Status</th>
+                                            <th>Wiederholung</th>
+                                            <th>Fällig am</th>
+                                            <th>Aktionen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="task : ${tasks}">
+                                            <td th:text="${task.title}"></td>
+                                            <td th:text="${task.description} ?: '-'"></td>
+                                            <td th:text="${task.basePoints}"></td>
+                                            <td
+                                                th:text="${task.assignedUser != null ? task.assignedUser.firstName : 'Alle'}">
+                                            </td>
+                                            <td>
+                                                <span
+                                                    th:attr="class=${task.status.name() == 'PENDING' ? 'badge bg-warning' : task.status.name() == 'IN_PROGRESS' ? 'badge bg-primary' : task.status.name() == 'CHILD_COMPLETED' ? 'badge bg-info' : task.status.name() == 'APPROVED' ? 'badge bg-success' : 'badge bg-danger'}"
+                                                    th:text="#{${'task.status.' + task.status.name()}}"></span>
+                                            </td>
+                                            <td
+                                                th:text="${task.recurrenceType.name() == 'ONCE' ? 'Einmalig' : task.recurrenceType.name() == 'DAILY' ? 'Täglich' : task.recurrenceType.name() == 'WEEKLY' ? 'Wöchentlich' : 'Monatlich'}">
+                                            </td>
+                                            <td
+                                                th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : '-'}">
+                                            </td>
+                                            <td>
+                                                <a th:if="${task.status.name() != 'APPROVED' and task.status.name() != 'CHILD_COMPLETED'}"
+                                                    th:href="@{'/parent/tasks/' + ${task.id} + '/edit'}"
+                                                    class="btn btn-sm btn-outline-primary me-2">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form
+                                                    th:if="${task.status.name() != 'APPROVED' and task.status.name() != 'CHILD_COMPLETED'}"
+                                                    th:action="@{'/parent/tasks/' + ${task.id} + '/delete'}"
+                                                    method="post" style="display: inline;">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        onclick="return confirm('Sind Sie sicher, dass Sie diese Aufgabe löschen möchten?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
