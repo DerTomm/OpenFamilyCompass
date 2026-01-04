@@ -62,9 +62,7 @@
         <script>
             document.getElementById('username').addEventListener('input', function () {
                 const firstNameInput = document.getElementById('firstName');
-                if (!firstNameInput.value || firstNameInput.value === firstNameInput.defaultValue) {
-                    firstNameInput.value = this.value;
-                }
+                firstNameInput.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
             });
 
             document.getElementById('role').addEventListener('change', function () {
