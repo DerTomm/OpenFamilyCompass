@@ -21,7 +21,7 @@ class SessionManager(context: Context) {
         private const val KEY_USER_ROLE = "user_role"
         private const val KEY_SESSION_COOKIE = "session_cookie"
         private const val KEY_LAST_LOGIN = "last_login"
-        const val DEFAULT_SERVER_URL = "http://192.168.178.100:8080"
+        const val DEFAULT_SERVER_URL = "https://my.openfamilycompass.url"
     }
     
     /**

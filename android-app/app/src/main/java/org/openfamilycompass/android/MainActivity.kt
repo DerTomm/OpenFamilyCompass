@@ -2,16 +2,22 @@ package org.openfamilycompass.android
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.webkit.*
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,6 +31,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fabMenuLayout: android.widget.LinearLayout
     private lateinit var fabOverlay: View
     private var isFabMenuOpen = false
+    private lateinit var prefs: SharedPreferences
+    private lateinit var deviceId: String
     
     // Activity Result Launcher für Settings
     private val settingsLauncher = registerForActivityResult(
@@ -45,6 +53,8 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize components
         sessionManager = SessionManager(this)
+        prefs = getSharedPreferences("OpenFamilyCompass", MODE_PRIVATE)
+        deviceId = getOrCreateDeviceId()
         webView = findViewById(R.id.webView)
         progressBar = findViewById(R.id.progressBar)
         fabMain = findViewById(R.id.fabMain)
@@ -64,6 +74,7 @@ class MainActivity : AppCompatActivity() {
             showServerConfigDialog()
         } else {
             loadWebApp()
+            // FCM token will be sent after successful login
         }
     }
 
@@ -232,6 +243,8 @@ class MainActivity : AppCompatActivity() {
             sessionManager.restoreCookies()
             // Session aktualisieren
             sessionManager.refreshSession()
+            // Send FCM token for existing session
+            getFcmToken()
             // Direkt zum Dashboard
             webView.loadUrl("$serverUrl/dashboard")
         } else {
@@ -272,6 +285,8 @@ class MainActivity : AppCompatActivity() {
                         }
                         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     }
+                    // Send FCM token after successful login
+                    getFcmToken()
                 } else {
                     android.util.Log.d("MainActivity", "Username is empty, trying fallback")
                     tryFallbackSession()
@@ -299,6 +314,8 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     Toast.makeText(this, getString(R.string.toast_logged_in_as, username), Toast.LENGTH_SHORT).show()
                 }
+                // Send FCM token after successful login
+                getFcmToken()
             } else {
                 // Fallback 2: Einfach Cookies speichern mit Dummy-Username
                 android.util.Log.d("MainActivity", "Using dummy session for cookie storage")
@@ -312,6 +329,8 @@ class MainActivity : AppCompatActivity() {
                     runOnUiThread {
                         Toast.makeText(this, getString(R.string.toast_logged_in_as, "user"), Toast.LENGTH_SHORT).show()
                     }
+                    // Send FCM token after successful login
+                    getFcmToken()
                 } else {
                     android.util.Log.d("MainActivity", "No cookies found at all")
                 }
@@ -393,6 +412,54 @@ class MainActivity : AppCompatActivity() {
         if (sessionManager.hasValidSession()) {
             sessionManager.refreshSession()
         }
+    }
+
+    private fun getFcmToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                android.util.Log.w("MainActivity", "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+            android.util.Log.d("MainActivity", "FCM Token: $token")
+            sendTokenToServer(token)
+        }
+    }
+
+    private fun sendTokenToServer(token: String) {
+        // Verwende WebView, um Token via JavaScript zu senden
+        val serverUrl = sessionManager.getServerUrl()
+        val jsCode = """
+            // Send FCM token
+            fetch('$serverUrl/notifications/fcm-token', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({deviceId: '$deviceId', token: '$token'}),
+                credentials: 'include'
+            }).then(response => {
+                if (response.ok) {
+                    console.log('FCM Token sent successfully');
+                } else {
+                    console.error('Failed to send FCM Token:', response.status);
+                }
+            }).catch(error => {
+                console.error('Error sending FCM Token:', error);
+            });
+        """.trimIndent()
+
+        webView.evaluateJavascript(jsCode, null)
+    }
+
+    private fun getOrCreateDeviceId(): String {
+        var id = prefs.getString("device_id", null)
+        if (id == null) {
+            id = java.util.UUID.randomUUID().toString()
+            prefs.edit().putString("device_id", id).apply()
+        }
+        return id
     }
 
     override fun onPause() {

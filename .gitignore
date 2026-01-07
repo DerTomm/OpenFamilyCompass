@@ -49,6 +49,11 @@ Thumbs.db
 
 ### Maven ###
 
+### Android ###
+src/main/resources/firebase-service-account.json
+android-app/app/google-services.json
+
 ### Others ###
 *.keystore
 .github/copilot-instructions.md
+src/main/resources/data/initial-data.sql

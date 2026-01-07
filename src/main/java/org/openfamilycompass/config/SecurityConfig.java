@@ -13,6 +13,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,12 +30,26 @@ public class SecurityConfig {
                 return config.getAuthenticationManager();
         }
 
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOriginPatterns(java.util.List.of("*")); // Erlaube alle Origins für WebView
+                configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                configuration.setAllowedHeaders(java.util.List.of("*"));
+                configuration.setAllowCredentials(true);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/api/**", configuration);
+                source.registerCorsConfiguration("/notifications/**", configuration); // Für WebView
+                return source;
+        }
+
         // API Security: Stateless with OIDC JWT
         @Bean
         @Order(3)
         public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .securityMatcher("/api/**")
+                                .cors(Customizer.withDefaults()) // CORS aktivieren
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/api/avatar/icons").permitAll()
@@ -55,9 +72,9 @@ public class SecurityConfig {
                         throws Exception {
 
                 http
-
                                 .securityMatcher(new NegatedRequestMatcher(
                                                 PathPatternRequestMatcher.withDefaults().matcher("/api/**")))
+                                .cors(Customizer.withDefaults()) // CORS für WebView
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**",
                                                                 "/favicon.png", "/favicon.ico")
@@ -86,7 +103,7 @@ public class SecurityConfig {
                                                 .invalidateHttpSession(true)
                                                 .deleteCookies("JSESSIONID")
                                                 .permitAll())
-                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/notifications/**"));
 
                 return http.build();
         }

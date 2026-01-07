@@ -7,6 +7,8 @@ import org.openfamilycompass.model.Notification;
 import org.openfamilycompass.model.NotificationType;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.NotificationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +18,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
     private final NotificationRepository notificationRepository;
+    private final FcmService fcmService;
+    private final UserService userService;
 
     @Transactional
     public Notification createNotification(User user, NotificationType type, String title, String message,
@@ -29,7 +35,15 @@ public class NotificationService {
         notification.setReferenceId(referenceId);
         notification.setCreatedAt(LocalDateTime.now());
 
-        return notificationRepository.save(notification);
+        Notification savedNotification = notificationRepository.save(notification);
+
+        // Send push notification to all user's devices
+        log.debug("NOTIFICATION: Created notification for user {}, sending push...", user.getId());
+        List<String> tokens = userService.getFcmTokensForUser(user.getId());
+        log.debug("NOTIFICATION: Found {} FCM tokens for user", tokens.size());
+        fcmService.sendPushNotificationToUser(tokens, title, message);
+
+        return savedNotification;
     }
 
     public List<Notification> getNotificationsForUser(User user) {

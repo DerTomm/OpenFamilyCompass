@@ -1,10 +1,13 @@
 package org.openfamilycompass.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.openfamilycompass.model.User;
+import org.openfamilycompass.model.UserDevice;
 import org.openfamilycompass.model.UserRole;
+import org.openfamilycompass.repository.UserDeviceRepository;
 import org.openfamilycompass.repository.UserRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -99,5 +103,43 @@ public class UserService implements UserDetailsService {
     @Transactional
     public User save(@NonNull User user) {
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public void registerDevice(@NonNull Long userId, @NonNull String deviceId, @NonNull String fcmToken) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Optional<UserDevice> existingDevice = userDeviceRepository.findByUserAndDeviceId(user, deviceId);
+        if (existingDevice.isPresent()) {
+            // Update existing
+            UserDevice device = existingDevice.get();
+            device.setFcmToken(fcmToken);
+            device.setUpdatedAt(LocalDateTime.now());
+            userDeviceRepository.save(device);
+        } else {
+            // Create new
+            UserDevice device = new UserDevice();
+            device.setUser(user);
+            device.setDeviceId(deviceId);
+            device.setFcmToken(fcmToken);
+            device.setCreatedAt(LocalDateTime.now());
+            device.setUpdatedAt(LocalDateTime.now());
+            userDeviceRepository.save(device);
+        }
+    }
+
+    public List<String> getFcmTokensForUser(@NonNull Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return userDeviceRepository.findByUser(user).stream()
+                .map(UserDevice::getFcmToken)
+                .toList();
+    }
+
+    @Transactional
+    public void unregisterDevice(@NonNull String deviceId) {
+        userDeviceRepository.deleteByDeviceId(deviceId);
     }
 }
