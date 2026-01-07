@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@Profile("!test")
+@Profile({ "!test", "!initial-data" })
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;

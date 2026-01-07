@@ -128,6 +128,13 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Firebase Admin SDK for Push Notifications -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.7.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -188,6 +195,27 @@
         <!-- Profile for Docker builds where .git directory is not available -->
         <profile>
             <id>docker</id>
+        </profile>
+
+        <!-- Profile for loading initial data -->
+        <profile>
+            <id>initial-data</id>
+            <properties>
+                <spring.profiles.active>initial-data</spring.profiles.active>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <profiles>
+                                <profile>initial-data</profile>
+                            </profiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>
