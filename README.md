@@ -95,7 +95,17 @@ After the first startup, an admin account is automatically created:
 
 ⚠️ **Important:** Please change the admin password after the first login!
 
-## 🐳 Docker Image
+## � Push Notifications
+
+The application supports push notifications to Android devices for real-time updates. See [PUSH_NOTIFICATIONS_README.md](PUSH_NOTIFICATIONS_README.md) for setup instructions.
+
+**Quick Setup:**
+1. Create a Firebase project
+2. Download `google-services.json` → `android-app/app/`
+3. Download `firebase-service-account.json` → `src/main/resources/`
+4. Restart the server
+
+## �🐳 Docker Image
 
 Official Docker images are available at GitHub Container Registry (GHCR):
 
