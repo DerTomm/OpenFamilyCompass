@@ -261,7 +261,7 @@
                                             style="width: 100%; background-color: #e9ecef; position: relative;"
                                             th:attr="data-behavior-id=${behavior.id}">
                                             <div
-                                                th:style="'width: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points) : 100}) + '%; height: 100%; background-color: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 80 ? '#198754' : (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 50 ? '#ffc107' : '#dc3545')) : '#198754'}) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
+                                                th:style="'width: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points) : 100}) + '%; height: 100%; background-color: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points < 20 ? '#dc3545' : (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points < 80 ? '#ffc107' : '#198754')) : '#198754'}) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
                                             </div>
                                             <span
                                                 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; font-size: 14px; z-index: 2;"
@@ -312,7 +312,7 @@
                                     style="width: 100%; background-color: #e9ecef; position: relative;"
                                     th:attr="data-behavior-id=${behavior.id}">
                                     <div
-                                        th:style="'width: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points) : 100}) + '%; height: 100%; background-color: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 80 ? '#198754' : (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points > 50 ? '#ffc107' : '#dc3545')) : '#198754'}) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
+                                        th:style="'width: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points) : 100}) + '%; height: 100%; background-color: ' + (${evaluationMap.containsKey(behavior.id) ? (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points < 20 ? '#dc3545' : (evaluationMap.get(behavior.id).currentPoints * 100 / behavior.points < 80 ? '#ffc107' : '#198754')) : '#198754'}) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
                                     </div>
                                     <span
                                         style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; font-size: 12px; z-index: 2;"
@@ -533,7 +533,7 @@
                             const innerDiv = progressBar.querySelector('div');
                             if (innerDiv) {
                                 innerDiv.style.width = percentage + '%';
-                                innerDiv.style.backgroundColor = percentage > 80 ? '#198754' : percentage > 50 ? '#ffc107' : '#dc3545';
+                                innerDiv.style.backgroundColor = percentage < 20 ? '#dc3545' : percentage < 80 ? '#ffc107' : '#198754';
                             }
 
                             // Aktualisiere den Text im span

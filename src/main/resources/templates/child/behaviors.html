@@ -248,7 +248,7 @@
                                             style="width: 100%; background-color: #e9ecef; position: relative;"
                                             th:attr="aria-valuenow=${behavior.progressPercentage}, aria-valuemin=0, aria-valuemax=100">
                                             <div
-                                                th:style="'width: ' + ${behavior.progressPercentage} + '%; height: 100%; background-color: ' + (${behavior.progressPercentage} > 80 ? '#198754' : (${behavior.progressPercentage} > 50 ? '#ffc107' : '#dc3545')) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
+                                                th:style="'width: ' + ${behavior.progressPercentage} + '%; height: 100%; background-color: ' + (${behavior.progressPercentage} < 20 ? '#dc3545' : (${behavior.progressPercentage} < 80 ? '#ffc107' : '#198754')) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
                                             </div>
                                             <span
                                                 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; font-size: 12px; z-index: 2;"
@@ -296,7 +296,7 @@
                                     style="width: 100%; background-color: #e9ecef; position: relative;"
                                     th:attr="aria-valuenow=${behavior.progressPercentage}, aria-valuemin=0, aria-valuemax=100">
                                     <div
-                                        th:style="'width: ' + ${behavior.progressPercentage} + '%; height: 100%; background-color: ' + (${behavior.progressPercentage} > 80 ? '#198754' : (${behavior.progressPercentage} > 50 ? '#ffc107' : '#dc3545')) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
+                                        th:style="'width: ' + ${behavior.progressPercentage} + '%; height: 100%; background-color: ' + (${behavior.progressPercentage} < 20 ? '#dc3545' : (${behavior.progressPercentage} < 80 ? '#ffc107' : '#198754')) + '; position: absolute; top: 0; left: 0; z-index: 1;'">
                                     </div>
                                     <span
                                         style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 600; font-size: 12px; z-index: 2;"
