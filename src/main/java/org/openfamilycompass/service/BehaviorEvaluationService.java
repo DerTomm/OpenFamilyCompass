@@ -1,5 +1,6 @@
 package org.openfamilycompass.service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -158,6 +159,14 @@ public class BehaviorEvaluationService {
         return evaluations.stream()
                 .filter(eval -> eval.getBehavior().isActive())
                 .map(this::convertToDTO)
+                .sorted(Comparator.comparing(dto -> {
+                    // Find the original evaluation to get the behavior rank
+                    return evaluations.stream()
+                            .filter(eval -> eval.getBehavior().getId().equals(dto.getBehaviorId()))
+                            .findFirst()
+                            .map(eval -> eval.getBehavior().getRank())
+                            .orElse(0);
+                }))
                 .collect(Collectors.toList());
     }
 
