@@ -199,7 +199,7 @@
                                     <tr>
                                         <th></th>
                                         <th th:text="#{behavior.title.label}">Title</th>
-                                        <th th:text="#{behavior.guidelines.label}">Guidelines</th>
+                                        <th class="text-center" th:text="#{behavior.guidelines.label}">Guidelines</th>
                                         <th th:text="#{tasks.points}">Points</th>
                                         <th th:text="#{behavior.child.specific}">Child</th>
                                         <th th:text="#{tasks.actions}">Actions</th>
@@ -209,7 +209,14 @@
                                     <tr th:each="behavior : ${behaviors}" th:data-id="${behavior.id}">
                                         <td><i class="fas fa-grip-vertical drag-handle"></i></td>
                                         <td><strong th:text="${behavior.title}">Titel</strong></td>
-                                        <td th:text="${behavior.guideline}">Leitsatz</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-link text-info p-0"
+                                                onclick="showGuidelineModal(this)"
+                                                th:attr="data-guideline=${behavior.guideline}"
+                                                th:title="#{behavior.guidelines.label}">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </td>
                                         <td th:text="${behavior.points} + ' ' + #{tasks.points}">0</td>
                                         <td
                                             th:text="${behavior.user != null ? behavior.user.firstName : #messages.msg('children.all')}">
@@ -248,9 +255,16 @@
                                 </div>
 
                                 <div class="behavior-card-row">
-                                    <span class="behavior-card-label"
-                                        th:text="#{behavior.guidelines.label}">Guidelines</span>
-                                    <span class="behavior-card-value" th:text="${behavior.guideline}">Leitsatz</span>
+                                    <div style="display: flex; align-items: baseline;">
+                                        <span class="behavior-card-label"
+                                            th:text="#{behavior.guidelines.label}">Guidelines</span>
+                                        <button class="btn btn-link text-info p-0 ms-2"
+                                            onclick="showGuidelineModal(this)"
+                                            th:attr="data-guideline=${behavior.guideline}"
+                                            th:title="#{behavior.guidelines.label}">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="behavior-card-row">
@@ -366,6 +380,36 @@
                     }
                 }
             });
+        </script>
+
+        <!-- Guideline Modal -->
+        <div class="modal fade" id="guidelineModal" tabindex="-1" aria-labelledby="guidelineModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="guidelineModalLabel" th:text="#{behavior.guidelines.label}">
+                            Guidelines</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="guidelineContent" style="max-height: 400px; overflow-y: auto;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            th:text="#{button.close}">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function showGuidelineModal(button) {
+                const guideline = button.getAttribute('data-guideline');
+                document.getElementById('guidelineContent').innerHTML = guideline.replace(/\n/g, '<br>');
+                const modal = new bootstrap.Modal(document.getElementById('guidelineModal'));
+                modal.show();
+            }
         </script>
     </th:block>
 
