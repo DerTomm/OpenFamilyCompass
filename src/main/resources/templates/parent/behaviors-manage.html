@@ -139,6 +139,32 @@
                 font-size: 0.8rem !important;
                 padding: 0.35rem 0.65rem !important;
             }
+        }
+
+        /* Drag and Drop Styles */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: var(--bs-primary) !important;
+            color: white !important;
+        }
+
+        .sortable-chosen {
+            cursor: grabbing !important;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: var(--bs-secondary);
+            user-select: none;
+        }
+
+        .drag-handle:hover {
+            color: var(--bs-primary);
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
     </style>
 </div>
 
@@ -171,6 +197,7 @@
                             <table class="table table-striped behavior-table mb-0">
                                 <thead>
                                     <tr>
+                                        <th></th>
                                         <th th:text="#{behavior.title.label}">Title</th>
                                         <th th:text="#{behavior.guidelines.label}">Guidelines</th>
                                         <th th:text="#{tasks.points}">Points</th>
@@ -178,8 +205,9 @@
                                         <th th:text="#{tasks.actions}">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr th:each="behavior : ${behaviors}">
+                                <tbody id="behaviorTableBody">
+                                    <tr th:each="behavior : ${behaviors}" th:data-id="${behavior.id}">
+                                        <td><i class="fas fa-grip-vertical drag-handle"></i></td>
                                         <td><strong th:text="${behavior.title}">Titel</strong></td>
                                         <td th:text="${behavior.guideline}">Leitsatz</td>
                                         <td th:text="${behavior.points} + ' ' + #{tasks.points}">0</td>
@@ -202,7 +230,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${behaviors.isEmpty()}">
-                                        <td colspan="5" class="text-center text-muted" th:text="#{behavior.none}">
+                                        <td colspan="6" class="text-center text-muted" th:text="#{behavior.none}">
                                             No behavior rules
                                         </td>
                                     </tr>
@@ -211,9 +239,11 @@
                         </div>
 
                         <!-- Mobile Card View -->
-                        <div class="behavior-card-list d-md-none p-3">
-                            <div th:each="behavior : ${behaviors}" class="behavior-card-item">
+                        <div class="behavior-card-list d-md-none p-3" id="behaviorCardList">
+                            <div th:each="behavior : ${behaviors}" class="behavior-card-item"
+                                th:data-id="${behavior.id}">
                                 <div class="behavior-card-header">
+                                    <i class="fas fa-grip-vertical drag-handle me-2"></i>
                                     <div class="behavior-card-title" th:text="${behavior.title}">Titel</div>
                                 </div>
 
@@ -261,6 +291,84 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <!-- SortableJS for Drag & Drop -->
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Function to update order
+                function updateOrder(container, selector) {
+                    const items = container.querySelectorAll(selector);
+                    const behaviorIds = Array.from(items).map(item => parseInt(item.getAttribute('data-id')));
+
+                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+
+                    if (csrfToken && csrfHeader) {
+                        headers[csrfHeader] = csrfToken;
+                    }
+
+                    fetch('/parent/behaviors/update-ranks', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(behaviorIds)
+                    }).then(response => {
+                        if (response.ok) {
+                            console.log('Behavior order updated successfully');
+                        } else {
+                            console.error('Failed to update behavior order');
+                            location.reload();
+                        }
+                    }).catch(error => {
+                        console.error('Error updating behavior order:', error);
+                        location.reload();
+                    });
+                }
+
+                // Table sorting
+                const tableBody = document.getElementById('behaviorTableBody');
+                if (tableBody) {
+                    const rows = tableBody.querySelectorAll('tr[data-id]');
+                    if (rows.length > 0) {
+                        new Sortable(tableBody, {
+                            handle: '.drag-handle',
+                            animation: 150,
+                            ghostClass: 'sortable-ghost',
+                            chosenClass: 'sortable-chosen',
+                            filter: 'tr:not([data-id])',
+                            onEnd: function (evt) {
+                                updateOrder(tableBody, 'tr[data-id]');
+                            }
+                        });
+                    }
+                }
+
+                // Card sorting
+                const cardList = document.getElementById('behaviorCardList');
+                if (cardList) {
+                    const cards = cardList.querySelectorAll('.behavior-card-item[data-id]');
+                    if (cards.length > 0) {
+                        new Sortable(cardList, {
+                            handle: '.drag-handle',
+                            animation: 150,
+                            ghostClass: 'sortable-ghost',
+                            chosenClass: 'sortable-chosen',
+                            onEnd: function (evt) {
+                                updateOrder(cardList, '.behavior-card-item[data-id]');
+                            }
+                        });
+                    }
+                }
+            });
+        </script>
+    </th:block>
+
 </body>
 
 </html>

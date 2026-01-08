@@ -127,8 +127,8 @@ public class BehaviorEvaluationService {
 
     @Transactional(readOnly = true)
     public List<Behavior> getActiveBehaviorsForUser(@NonNull User user) {
-        List<Behavior> userSpecific = behaviorRepository.findByUserAndActiveTrue(user);
-        List<Behavior> global = behaviorRepository.findByUserIsNullAndActiveTrue();
+        List<Behavior> userSpecific = behaviorRepository.findByUserAndActiveTrueOrderByRankAsc(user);
+        List<Behavior> global = behaviorRepository.findByUserIsNullAndActiveTrueOrderByRankAsc();
 
         userSpecific.addAll(global);
         return userSpecific;

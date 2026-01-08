@@ -40,6 +40,9 @@ public class Behavior {
     private User user; // Can be null for all users
 
     @Column(nullable = false)
+    private int rank = 0; // For ordering behaviors
+
+    @Column(nullable = false)
     private boolean active = true;
 
     @Column(name = "created_at", nullable = false)

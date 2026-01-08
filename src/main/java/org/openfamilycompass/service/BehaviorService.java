@@ -101,7 +101,7 @@ public class BehaviorService {
     }
 
     public List<Behavior> findAllActive() {
-        return behaviorRepository.findByActiveTrue();
+        return behaviorRepository.findByActiveTrueOrderByRankAsc();
     }
 
     public java.util.Optional<Behavior> findById(@NonNull Long id) {
@@ -109,10 +109,21 @@ public class BehaviorService {
     }
 
     public List<Behavior> findByUser(@NonNull User user) {
-        return behaviorRepository.findByUser(user);
+        return behaviorRepository.findByUserAndActiveTrueOrderByRankAsc(user);
     }
 
     public List<Behavior> findGlobalBehaviors() {
-        return behaviorRepository.findByUserIsNullAndActiveTrue();
+        return behaviorRepository.findByUserIsNullAndActiveTrueOrderByRankAsc();
+    }
+
+    @Transactional
+    public void updateBehaviorRanks(List<Long> behaviorIdsInOrder) {
+        for (int i = 0; i < behaviorIdsInOrder.size(); i++) {
+            Long id = behaviorIdsInOrder.get(i);
+            Behavior behavior = behaviorRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Behavior not found: " + id));
+            behavior.setRank(i);
+            behaviorRepository.save(behavior);
+        }
     }
 }

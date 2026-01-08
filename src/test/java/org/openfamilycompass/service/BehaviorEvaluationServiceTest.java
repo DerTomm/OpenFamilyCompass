@@ -212,9 +212,9 @@ class BehaviorEvaluationServiceTest {
                 Behavior globalBehavior = new Behavior();
                 globalBehavior.setUser(null);
 
-                when(behaviorRepository.findByUserAndActiveTrue(testUserChild))
+                when(behaviorRepository.findByUserAndActiveTrueOrderByRankAsc(testUserChild))
                                 .thenReturn(new java.util.ArrayList<>(Arrays.asList(userBehavior)));
-                when(behaviorRepository.findByUserIsNullAndActiveTrue())
+                when(behaviorRepository.findByUserIsNullAndActiveTrueOrderByRankAsc())
                                 .thenReturn(new java.util.ArrayList<>(Arrays.asList(globalBehavior)));
 
                 // When
