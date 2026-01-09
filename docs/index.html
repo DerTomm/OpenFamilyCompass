@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>OpenFamilyCompass - Open Source Family Task & Behavior Management</title>
+    <meta name="title" content="OpenFamilyCompass - Open Source Family Task & Behavior Management">
+    <meta name="description"
+        content="Open-source web application for organizing family tasks, behavior rules, and rewards. Manage kids chores, track positive behaviors, and reward system with points. Built with Java Spring Boot, PostgreSQL, Docker.">
+    <meta name="keywords"
+        content="family management, kids chores, behavior tracking, task management, reward system, open source, family app, children tasks, behavior points, family organization, Spring Boot, PostgreSQL, Docker">
+    <meta name="author" content="OpenFamilyCompass">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://openfamilycompass.github.io/">
+    <meta property="og:title" content="OpenFamilyCompass - Open Source Family Task & Behavior Management">
+    <meta property="og:description"
+        content="Open-source web application for organizing family tasks, behavior rules, and rewards. Manage kids chores, track positive behaviors, and reward system with points.">
+    <meta property="og:image" content="https://openfamilycompass.github.io/images/og-image.png">
+    <meta property="og:site_name" content="OpenFamilyCompass">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://openfamilycompass.github.io/">
+    <meta property="twitter:title" content="OpenFamilyCompass - Open Source Family Task & Behavior Management">
+    <meta property="twitter:description"
+        content="Open-source web application for organizing family tasks, behavior rules, and rewards. Manage kids chores, track positive behaviors, and reward system with points.">
+    <meta property="twitter:image" content="https://openfamilycompass.github.io/images/og-image.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://openfamilycompass.github.io/">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <!-- Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "OpenFamilyCompass",
+      "applicationCategory": "FamilyApplication",
+      "operatingSystem": "Web, Android",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "Open-source web application for organizing family tasks, behavior rules, and rewards. Manage kids chores, track positive behaviors, and reward system with points.",
+      "url": "https://github.com/openfamilycompass/openfamilycompass",
+      "author": {
+        "@type": "Organization",
+        "name": "OpenFamilyCompass"
+      },
+      "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+      "codeRepository": "https://github.com/openfamilycompass/openfamilycompass",
+      "programmingLanguage": ["Java", "Kotlin"],
+      "runtimePlatform": "Spring Boot",
+      "featureList": [
+        "Multi-User System with Admin, Parents, and Children roles",
+        "Task Management with one-time and recurring tasks",
+        "Points System with flexible point allocation",
+        "Reward Shop for children to redeem points",
+        "Habit Tracking for positive behaviors",
+        "Penalty Points for negative behavior",
+        "Points History for accountability",
+        "Avatar System with predefined and custom uploads"
+      ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "OpenFamilyCompass",
+      "url": "https://openfamilycompass.github.io/",
+      "description": "Open-source family task and behavior management application",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://github.com/openfamilycompass/openfamilycompass/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 3rem 0;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-top: 2rem;
+        }
+
+        .intro {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #555;
+            text-align: center;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature {
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .tech-stack {
+            margin: 3rem 0;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .tech-stack h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .tech-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .tech-item {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .cta {
+            text-align: center;
+            margin: 3rem 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .cta h2 {
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 0.5rem;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .license {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tagline {
+                font-size: 1.2rem;
+            }
+
+            .main-content {
+                padding: 1.5rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🧭 OpenFamilyCompass</h1>
+            <p class="tagline">Guiding children's behavior and family routines — together.</p>
+        </header>
+
+        <main class="main-content">
+            <p class="intro">
+                <strong>OpenFamilyCompass</strong> is an open-source web application designed for parents to manage kids
+                chores and promote good behavior.
+                It combines task management, behavior points, and a reward system in a child-friendly, intuitive
+                interface.
+            </p>
+
+            <section class="features">
+                <article class="feature">
+                    <h3>👨‍👩‍👧‍👦 Multi-User System</h3>
+                    <p>Three roles: Admin, Parents, and Children with appropriate permissions and interfaces.</p>
+                </article>
+
+                <article class="feature">
+                    <h3>📝 Task Management</h3>
+                    <p>Create one-time and recurring tasks (daily, weekly, monthly) with automatic scheduling.</p>
+                </article>
+
+                <article class="feature">
+                    <h3>⭐ Points System</h3>
+                    <p>Flexible point allocation by parents for completed tasks and positive behaviors.</p>
+                </article>
+
+                <article class="feature">
+                    <h3>🛍️ Reward Shop</h3>
+                    <p>Children can redeem their earned points for rewards defined by parents.</p>
+                </article>
+
+                <article class="feature">
+                    <h3>💚 Habit Tracking</h3>
+                    <p>Track and reward positive behaviors to encourage good habits.</p>
+                </article>
+
+                <article class="feature">
+                    <h3>📊 Points History</h3>
+                    <p>Complete accountability with full history of all point transactions.</p>
+                </article>
+            </section>
+
+            <section class="tech-stack">
+                <h2>🛠️ Technology Stack</h2>
+                <div class="tech-list">
+                    <span class="tech-item">Java 21</span>
+                    <span class="tech-item">Spring Boot</span>
+                    <span class="tech-item">PostgreSQL</span>
+                    <span class="tech-item">Thymeleaf</span>
+                    <span class="tech-item">Bootstrap</span>
+                    <span class="tech-item">Docker</span>
+                    <span class="tech-item">Maven</span>
+                    <span class="tech-item">Android/Kotlin</span>
+                </div>
+            </section>
+
+            <section class="cta">
+                <h2>Get Started</h2>
+                <p>Join the open-source community and help families manage tasks and behavior together.</p>
+                <a href="https://github.com/openfamilycompass/openfamilycompass" class="btn"
+                    rel="noopener noreferrer">View on GitHub</a>
+                <a href="https://github.com/openfamilycompass/openfamilycompass#-installation--startup" class="btn"
+                    rel="noopener noreferrer">Installation Guide</a>
+            </section>
+
+            <section class="license">
+                <h3>📄 License</h3>
+                <p>
+                    This project is licensed under the <strong>GNU Affero General Public License v3.0
+                        (AGPL-3.0)</strong>.
+                    This ensures the software remains free and open source, with all improvements benefiting the
+                    community.
+                </p>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 OpenFamilyCompass. Open source under AGPL-3.0 license.</p>
+            <p>
+                <a href="https://github.com/openfamilycompass/openfamilycompass"
+                    style="color: white; text-decoration: underline;" rel="noopener noreferrer">GitHub Repository</a> |
+                <a href="https://github.com/openfamilycompass/openfamilycompass/blob/main/README.md"
+                    style="color: white; text-decoration: underline;" rel="noopener noreferrer">Documentation</a>
+            </p>
+        </footer>
+    </div>
+</body>
+
+</html>
