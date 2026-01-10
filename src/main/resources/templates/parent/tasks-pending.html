@@ -14,14 +14,15 @@
             <div class="col-12" th:each="task : ${tasks}">
                 <div class="card mb-3">
                     <div class="card-header bg-warning">
-                        <h5 class="mb-0" th:text="${task.assignedUser.firstName + ': ' + task.title}">Kind: Aufgabe
+                        <h5 class="mb-0" th:text="${task.assignedUser.firstName + ': ' + task.taskDefinition.title}">
+                            Kind: Aufgabe
                         </h5>
                     </div>
                     <div class="card-body">
-                        <p class="card-text" th:text="${task.description}">Beschreibung</p>
+                        <p class="card-text" th:text="${task.taskDefinition.description}">Beschreibung</p>
                         <p>
                             <strong th:text="#{tasks.pending.base.points}">Base Points:</strong>
-                            <span class="badge bg-success" th:text="${task.basePoints}">0</span>
+                            <span class="badge bg-success" th:text="${task.taskDefinition.basePoints}">0</span>
                         </p>
                         <p>
                             <strong th:text="#{tasks.pending.completed.at}">Completed at:</strong>
@@ -36,7 +37,7 @@
                                     <label for="awardedPoints" class="form-label"
                                         th:text="#{tasks.pending.award.points}">Awarded Points:</label>
                                     <input type="number" class="form-control" name="awardedPoints"
-                                        th:value="${task.basePoints}" min="0" required>
+                                        th:value="${task.taskDefinition.basePoints}" min="0" required>
                                 </div>
                                 <div class="col-md-8">
                                     <label for="notes" class="form-label"

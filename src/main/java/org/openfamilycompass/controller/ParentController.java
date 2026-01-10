@@ -1,10 +1,12 @@
 package org.openfamilycompass.controller;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
@@ -12,7 +14,8 @@ import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.Reward;
 import org.openfamilycompass.model.RewardRedemption;
-import org.openfamilycompass.model.Task;
+import org.openfamilycompass.model.TaskDefinition;
+import org.openfamilycompass.model.TaskInstance;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.service.BehaviorEvaluationService;
@@ -21,7 +24,8 @@ import org.openfamilycompass.service.PointService;
 import org.openfamilycompass.service.PointTransactionWithBalance;
 import org.openfamilycompass.service.RewardRedemptionService;
 import org.openfamilycompass.service.RewardService;
-import org.openfamilycompass.service.TaskService;
+import org.openfamilycompass.service.TaskDefinitionService;
+import org.openfamilycompass.service.TaskInstanceService;
 import org.openfamilycompass.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,15 +44,18 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/parent")
 @PreAuthorize("hasRole('PARENT')")
 @RequiredArgsConstructor
+@Slf4j
 public class ParentController {
 
     private final UserService userService;
-    private final TaskService taskService;
+    private final TaskDefinitionService taskDefinitionService;
+    private final TaskInstanceService taskInstanceService;
     private final RewardRedemptionService redemptionService;
     private final BehaviorService behaviorService;
     private final BehaviorEvaluationService behaviorEvaluationService;
@@ -64,7 +71,7 @@ public class ParentController {
             pointService.updateUserPoints(child);
         });
 
-        List<Task> pendingApprovals = taskService.findPendingApproval();
+        List<TaskInstance> pendingApprovals = taskInstanceService.findPendingApproval();
         List<RewardRedemption> pendingRedemptions = redemptionService.findPendingApprovals();
 
         model.addAttribute("children", children);
@@ -76,16 +83,20 @@ public class ParentController {
 
     @GetMapping("/tasks/pending")
     public String pendingTasks(Model model) {
-        List<Task> tasks = taskService.findPendingApproval();
+        List<TaskInstance> tasks = taskInstanceService.findPendingApproval();
         model.addAttribute("tasks", tasks);
         return "parent/tasks-pending";
     }
 
     // Task Management
     @GetMapping("/tasks")
-    public String listTasks(Model model) {
-        List<Task> tasks = taskService.findAll();
-        model.addAttribute("tasks", tasks);
+    public String listTasks(Model model, Authentication authentication) {
+        User currentUser = userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        List<TaskDefinition> taskDefinitions = taskDefinitionService.findByCreatedBy(currentUser);
+        List<User> children = userService.findAllByRole(UserRole.CHILD);
+        model.addAttribute("taskDefinitions", taskDefinitions);
+        model.addAttribute("children", children);
         return "parent/tasks";
     }
 
@@ -98,38 +109,59 @@ public class ParentController {
     }
 
     @PostMapping("/tasks/create")
-    public String createTask(@ModelAttribute TaskController form) {
-        User child = form.getUserId() != null ? userService.findById(form.getUserId()).orElse(null) : null;
+    public String createTask(@ModelAttribute TaskDefinitionController form,
+            Authentication authentication) {
+        User currentUser = userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Set<User> assignedUsers = form.getUserIds() != null ? form.getUserIds().stream()
+                .map(id -> userService.findById(id).orElse(null))
+                .filter(user -> user != null)
+                .collect(java.util.stream.Collectors.toSet()) : Set.of();
 
-        taskService.createTask(form.getTitle(), form.getDescription(),
-                form.getBasePoints(), child,
-                form.getRecurrenceType(), form.getDueDate());
+        log.info("Creating task '{}' with recurrence '{}' and {} assigned users", form.getTitle(),
+                form.getRecurrenceType(), assignedUsers.size());
+        log.info("Form data: title='{}', recurrenceType='{}', startDate='{}', userIds={}",
+                form.getTitle(), form.getRecurrenceType(), form.getStartDate(), form.getUserIds());
+
+        // Für ONCE: Due Date == Start Date (behandelt als End Date im Service)
+        LocalDate effectiveEndDate = form.getRecurrenceType() == RecurrenceType.ONCE ? form.getStartDate()
+                : form.getEndDate();
+
+        taskDefinitionService.createTaskDefinition(form.getTitle(), form.getDescription(),
+                form.getBasePoints(), form.getRecurrenceType(), assignedUsers,
+                currentUser, form.getStartDate(), effectiveEndDate, form.getWeeklyDays());
 
         return "redirect:/parent/tasks";
     }
 
     @GetMapping("/tasks/{id}/edit")
     public String editTaskForm(@PathVariable Long id, Model model) {
-        Task task = taskService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+        TaskDefinition taskDefinition = taskDefinitionService.findById(id);
         List<User> children = userService.findAllByRole(UserRole.CHILD);
-        model.addAttribute("task", task);
+        model.addAttribute("task", taskDefinition);
         model.addAttribute("children", children);
         model.addAttribute("recurrenceTypes", RecurrenceType.values());
         return "parent/task-edit";
     }
 
     @PostMapping("/tasks/{id}/edit")
-    public String editTask(@PathVariable Long id, @ModelAttribute TaskController form) {
-        User child = form.getUserId() != null ? userService.findById(form.getUserId()).orElse(null) : null;
-        taskService.updateTask(id, form.getTitle(), form.getDescription(),
-                form.getBasePoints(), child, form.getRecurrenceType(), form.getDueDate());
+    public String editTask(@PathVariable Long id, @ModelAttribute TaskDefinitionController form,
+            Authentication authentication) {
+        userService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Set<User> assignedUsers = form.getUserIds() != null ? form.getUserIds().stream()
+                .map(userId -> userService.findById(userId).orElse(null))
+                .filter(user -> user != null)
+                .collect(java.util.stream.Collectors.toSet()) : Set.of();
+        taskDefinitionService.updateTaskDefinition(id, form.getTitle(), form.getDescription(),
+                form.getBasePoints(), form.getRecurrenceType(), assignedUsers,
+                form.getStartDate(), form.getEndDate(), form.getWeeklyDays());
         return "redirect:/parent/tasks";
     }
 
     @PostMapping("/tasks/{id}/delete")
     public String deleteTask(@PathVariable Long id) {
-        taskService.deleteTask(id);
+        taskDefinitionService.deleteTaskDefinition(id);
         return "redirect:/parent/tasks";
     }
 
@@ -139,7 +171,7 @@ public class ParentController {
             @RequestParam(required = false) String notes,
             Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
-        taskService.approveTask(id, currentUser, awardedPoints, notes);
+        taskInstanceService.approveTask(id, currentUser, awardedPoints, notes);
         return "redirect:/parent/tasks/pending";
     }
 
@@ -148,7 +180,7 @@ public class ParentController {
             @RequestParam String notes,
             Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
-        taskService.rejectTask(id, currentUser, notes);
+        taskInstanceService.rejectTask(id, currentUser, notes);
         return "redirect:/parent/tasks/pending";
     }
 
@@ -239,7 +271,7 @@ public class ParentController {
         // Reverse to show chronologically in chart
         java.util.Collections.reverse(chartData);
 
-        List<Task> tasks = taskService.findByUser(child);
+        List<TaskInstance> tasks = taskInstanceService.findByUser(child);
 
         model.addAttribute("child", child);
         model.addAttribute("transactionsWithBalance", transactionsWithBalance);

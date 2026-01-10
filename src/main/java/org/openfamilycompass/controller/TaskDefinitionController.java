@@ -1,17 +1,20 @@
 package org.openfamilycompass.controller;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import org.openfamilycompass.model.RecurrenceType;
 
 import lombok.Data;
 
 @Data
-public class TaskController {
+public class TaskDefinitionController {
     private String title;
     private String description;
     private int basePoints;
-    private Long userId;
+    private Set<Long> userIds; // Mehrere Kinder
     private RecurrenceType recurrenceType;
-    private LocalDate dueDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String weeklyDays;
 }

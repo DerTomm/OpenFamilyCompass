@@ -5,5 +5,6 @@ public enum TaskStatus {
     IN_PROGRESS, // Child has started
     CHILD_COMPLETED, // Child marked as completed
     APPROVED, // Parents approved
-    REJECTED // Parents rejected
+    REJECTED, // Parents rejected
+    EXPIRED // Task expired without completion
 }

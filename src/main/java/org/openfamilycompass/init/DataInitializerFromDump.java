@@ -13,8 +13,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
 @Profile("initial-data")
+@Slf4j
 public class DataInitializerFromDump {
 
     private final JdbcTemplate jdbcTemplate;
@@ -26,19 +29,23 @@ public class DataInitializerFromDump {
     public DataInitializerFromDump(JdbcTemplate jdbcTemplate, Flyway flyway) {
         this.jdbcTemplate = jdbcTemplate;
         this.flyway = flyway;
+        log.info("DataInitializerFromDump bean created");
     }
 
     @PostConstruct
     public void loadInitialData() {
-        System.out.println("Resetting database with Flyway clean and migrate...");
+        log.info("Resetting database with Flyway clean and migrate...");
 
         // Clean the database completely
         flyway.clean();
 
+        // Repair to update checksums after clean
+        flyway.repair();
+
         // Re-run all migrations to recreate schema
         flyway.migrate();
 
-        System.out.println("Database reset complete. Loading initial data...");
+        log.info("Database reset complete. Loading initial data...");
 
         try {
             String sql = new String(FileCopyUtils.copyToByteArray(initialDataScript.getInputStream()),
@@ -51,9 +58,9 @@ public class DataInitializerFromDump {
                     jdbcTemplate.execute(statement);
                 }
             }
-            System.out.println("Initial data loaded successfully.");
+            log.info("Initial data loaded successfully.");
         } catch (IOException e) {
-            System.err.println("Failed to load initial data: " + e.getMessage());
+            log.error("Failed to load initial data: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }

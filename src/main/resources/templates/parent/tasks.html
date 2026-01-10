@@ -25,10 +25,10 @@
                         <h5 class="mb-0">Aufgabenverwaltung</h5>
                     </div>
                     <div class="card-body">
-                        <div th:if="${#lists.isEmpty(tasks)}" class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> Es wurden noch keine Aufgaben erstellt.
+                        <div th:if="${#lists.isEmpty(taskDefinitions)}" class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Es wurden noch keine Aufgabendefinitionen erstellt.
                         </div>
-                        <div th:if="${not #lists.isEmpty(tasks)}">
+                        <div th:if="${not #lists.isEmpty(taskDefinitions)}">
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
@@ -36,46 +36,40 @@
                                             <th>Titel</th>
                                             <th>Beschreibung</th>
                                             <th>Punkte</th>
-                                            <th>Kind</th>
-                                            <th>Status</th>
+                                            <th>Kinder</th>
                                             <th>Wiederholung</th>
-                                            <th>Fällig am</th>
+                                            <th>Startdatum</th>
                                             <th>Aktionen</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr th:each="task : ${tasks}">
-                                            <td th:text="${task.title}"></td>
-                                            <td th:text="${task.description} ?: '-'"></td>
-                                            <td th:text="${task.basePoints}"></td>
-                                            <td
-                                                th:text="${task.assignedUser != null ? task.assignedUser.firstName : 'Alle'}">
-                                            </td>
+                                        <tr th:each="taskDef : ${taskDefinitions}">
+                                            <td th:text="${taskDef.title}"></td>
+                                            <td th:text="${taskDef.description} ?: '-'"></td>
+                                            <td th:text="${taskDef.basePoints}"></td>
                                             <td>
+                                                <span th:if="${taskDef.assignedUsers.size() == children.size()}"
+                                                    th:text="#{tasks.assignment.all}"></span>
+                                                <span th:if="${taskDef.assignedUsers.size() == 1}"
+                                                    th:text="${taskDef.assignedUsers[0].firstName}"></span>
                                                 <span
-                                                    th:attr="class=${task.status.name() == 'PENDING' ? 'badge bg-warning' : task.status.name() == 'IN_PROGRESS' ? 'badge bg-primary' : task.status.name() == 'CHILD_COMPLETED' ? 'badge bg-info' : task.status.name() == 'APPROVED' ? 'badge bg-success' : 'badge bg-danger'}"
-                                                    th:text="#{${'task.status.' + task.status.name()}}"></span>
-                                            </td>
-                                            <td
-                                                th:text="${task.recurrenceType.name() == 'ONCE' ? 'Einmalig' : task.recurrenceType.name() == 'DAILY' ? 'Täglich' : task.recurrenceType.name() == 'WEEKLY' ? 'Wöchentlich' : 'Monatlich'}">
-                                            </td>
-                                            <td
-                                                th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : '-'}">
+                                                    th:if="${taskDef.assignedUsers.size() > 1 and taskDef.assignedUsers.size() < children.size()}"
+                                                    th:text="#{tasks.assignment.some}"></span>
                                             </td>
                                             <td>
-                                                <a th:if="${task.status.name() != 'APPROVED' and task.status.name() != 'CHILD_COMPLETED'}"
-                                                    th:href="@{'/parent/tasks/' + ${task.id} + '/edit'}"
-                                                    class="btn btn-sm btn-outline-primary me-2">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form
-                                                    th:if="${task.status.name() != 'APPROVED' and task.status.name() != 'CHILD_COMPLETED'}"
-                                                    th:action="@{'/parent/tasks/' + ${task.id} + '/delete'}"
+                                                <span th:if="${taskDef.recurrenceType.name() == 'ONCE'}"
+                                                    th:text="#{recurrence.once}">Einmalig</span>
+                                                <span th:if="${taskDef.recurrenceType.name() != 'ONCE'}"
+                                                    th:text="#{recurrence.weekly}">Wöchentlich</span>
+                                            </td>
+                                            <td th:text="${taskDef.startDate} ?: '-'"></td>
+                                            <td>
+                                                <a th:href="@{'/parent/tasks/' + ${taskDef.id} + '/edit'}"
+                                                    class="btn btn-sm btn-primary">Bearbeiten</a>
+                                                <form th:action="@{'/parent/tasks/' + ${taskDef.id} + '/delete'}"
                                                     method="post" style="display: inline;">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('Sind Sie sicher, dass Sie diese Aufgabe löschen möchten?')">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
+                                                    <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Wirklich löschen?')">Löschen</button>
                                                 </form>
                                             </td>
                                         </tr>

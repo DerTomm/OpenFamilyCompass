@@ -188,14 +188,15 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="task : ${tasks}">
-                                        <td th:text="${task.title}">Aufgabe</td>
+                                        <td th:text="${task.taskDefinition.title}">Aufgabe</td>
                                         <td>
                                             <span class="badge"
                                                 th:classappend="${task.status.name() == 'PENDING'} ? 'bg-warning' : 
-                                                                  (${task.status.name() == 'APPROVED'} ? 'bg-success' : 'bg-info')"
+                                                                  (${task.status.name() == 'APPROVED'} ? 'bg-success' : 
+                                                                  (${task.status.name() == 'EXPIRED'} ? 'bg-danger' : 'bg-info'))"
                                                 th:text="${task.status}">Status</span>
                                         </td>
-                                        <td th:text="${task.basePoints}">0</td>
+                                        <td th:text="${task.taskDefinition.basePoints}">0</td>
                                         <td
                                             th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : '-'}">
                                             Datum</td>

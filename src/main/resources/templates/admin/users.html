@@ -46,8 +46,11 @@
                                         </td>
                                         <td>
                                             <span class="badge"
-                                                th:classappend="${user.active} ? 'bg-success' : 'bg-secondary'"
-                                                th:text="${user.active} ? #{status.active} : #{status.inactive}">Status</span>
+                                                th:classappend="${user.active} ? 'bg-success' : 'bg-secondary'">
+                                                <span th:if="${user.active}" th:text="#{status.active}">Aktiv</span>
+                                                <span th:if="${!user.active}"
+                                                    th:text="#{status.inactive}">Inaktiv</span>
+                                            </span>
                                         </td>
                                         <td th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy HH:mm')}">Datum
                                         </td>

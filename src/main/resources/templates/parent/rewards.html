@@ -40,8 +40,11 @@
                                         </p>
                                         <p>
                                             <span class="badge"
-                                                th:classappend="${reward.active} ? 'bg-success' : 'bg-secondary'"
-                                                th:text="${reward.active} ? #{status.active} : #{status.inactive}">Status</span>
+                                                th:classappend="${reward.active} ? 'bg-success' : 'bg-secondary'">
+                                                <span th:if="${reward.active}" th:text="#{status.active}">Aktiv</span>
+                                                <span th:if="${!reward.active}"
+                                                    th:text="#{status.inactive}">Inaktiv</span>
+                                            </span>
                                         </p>
                                     </div>
                                 </div>

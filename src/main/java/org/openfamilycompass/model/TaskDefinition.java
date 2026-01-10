@@ -2,15 +2,19 @@ package org.openfamilycompass.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -19,11 +23,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tasks")
+@Table(name = "task_definitions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Task {
+public class TaskDefinition {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,36 +42,26 @@ public class Task {
     @Column(nullable = false)
     private int basePoints; // Base reward points
 
-    @ManyToOne
-    @JoinColumn(name = "assigned_user_id")
-    private User assignedUser; // Can be null if for all users
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TaskStatus status = TaskStatus.PENDING;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RecurrenceType recurrenceType = RecurrenceType.ONCE;
 
-    @Column(name = "due_date")
-    private LocalDate dueDate; // Due date
-
-    @Column(name = "completed_at")
-    private LocalDateTime completedAt; // Marked as completed by child
-
-    @Column(name = "approved_at")
-    private LocalDateTime approvedAt; // Approved by parents
-
-    @Column(name = "awarded_points")
-    private Integer awardedPoints; // Actually awarded points (can differ)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "task_definition_assigned_users", joinColumns = @JoinColumn(name = "task_definition_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<User> assignedUsers; // Kinder, denen die Aufgabe gilt
 
     @ManyToOne
-    @JoinColumn(name = "approved_by")
-    private User approvedBy; // Which parent approved
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy; // Elternteil, der die Definition erstellt hat
 
-    @Column(name = "parent_notes", columnDefinition = "TEXT")
-    private String parentNotes; // Notes from parents
+    @Column(name = "start_date")
+    private LocalDate startDate; // Optional: Wann die Aufgabe startet
+
+    @Column(name = "end_date")
+    private LocalDate endDate; // Optional: Wann die Aufgabe endet
+
+    @Column(name = "weekly_days", columnDefinition = "TEXT")
+    private String weeklyDays; // JSON oder kommasepariert: MONDAY,TUESDAY für WEEKLY
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

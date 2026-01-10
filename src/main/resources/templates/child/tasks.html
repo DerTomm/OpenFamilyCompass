@@ -95,8 +95,9 @@
                             <div class="card-body">
                                 <div class="row align-items-center">
                                     <div class="col-md-8">
-                                        <h5 class="card-title" th:text="${task.title}">Task</h5>
-                                        <p class="card-text" th:text="${task.description}">Description</p>
+                                        <h5 class="card-title" th:text="${task.taskDefinition.title}">Task</h5>
+                                        <p class="card-text" th:text="${task.taskDefinition.description}">Description
+                                        </p>
                                         <small class="text-muted" th:if="${task.dueDate}">
                                             <span th:text="#{child.dashboard.due}">📅 Due:</span> <span
                                                 th:text="${#temporals.format(task.dueDate, 'dd.MM.yyyy')}">Date</span>
@@ -105,7 +106,7 @@
                                     <div class="col-md-4 text-end">
                                         <div class="mb-2">
                                             <span class="badge bg-success" style="font-size: 1.2rem;"
-                                                th:text="#{child.dashboard.tasks.points(${task.basePoints})}">
+                                                th:text="#{child.dashboard.tasks.points(${task.taskDefinition.basePoints})}">
                                                 ⭐ 0 Points
                                             </span>
                                         </div>
