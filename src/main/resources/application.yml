@@ -91,3 +91,6 @@ app:
     # Or set via environment: APP_ADMIN_DEFAULT_PASSWORD=your_secure_password
     default-username: admin
     default-password: "admin" # ⚠️ CHANGE AFTER FIRST LOGIN!
+
+# Firebase Cloud Messaging Configuration
+# Project ID is read from firebase-service-account.json at runtime
