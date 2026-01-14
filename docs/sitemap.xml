@@ -5,14 +5,14 @@
 
     <url>
         <loc>https://dertomm.github.io/OpenFamilyCompass/</loc>
-        <lastmod>2026-01-09</lastmod>
+        <lastmod>2026-01-14</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
 
     <url>
         <loc>https://github.com/dertomm/openfamilycompass</loc>
-        <lastmod>2026-01-09</lastmod>
+        <lastmod>2026-01-14</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
