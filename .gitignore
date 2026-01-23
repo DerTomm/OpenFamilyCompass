@@ -1,19 +1,31 @@
 # Uploads directory for avatars
 uploads/
 *.log
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+
+### Backend (Java/Spring Boot) ###
+backend/target/
+!backend/.mvn/wrapper/maven-wrapper.jar
+backend/src/main/resources/firebase-service-account.json
+backend/src/main/resources/data/initial-data.sql
+
+### App (Expo/React Native) ###
+app/node_modules/
+app/.expo/
+app/dist/
+app/web-build/
+app/*.jks
+app/*.p8
+app/*.p12
+app/*.mobileprovision
+app/.env.local
 
 ### Security & Secrets ###
 .env
 .env.local
 .env.*.local
 keystore.properties
-android-app/keystore.properties
-android-app/local.properties
 local.properties
+*.keystore
 
 ### STS ###
 .apt_generated
@@ -47,13 +59,5 @@ build/
 .DS_Store
 Thumbs.db
 
-### Maven ###
-
-### Android ###
-src/main/resources/firebase-service-account.json
-android-app/app/google-services.json
-
 ### Others ###
-*.keystore
 .github/copilot-instructions.md
-src/main/resources/data/initial-data.sql
