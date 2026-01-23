@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 // API Configuration
 export const API_CONFIG = {
@@ -8,7 +9,7 @@ export const API_CONFIG = {
   
   // OAuth2 PKCE Configuration
   oauth: {
-    clientId: 'openfamilycompass-mobile',
+    clientId: 'openfamilycompass-client',
     authorizationEndpoint: '/oauth2/authorize',
     tokenEndpoint: '/oauth2/token',
     scopes: ['openid', 'profile', 'read', 'write'],
@@ -24,8 +25,25 @@ export const STORAGE_KEYS = {
   USER_PROFILE: 'user_profile',
 };
 
-// Helper functions for secure storage
-export const secureStorage = {
+// Web storage fallback using localStorage
+const webStorage = {
+  async getItem(key: string): Promise<string | null> {
+    return localStorage.getItem(key);
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    localStorage.setItem(key, value);
+  },
+  async removeItem(key: string): Promise<void> {
+    localStorage.removeItem(key);
+  },
+  async clear(): Promise<void> {
+    const keys = Object.values(STORAGE_KEYS);
+    keys.forEach(key => localStorage.removeItem(key));
+  },
+};
+
+// Native storage using SecureStore
+const nativeStorage = {
   async getItem(key: string): Promise<string | null> {
     try {
       return await SecureStore.getItemAsync(key);
@@ -33,20 +51,20 @@ export const secureStorage = {
       return null;
     }
   },
-
   async setItem(key: string, value: string): Promise<void> {
     await SecureStore.setItemAsync(key, value);
   },
-
   async removeItem(key: string): Promise<void> {
     await SecureStore.deleteItemAsync(key);
   },
-
   async clear(): Promise<void> {
     const keys = Object.values(STORAGE_KEYS);
     await Promise.all(keys.map(key => SecureStore.deleteItemAsync(key)));
   },
 };
+
+// Use appropriate storage based on platform
+export const secureStorage = Platform.OS === 'web' ? webStorage : nativeStorage;
 
 // Get the current API base URL
 export const getApiBaseUrl = async (): Promise<string> => {

@@ -7,7 +7,6 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -15,7 +14,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -39,74 +38,67 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 @Configuration
 @EnableWebSecurity
 @Profile("!test")
 public class AuthorizationServerConfig {
 
-    @Value("${spring.security.oauth2.client.secret:change-me-in-production}")
-    private String oauthClientSecret;
-
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/oauth2/**")
-                .with(new OAuth2AuthorizationServerConfigurer(), config -> config
-                        .oidc(oidc -> oidc
-                                .clientRegistrationEndpoint(Customizer.withDefaults())));
+        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+                .oidc(Customizer.withDefaults());
 
-        http.exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
+        http
+                .cors(cors -> cors.configurationSource(authServerCorsConfigurationSource()))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
 
         return http.build();
     }
+    
+    private CorsConfigurationSource authServerCorsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:8081");
+        configuration.addAllowedOrigin("http://localhost:19006");
+        configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/oauth2/**", configuration);
+        source.registerCorsConfiguration("/.well-known/**", configuration);
+        return source;
+    }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
-        // Web client (confidential client with secret)
-        RegisteredClient webClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId("openfamilycompass-web")
-                .clientSecret(passwordEncoder.encode(oauthClientSecret))
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri("http://localhost:8080/login/oauth2/code/openfamilycompass")
-                .redirectUri("http://localhost:3000/callback") // React dev server
-                .redirectUri("http://localhost:19006/callback") // Expo web dev
-                .scope(OidcScopes.OPENID)
-                .scope(OidcScopes.PROFILE)
-                .scope("read")
-                .scope("write")
-                .clientSettings(ClientSettings.builder()
-                        .requireAuthorizationConsent(false)
-                        .build())
-                .tokenSettings(TokenSettings.builder()
-                        .accessTokenTimeToLive(Duration.ofMinutes(15))
-                        .refreshTokenTimeToLive(Duration.ofDays(30))
-                        .reuseRefreshTokens(false)
-                        .build())
-                .build();
-
-        // Mobile/SPA client (public client with PKCE, no secret)
-        RegisteredClient mobileClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId("openfamilycompass-mobile")
-                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE) // Public client
+    public RegisteredClientRepository registeredClientRepository() {
+        // Public client with PKCE for Web and Mobile apps
+        RegisteredClient client = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("openfamilycompass-client")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 // Expo/React Native redirect URIs
                 .redirectUri("exp://localhost:19000/--/callback")
-                .redirectUri("exp://192.168.0.0/--/callback") // Local network
-                .redirectUri("openfamilycompass://callback") // Custom scheme for production
-                .redirectUri("http://localhost:19006/callback") // Expo web
-                .redirectUri("http://localhost:3000/callback") // React web dev
+                .redirectUri("exp://192.168.0.0/--/callback")
+                .redirectUri("openfamilycompass://callback")
+                .redirectUri("http://localhost:19006")
+                .redirectUri("http://localhost:8081")
+                .redirectUri("http://localhost:3000")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope("read")
                 .scope("write")
                 .clientSettings(ClientSettings.builder()
                         .requireAuthorizationConsent(false)
-                        .requireProofKey(true) // PKCE required for public clients
+                        .requireProofKey(true)
                         .build())
                 .tokenSettings(TokenSettings.builder()
                         .accessTokenTimeToLive(Duration.ofMinutes(15))
@@ -115,7 +107,7 @@ public class AuthorizationServerConfig {
                         .build())
                 .build();
 
-        return new InMemoryRegisteredClientRepository(webClient, mobileClient);
+        return new InMemoryRegisteredClientRepository(client);
     }
 
     @Bean
