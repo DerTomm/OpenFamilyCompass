@@ -9,19 +9,45 @@ import { useAuthStore, selectIsChild, selectIsParent, selectIsAdmin } from '../s
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { ChildDashboardScreen } from '../screens/child/DashboardScreen';
 import { ParentDashboardScreen } from '../screens/parent/DashboardScreen';
+import { TaskListScreen } from '../screens/tasks/TaskListScreen';
+import { PendingApprovalScreen } from '../screens/tasks/PendingApprovalScreen';
+import { RewardListScreen } from '../screens/shop/RewardListScreen';
+import { ProfileScreen } from '../screens/profile/ProfileScreen';
 
 // Types
 import { RootStackParamList, MainTabParamList } from './types';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
+const TasksStack = createNativeStackNavigator();
+const ShopStack = createNativeStackNavigator();
 
-// Placeholder screens
-const PlaceholderScreen: React.FC<{ title: string }> = ({ title }) => (
-  <View style={styles.placeholder}>
-    <ActivityIndicator size="large" />
-  </View>
-);
+// Tasks Stack Navigator
+const TasksStackNavigator: React.FC = () => {
+  const isChild = useAuthStore(selectIsChild);
+  
+  return (
+    <TasksStack.Navigator>
+      <TasksStack.Screen name="TaskList" component={TaskListScreen} options={{ title: 'My Tasks' }} />
+      {!isChild && (
+        <TasksStack.Screen 
+          name="PendingApproval" 
+          component={PendingApprovalScreen} 
+          options={{ title: 'Pending Approval' }} 
+        />
+      )}
+    </TasksStack.Navigator>
+  );
+};
+
+// Shop Stack Navigator
+const ShopStackNavigator: React.FC = () => {
+  return (
+    <ShopStack.Navigator>
+      <ShopStack.Screen name="RewardList" component={RewardListScreen} options={{ title: 'Reward Shop' }} />
+    </ShopStack.Navigator>
+  );
+};
 
 // Main Tab Navigator
 const MainTabNavigator: React.FC = () => {
@@ -51,38 +77,31 @@ const MainTabNavigator: React.FC = () => {
       />
       <MainTab.Screen
         name="Tasks"
-        component={() => <PlaceholderScreen title="Tasks" />}
+        component={TasksStackNavigator}
         options={{
           title: 'Tasks',
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabIcon name="tasks" color={color} />,
         }}
       />
       <MainTab.Screen
         name="Shop"
-        component={() => <PlaceholderScreen title="Shop" />}
+        component={ShopStackNavigator}
         options={{
           title: 'Shop',
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabIcon name="shop" color={color} />,
         }}
       />
       <MainTab.Screen
         name="Profile"
-        component={() => <PlaceholderScreen title="Profile" />}
+        component={ProfileScreen}
         options={{
           title: 'Profile',
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabIcon name="profile" color={color} />,
         }}
       />
-      {isAdmin && (
-        <MainTab.Screen
-          name="Admin"
-          component={() => <PlaceholderScreen title="Admin" />}
-          options={{
-            title: 'Admin',
-            tabBarIcon: ({ color }) => <TabIcon name="admin" color={color} />,
-          }}
-        />
-      )}
     </MainTab.Navigator>
   );
 };
@@ -139,12 +158,6 @@ export const AppNavigator: React.FC = () => {
 
 const styles = StyleSheet.create({
   loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  placeholder: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
