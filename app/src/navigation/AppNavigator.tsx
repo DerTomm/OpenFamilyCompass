@@ -12,7 +12,10 @@ import { ParentDashboardScreen } from '../screens/parent/DashboardScreen';
 import { TaskListScreen } from '../screens/tasks/TaskListScreen';
 import { PendingApprovalScreen } from '../screens/tasks/PendingApprovalScreen';
 import { RewardListScreen } from '../screens/shop/RewardListScreen';
+import { PendingRedemptionsScreen } from '../screens/shop/PendingRedemptionsScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
+import { UserListScreen } from '../screens/admin/UserListScreen';
 
 // Types
 import { RootStackParamList, MainTabParamList } from './types';
@@ -21,6 +24,8 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
 const TasksStack = createNativeStackNavigator();
 const ShopStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
+const AdminStack = createNativeStackNavigator();
 
 // Tasks Stack Navigator
 const TasksStackNavigator: React.FC = () => {
@@ -42,10 +47,38 @@ const TasksStackNavigator: React.FC = () => {
 
 // Shop Stack Navigator
 const ShopStackNavigator: React.FC = () => {
+  const isChild = useAuthStore(selectIsChild);
+  
   return (
     <ShopStack.Navigator>
       <ShopStack.Screen name="RewardList" component={RewardListScreen} options={{ title: 'Reward Shop' }} />
+      {!isChild && (
+        <ShopStack.Screen 
+          name="PendingRedemptions" 
+          component={PendingRedemptionsScreen} 
+          options={{ title: 'Pending Redemptions' }} 
+        />
+      )}
     </ShopStack.Navigator>
+  );
+};
+
+// Profile Stack Navigator
+const ProfileStackNavigator: React.FC = () => {
+  return (
+    <ProfileStack.Navigator>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
+    </ProfileStack.Navigator>
+  );
+};
+
+// Admin Stack Navigator
+const AdminStackNavigator: React.FC = () => {
+  return (
+    <AdminStack.Navigator>
+      <AdminStack.Screen name="UserList" component={UserListScreen} options={{ title: 'Users' }} />
+    </AdminStack.Navigator>
   );
 };
 
@@ -95,13 +128,24 @@ const MainTabNavigator: React.FC = () => {
       />
       <MainTab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{
           title: 'Profile',
           headerShown: false,
           tabBarIcon: ({ color }) => <TabIcon name="profile" color={color} />,
         }}
       />
+      {isAdmin && (
+        <MainTab.Screen
+          name="Admin"
+          component={AdminStackNavigator}
+          options={{
+            title: 'Admin',
+            headerShown: false,
+            tabBarIcon: ({ color }) => <TabIcon name="admin" color={color} />,
+          }}
+        />
+      )}
     </MainTab.Navigator>
   );
 };
