@@ -64,4 +64,9 @@ public class RewardService {
     public List<Reward> findAll() {
         return rewardRepository.findAllByOrderByPointsCostAsc();
     }
+
+    @Transactional
+    public Reward save(@NonNull Reward reward) {
+        return rewardRepository.save(reward);
+    }
 }

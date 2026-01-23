@@ -178,21 +178,23 @@ class TaskDefinitionServiceTest {
         when(taskDefinitionRepository.findById(1L)).thenReturn(Optional.of(taskDefinition));
 
         // When
-        TaskDefinition result = taskDefinitionService.findById(1L);
+        Optional<TaskDefinition> result = taskDefinitionService.findById(1L);
 
         // Then
-        assertThat(result).isEqualTo(taskDefinition);
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(taskDefinition);
     }
 
     @Test
-    void findById_ShouldThrowException_WhenNotExists() {
+    void findById_ShouldReturnEmpty_WhenNotExists() {
         // Given
         when(taskDefinitionRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When & Then
-        assertThatThrownBy(() -> taskDefinitionService.findById(999L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("TaskDefinition not found");
+        // When
+        Optional<TaskDefinition> result = taskDefinitionService.findById(999L);
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test

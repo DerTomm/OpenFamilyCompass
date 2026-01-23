@@ -14,6 +14,8 @@ public interface BehaviorEvaluationRepository extends JpaRepository<BehaviorEval
 
     List<BehaviorEvaluation> findByUserAndCommittedFalse(User user);
 
+    List<BehaviorEvaluation> findByUser(User user);
+
     Optional<BehaviorEvaluation> findByUserAndBehaviorAndCommittedFalse(User user, Behavior behavior);
 
     List<BehaviorEvaluation> findByCommittedFalse();

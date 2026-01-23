@@ -100,4 +100,18 @@ public class PointService {
         Integer total = pointTransactionRepository.sumPointsByUser(user);
         return total != null ? total : 0;
     }
+
+    public List<PointTransaction> findByUser(@NonNull User user) {
+        return pointTransactionRepository.findByUserOrderByCreatedAtDesc(user);
+    }
+
+    public List<PointTransaction> findAll() {
+        return pointTransactionRepository.findAll();
+    }
+
+    @Transactional
+    public PointTransaction awardPoints(@NonNull User user, int points, @NonNull PointTransactionType type,
+            @NonNull String description, Long referenceId, User createdBy) {
+        return addPoints(user, points, type, description, referenceId, createdBy);
+    }
 }

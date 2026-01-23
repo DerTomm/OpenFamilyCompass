@@ -142,4 +142,16 @@ public class RewardRedemptionService {
     public List<RewardRedemption> findApproved() {
         return redemptionRepository.findByStatus(RewardStatus.APPROVED);
     }
+
+    public java.util.Optional<RewardRedemption> findById(@NonNull Long id) {
+        return redemptionRepository.findById(id);
+    }
+
+    public List<RewardRedemption> findAll() {
+        return redemptionRepository.findAll();
+    }
+
+    public List<RewardRedemption> findByStatus(@NonNull RewardStatus status) {
+        return redemptionRepository.findByStatus(status);
+    }
 }

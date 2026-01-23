@@ -76,9 +76,32 @@ public class TaskDefinitionService {
     }
 
     @Transactional(readOnly = true)
-    public TaskDefinition findById(@NonNull Long id) {
-        return taskDefinitionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("TaskDefinition not found"));
+    public java.util.Optional<TaskDefinition> findById(@NonNull Long id) {
+        return taskDefinitionRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskDefinition> findAll() {
+        return taskDefinitionRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskDefinition> findByAssignedUserId(@NonNull Long userId) {
+        return taskDefinitionRepository.findAll().stream()
+                .filter(def -> def.getAssignedUsers().stream()
+                        .anyMatch(user -> user.getId().equals(userId)))
+                .toList();
+    }
+
+    @Transactional
+    public TaskDefinition save(@NonNull TaskDefinition definition) {
+        return taskDefinitionRepository.save(definition);
+    }
+
+    @Transactional
+    public void delete(@NonNull TaskDefinition definition) {
+        taskInstanceService.deleteByTaskDefinitionId(definition.getId());
+        taskDefinitionRepository.delete(definition);
     }
 
     @Transactional

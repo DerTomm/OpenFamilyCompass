@@ -136,7 +136,8 @@ public class ParentController {
 
     @GetMapping("/tasks/{id}/edit")
     public String editTaskForm(@PathVariable Long id, Model model) {
-        TaskDefinition taskDefinition = taskDefinitionService.findById(id);
+        TaskDefinition taskDefinition = taskDefinitionService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("TaskDefinition not found"));
         List<User> children = userService.findAllByRole(UserRole.CHILD);
         model.addAttribute("task", taskDefinition);
         model.addAttribute("children", children);

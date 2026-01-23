@@ -152,6 +152,31 @@ public class TaskInstanceService {
         return taskInstanceRepository.findByAssignedUser(user);
     }
 
+    public List<TaskInstance> findByAssignedUser(@NonNull User user) {
+        return taskInstanceRepository.findByAssignedUser(user);
+    }
+
+    public List<TaskInstance> findByStatus(@NonNull TaskStatus status) {
+        return taskInstanceRepository.findByStatus(status);
+    }
+
+    @Transactional
+    public TaskInstance markAsCompleted(@NonNull TaskInstance instance) {
+        instance.setStatus(TaskStatus.CHILD_COMPLETED);
+        instance.setCompletedAt(LocalDateTime.now());
+        return taskInstanceRepository.save(instance);
+    }
+
+    @Transactional
+    public TaskInstance approve(@NonNull TaskInstance instance, @NonNull User approver, int awardedPoints, String notes) {
+        return approveTask(instance.getId(), approver, awardedPoints, notes);
+    }
+
+    @Transactional
+    public TaskInstance reject(@NonNull TaskInstance instance, @NonNull User rejector, String notes) {
+        return rejectTask(instance.getId(), rejector, notes);
+    }
+
     public List<TaskInstance> findAll() {
         return taskInstanceRepository.findAll();
     }
