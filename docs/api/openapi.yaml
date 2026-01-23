@@ -1,0 +1,2008 @@
+openapi: 3.0.3
+info:
+  title: OpenFamilyCompass API
+  description: |
+    REST API for OpenFamilyCompass - A family task management application.
+    
+    ## Authentication
+    This API uses OAuth2/OIDC with PKCE flow for authentication.
+    - Authorization endpoint: `/oauth2/authorize`
+    - Token endpoint: `/oauth2/token`
+    - JWKS endpoint: `/.well-known/jwks.json`
+    
+    ## Roles
+    - **ADMIN**: Full access to user management
+    - **PARENT**: Manage tasks, rewards, behaviors; approve/reject child actions
+    - **CHILD**: View tasks, redeem rewards, view points
+  version: 1.0.0
+  contact:
+    name: OpenFamilyCompass
+    url: https://github.com/openfamilycompass/openfamilycompass
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+tags:
+  - name: Auth
+    description: Authentication and token management
+  - name: Users
+    description: User management (Admin only)
+  - name: Tasks
+    description: Task definitions and instances
+  - name: Rewards
+    description: Rewards and redemptions
+  - name: Behaviors
+    description: Behavior rules and evaluations
+  - name: Points
+    description: Points and transactions
+  - name: Notifications
+    description: Push notifications management
+
+paths:
+  # ============ AUTH ============
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with username and password
+      description: Returns access and refresh tokens
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: New tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid or expired refresh token
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout and invalidate tokens
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Successfully logged out
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user info
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Change current user's password
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password changed successfully
+        '400':
+          description: Invalid current password or validation error
+
+  # ============ USERS (Admin) ============
+  /users:
+    get:
+      tags: [Users]
+      summary: List all users
+      operationId: listUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Admin access required
+
+    post:
+      tags: [Users]
+      summary: Create a new user
+      operationId: createUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Validation error
+        '403':
+          description: Admin access required
+        '409':
+          description: Username already exists
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          description: User not found
+
+    put:
+      tags: [Users]
+      summary: Update user
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Admin access required
+        '404':
+          description: User not found
+
+    delete:
+      tags: [Users]
+      summary: Deactivate user
+      operationId: deactivateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: User deactivated
+        '403':
+          description: Admin access required
+        '404':
+          description: User not found
+
+  /users/children:
+    get:
+      tags: [Users]
+      summary: List all children (for parents/admins)
+      operationId: listChildren
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of children
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChildResponse'
+
+  # ============ TASK DEFINITIONS ============
+  /tasks/definitions:
+    get:
+      tags: [Tasks]
+      summary: List task definitions
+      operationId: listTaskDefinitions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: assignedUserId
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Filter by assigned user
+      responses:
+        '200':
+          description: List of task definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskDefinitionResponse'
+
+    post:
+      tags: [Tasks]
+      summary: Create a new task definition
+      operationId: createTaskDefinition
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskDefinitionRequest'
+      responses:
+        '201':
+          description: Task definition created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDefinitionResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /tasks/definitions/{id}:
+    get:
+      tags: [Tasks]
+      summary: Get task definition by ID
+      operationId: getTaskDefinitionById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Task definition details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDefinitionResponse'
+        '404':
+          description: Task definition not found
+
+    put:
+      tags: [Tasks]
+      summary: Update task definition
+      operationId: updateTaskDefinition
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskDefinitionRequest'
+      responses:
+        '200':
+          description: Task definition updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDefinitionResponse'
+        '403':
+          description: Parent/Admin access required
+        '404':
+          description: Task definition not found
+
+    delete:
+      tags: [Tasks]
+      summary: Delete task definition
+      operationId: deleteTaskDefinition
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Task definition deleted
+        '403':
+          description: Parent/Admin access required
+        '404':
+          description: Task definition not found
+
+  # ============ TASK INSTANCES ============
+  /tasks/instances:
+    get:
+      tags: [Tasks]
+      summary: List task instances
+      operationId: listTaskInstances
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: assignedUserId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+        - name: dueDateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dueDateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of task instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskInstanceResponse'
+
+  /tasks/instances/{id}:
+    get:
+      tags: [Tasks]
+      summary: Get task instance by ID
+      operationId: getTaskInstanceById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Task instance details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskInstanceResponse'
+        '404':
+          description: Task instance not found
+
+  /tasks/instances/{id}/complete:
+    post:
+      tags: [Tasks]
+      summary: Mark task as completed (Child)
+      operationId: completeTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Task marked as completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskInstanceResponse'
+        '400':
+          description: Task cannot be completed (wrong status)
+        '403':
+          description: Not assigned to this task
+
+  /tasks/instances/{id}/approve:
+    post:
+      tags: [Tasks]
+      summary: Approve completed task (Parent)
+      operationId: approveTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveTaskRequest'
+      responses:
+        '200':
+          description: Task approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskInstanceResponse'
+        '400':
+          description: Task cannot be approved
+        '403':
+          description: Parent/Admin access required
+
+  /tasks/instances/{id}/reject:
+    post:
+      tags: [Tasks]
+      summary: Reject completed task (Parent)
+      operationId: rejectTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectTaskRequest'
+      responses:
+        '200':
+          description: Task rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskInstanceResponse'
+        '400':
+          description: Task cannot be rejected
+        '403':
+          description: Parent/Admin access required
+
+  /tasks/pending:
+    get:
+      tags: [Tasks]
+      summary: Get pending tasks for approval (Parent)
+      operationId: getPendingTasks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of pending tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskInstanceResponse'
+
+  # ============ REWARDS ============
+  /rewards:
+    get:
+      tags: [Rewards]
+      summary: List all rewards
+      operationId: listRewards
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of rewards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RewardResponse'
+
+    post:
+      tags: [Rewards]
+      summary: Create a new reward
+      operationId: createReward
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRewardRequest'
+      responses:
+        '201':
+          description: Reward created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /rewards/{id}:
+    get:
+      tags: [Rewards]
+      summary: Get reward by ID
+      operationId: getRewardById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Reward details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardResponse'
+        '404':
+          description: Reward not found
+
+    put:
+      tags: [Rewards]
+      summary: Update reward
+      operationId: updateReward
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRewardRequest'
+      responses:
+        '200':
+          description: Reward updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardResponse'
+        '403':
+          description: Parent/Admin access required
+        '404':
+          description: Reward not found
+
+    delete:
+      tags: [Rewards]
+      summary: Deactivate reward
+      operationId: deactivateReward
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Reward deactivated
+        '403':
+          description: Parent/Admin access required
+        '404':
+          description: Reward not found
+
+  # ============ REWARD REDEMPTIONS ============
+  /rewards/redemptions:
+    get:
+      tags: [Rewards]
+      summary: List redemptions
+      operationId: listRedemptions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/RewardStatus'
+      responses:
+        '200':
+          description: List of redemptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RewardRedemptionResponse'
+
+    post:
+      tags: [Rewards]
+      summary: Request reward redemption (Child)
+      operationId: requestRedemption
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestRedemptionRequest'
+      responses:
+        '201':
+          description: Redemption requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardRedemptionResponse'
+        '400':
+          description: Insufficient points or reward unavailable
+
+  /rewards/redemptions/{id}/approve:
+    post:
+      tags: [Rewards]
+      summary: Approve redemption (Parent)
+      operationId: approveRedemption
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Redemption approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardRedemptionResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /rewards/redemptions/{id}/reject:
+    post:
+      tags: [Rewards]
+      summary: Reject redemption (Parent)
+      operationId: rejectRedemption
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectRedemptionRequest'
+      responses:
+        '200':
+          description: Redemption rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardRedemptionResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /rewards/redemptions/{id}/deliver:
+    post:
+      tags: [Rewards]
+      summary: Mark redemption as delivered (Parent)
+      operationId: deliverRedemption
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Redemption marked as delivered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardRedemptionResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /rewards/redemptions/pending:
+    get:
+      tags: [Rewards]
+      summary: Get pending redemptions (Parent)
+      operationId: getPendingRedemptions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of pending redemptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RewardRedemptionResponse'
+
+  # ============ BEHAVIORS ============
+  /behaviors:
+    get:
+      tags: [Behaviors]
+      summary: List behaviors
+      operationId: listBehaviors
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Filter by user (null = global behaviors)
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of behaviors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BehaviorResponse'
+
+    post:
+      tags: [Behaviors]
+      summary: Create a new behavior
+      operationId: createBehavior
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBehaviorRequest'
+      responses:
+        '201':
+          description: Behavior created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BehaviorResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /behaviors/{id}:
+    get:
+      tags: [Behaviors]
+      summary: Get behavior by ID
+      operationId: getBehaviorById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Behavior details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BehaviorResponse'
+        '404':
+          description: Behavior not found
+
+    put:
+      tags: [Behaviors]
+      summary: Update behavior
+      operationId: updateBehavior
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBehaviorRequest'
+      responses:
+        '200':
+          description: Behavior updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BehaviorResponse'
+        '403':
+          description: Parent/Admin access required
+        '404':
+          description: Behavior not found
+
+    delete:
+      tags: [Behaviors]
+      summary: Deactivate behavior
+      operationId: deactivateBehavior
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Behavior deactivated
+        '403':
+          description: Parent/Admin access required
+        '404':
+          description: Behavior not found
+
+  # ============ BEHAVIOR EVALUATIONS ============
+  /behaviors/evaluations:
+    get:
+      tags: [Behaviors]
+      summary: List behavior evaluations
+      operationId: listBehaviorEvaluations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: committed
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of evaluations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BehaviorEvaluationResponse'
+
+    post:
+      tags: [Behaviors]
+      summary: Create or update behavior evaluation
+      operationId: saveBehaviorEvaluation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveBehaviorEvaluationRequest'
+      responses:
+        '200':
+          description: Evaluation saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BehaviorEvaluationResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /behaviors/evaluations/commit:
+    post:
+      tags: [Behaviors]
+      summary: Commit all pending evaluations for a user
+      operationId: commitBehaviorEvaluations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitEvaluationsRequest'
+      responses:
+        '200':
+          description: Evaluations committed, points awarded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommitEvaluationsResponse'
+        '403':
+          description: Parent/Admin access required
+
+  # ============ POINTS ============
+  /points/balance:
+    get:
+      tags: [Points]
+      summary: Get current user's point balance
+      operationId: getPointBalance
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Point balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointBalanceResponse'
+
+  /points/balance/{userId}:
+    get:
+      tags: [Points]
+      summary: Get point balance for a user (Parent/Admin)
+      operationId: getPointBalanceForUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Point balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointBalanceResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /points/transactions:
+    get:
+      tags: [Points]
+      summary: Get point transactions
+      operationId: getPointTransactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/PointTransactionType'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointTransactionsResponse'
+
+  /points/bonus:
+    post:
+      tags: [Points]
+      summary: Award bonus points (Parent)
+      operationId: awardBonusPoints
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardPointsRequest'
+      responses:
+        '201':
+          description: Bonus points awarded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointTransactionResponse'
+        '403':
+          description: Parent/Admin access required
+
+  /points/penalty:
+    post:
+      tags: [Points]
+      summary: Deduct penalty points (Parent)
+      operationId: deductPenaltyPoints
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardPointsRequest'
+      responses:
+        '201':
+          description: Penalty points deducted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointTransactionResponse'
+        '403':
+          description: Parent/Admin access required
+
+  # ============ NOTIFICATIONS ============
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get notifications for current user
+      operationId: getNotifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationResponse'
+
+  /notifications/{id}/read:
+    post:
+      tags: [Notifications]
+      summary: Mark notification as read
+      operationId: markNotificationAsRead
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Notification marked as read
+
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      operationId: markAllNotificationsAsRead
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: All notifications marked as read
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread notification count
+      operationId: getUnreadNotificationCount
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+
+  /notifications/register-device:
+    post:
+      tags: [Notifications]
+      summary: Register device for push notifications
+      operationId: registerDevice
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDeviceRequest'
+      responses:
+        '204':
+          description: Device registered
+
+  /notifications/unregister-device:
+    post:
+      tags: [Notifications]
+      summary: Unregister device from push notifications
+      operationId: unregisterDevice
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnregisterDeviceRequest'
+      responses:
+        '204':
+          description: Device unregistered
+
+  # ============ PROFILE ============
+  /profile:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      operationId: getProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+
+    put:
+      tags: [Auth]
+      summary: Update current user profile
+      operationId: updateProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+
+  /profile/avatar:
+    post:
+      tags: [Auth]
+      summary: Upload avatar image
+      operationId: uploadAvatar
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+
+  /avatar/icons:
+    get:
+      tags: [Auth]
+      summary: Get available avatar icons
+      operationId: getAvatarIcons
+      responses:
+        '200':
+          description: List of available icons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ============ ENUMS ============
+    UserRole:
+      type: string
+      enum: [ADMIN, PARENT, CHILD]
+
+    TaskStatus:
+      type: string
+      enum: [PENDING, IN_PROGRESS, CHILD_COMPLETED, APPROVED, REJECTED, EXPIRED]
+
+    RecurrenceType:
+      type: string
+      enum: [ONCE, DAILY, WEEKLY, MONTHLY]
+
+    RewardStatus:
+      type: string
+      enum: [REQUESTED, APPROVED, REJECTED, DELIVERED]
+
+    PointTransactionType:
+      type: string
+      enum: [TASK, REWARD, BEHAVIOR, PENALTY, BONUS]
+
+    NotificationType:
+      type: string
+      enum: [TASK_COMPLETED, TASK_APPROVED, TASK_REJECTED, TASK_EXPIRED, REWARD_REQUESTED, REWARD_APPROVED, REWARD_REJECTED, POINTS_EARNED]
+
+    # ============ AUTH ============
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          description: Access token expiry in seconds
+        tokenType:
+          type: string
+          default: Bearer
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 4
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    # ============ USER ============
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        firstName:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        active:
+          type: boolean
+        theme:
+          type: string
+        language:
+          type: string
+        avatarPath:
+          type: string
+        totalPoints:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ChildResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        firstName:
+          type: string
+        avatarPath:
+          type: string
+        totalPoints:
+          type: integer
+
+    CreateUserRequest:
+      type: object
+      required: [username, password, firstName, role]
+      properties:
+        username:
+          type: string
+          minLength: 3
+        password:
+          type: string
+          minLength: 4
+        firstName:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        password:
+          type: string
+          minLength: 4
+        active:
+          type: boolean
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    UserProfileResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        firstName:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        theme:
+          type: string
+        language:
+          type: string
+        avatarType:
+          type: string
+        avatarIconName:
+          type: string
+        avatarPath:
+          type: string
+        totalPoints:
+          type: integer
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        theme:
+          type: string
+          enum: [LIGHT, DARK]
+        language:
+          type: string
+          enum: [en, de]
+        avatarType:
+          type: string
+          enum: [DEFAULT, ICON, PHOTO]
+        avatarIconName:
+          type: string
+
+    # ============ TASK DEFINITION ============
+    TaskDefinitionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        basePoints:
+          type: integer
+        recurrenceType:
+          $ref: '#/components/schemas/RecurrenceType'
+        assignedUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChildResponse'
+        createdBy:
+          $ref: '#/components/schemas/UserResponse'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        weeklyDays:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateTaskDefinitionRequest:
+      type: object
+      required: [title, basePoints, recurrenceType, assignedUserIds]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        basePoints:
+          type: integer
+          minimum: 1
+        recurrenceType:
+          $ref: '#/components/schemas/RecurrenceType'
+        assignedUserIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        weeklyDays:
+          type: array
+          items:
+            type: string
+            enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+
+    UpdateTaskDefinitionRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        basePoints:
+          type: integer
+          minimum: 1
+        recurrenceType:
+          $ref: '#/components/schemas/RecurrenceType'
+        assignedUserIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        weeklyDays:
+          type: array
+          items:
+            type: string
+
+    # ============ TASK INSTANCE ============
+    TaskInstanceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        taskDefinition:
+          $ref: '#/components/schemas/TaskDefinitionResponse'
+        assignedUser:
+          $ref: '#/components/schemas/ChildResponse'
+        dueDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        completedAt:
+          type: string
+          format: date-time
+        approvedAt:
+          type: string
+          format: date-time
+        awardedPoints:
+          type: integer
+        approvedBy:
+          $ref: '#/components/schemas/UserResponse'
+        parentNotes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ApproveTaskRequest:
+      type: object
+      properties:
+        awardedPoints:
+          type: integer
+          description: Override points (optional, defaults to basePoints)
+        notes:
+          type: string
+
+    RejectTaskRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+
+    # ============ REWARD ============
+    RewardResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        pointsCost:
+          type: integer
+        imagePath:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateRewardRequest:
+      type: object
+      required: [title, pointsCost]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        pointsCost:
+          type: integer
+          minimum: 1
+
+    UpdateRewardRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        pointsCost:
+          type: integer
+          minimum: 1
+        active:
+          type: boolean
+
+    # ============ REWARD REDEMPTION ============
+    RewardRedemptionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        user:
+          $ref: '#/components/schemas/ChildResponse'
+        reward:
+          $ref: '#/components/schemas/RewardResponse'
+        pointsSpent:
+          type: integer
+        status:
+          $ref: '#/components/schemas/RewardStatus'
+        requestedAt:
+          type: string
+          format: date-time
+        approvedAt:
+          type: string
+          format: date-time
+        approvedBy:
+          $ref: '#/components/schemas/UserResponse'
+        deliveredAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    RequestRedemptionRequest:
+      type: object
+      required: [rewardId]
+      properties:
+        rewardId:
+          type: integer
+          format: int64
+
+    RejectRedemptionRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+
+    # ============ BEHAVIOR ============
+    BehaviorResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        guideline:
+          type: string
+        points:
+          type: integer
+        user:
+          $ref: '#/components/schemas/ChildResponse'
+        rank:
+          type: integer
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateBehaviorRequest:
+      type: object
+      required: [title, guideline, points]
+      properties:
+        title:
+          type: string
+        guideline:
+          type: string
+        points:
+          type: integer
+          minimum: 1
+        userId:
+          type: integer
+          format: int64
+          description: Null for global behavior
+        rank:
+          type: integer
+
+    UpdateBehaviorRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        guideline:
+          type: string
+        points:
+          type: integer
+          minimum: 1
+        rank:
+          type: integer
+        active:
+          type: boolean
+
+    # ============ BEHAVIOR EVALUATION ============
+    BehaviorEvaluationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        behavior:
+          $ref: '#/components/schemas/BehaviorResponse'
+        user:
+          $ref: '#/components/schemas/ChildResponse'
+        currentPoints:
+          type: integer
+        remarks:
+          type: string
+        committed:
+          type: boolean
+        createdBy:
+          $ref: '#/components/schemas/UserResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SaveBehaviorEvaluationRequest:
+      type: object
+      required: [behaviorId, userId, currentPoints]
+      properties:
+        behaviorId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        currentPoints:
+          type: integer
+          minimum: 0
+        remarks:
+          type: string
+
+    CommitEvaluationsRequest:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: integer
+          format: int64
+
+    CommitEvaluationsResponse:
+      type: object
+      properties:
+        totalPointsAwarded:
+          type: integer
+        evaluationsCommitted:
+          type: integer
+
+    # ============ POINTS ============
+    PointBalanceResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        totalPoints:
+          type: integer
+
+    PointTransactionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        points:
+          type: integer
+        type:
+          $ref: '#/components/schemas/PointTransactionType'
+        description:
+          type: string
+        referenceId:
+          type: integer
+          format: int64
+        remarks:
+          type: string
+        createdBy:
+          $ref: '#/components/schemas/UserResponse'
+        createdAt:
+          type: string
+          format: date-time
+        balanceAfter:
+          type: integer
+          description: Balance after this transaction
+
+    PointTransactionsResponse:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PointTransactionResponse'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    AwardPointsRequest:
+      type: object
+      required: [userId, points, description]
+      properties:
+        userId:
+          type: integer
+          format: int64
+        points:
+          type: integer
+          minimum: 1
+        description:
+          type: string
+
+    # ============ NOTIFICATIONS ============
+    NotificationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        title:
+          type: string
+        message:
+          type: string
+        referenceId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        readAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+
+    RegisterDeviceRequest:
+      type: object
+      required: [token, platform]
+      properties:
+        token:
+          type: string
+        platform:
+          type: string
+          enum: [android, ios, web]
+
+    UnregisterDeviceRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+security:
+  - bearerAuth: []

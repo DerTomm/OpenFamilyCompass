@@ -77,7 +77,8 @@ public class SecurityConfig {
                                 .cors(Customizer.withDefaults()) // CORS für WebView
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**",
-                                                                "/favicon.png", "/favicon.ico")
+                                                                "/favicon.png", "/favicon.ico",
+                                                                "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
                                                 .permitAll()
                                                 .requestMatchers("/login", "/error").permitAll()
                                                 .requestMatchers("/profile/**").authenticated()

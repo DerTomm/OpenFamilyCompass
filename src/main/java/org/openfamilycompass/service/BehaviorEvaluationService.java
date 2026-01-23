@@ -196,4 +196,24 @@ public class BehaviorEvaluationService {
                 .mapToInt(BehaviorEvaluationDTO::getCurrentPoints)
                 .sum();
     }
+
+    @Transactional(readOnly = true)
+    public List<BehaviorEvaluation> findByUser(@NonNull User user) {
+        return evaluationRepository.findByUser(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BehaviorEvaluation> findAll() {
+        return evaluationRepository.findAll();
+    }
+
+    @Transactional
+    public BehaviorEvaluation save(@NonNull BehaviorEvaluation evaluation) {
+        return evaluationRepository.save(evaluation);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Optional<BehaviorEvaluation> findPendingEvaluation(@NonNull Behavior behavior, @NonNull User user) {
+        return evaluationRepository.findByUserAndBehaviorAndCommittedFalse(user, behavior);
+    }
 }

@@ -80,4 +80,31 @@ public class NotificationService {
         }
         notificationRepository.saveAll(unreadNotifications);
     }
+
+    public java.util.Optional<Notification> findById(Long id) {
+        return notificationRepository.findById(id);
+    }
+
+    public List<Notification> findByUser(User user) {
+        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
+    }
+
+    public List<Notification> findUnreadByUser(User user) {
+        return notificationRepository.findByUserAndReadAtIsNullOrderByCreatedAtDesc(user);
+    }
+
+    @Transactional
+    public void markAsRead(Notification notification) {
+        notification.markAsRead();
+        notificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void markAllAsRead(User user) {
+        markAllAsReadForUser(user);
+    }
+
+    public int countUnread(User user) {
+        return (int) notificationRepository.countByUserAndReadAtIsNull(user);
+    }
 }

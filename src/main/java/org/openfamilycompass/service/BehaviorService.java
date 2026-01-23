@@ -116,6 +116,22 @@ public class BehaviorService {
         return behaviorRepository.findByUserIsNullAndActiveTrueOrderByRankAsc();
     }
 
+    public List<Behavior> findAll() {
+        return behaviorRepository.findAll();
+    }
+
+    public List<Behavior> findByUserOrGlobal(@NonNull User user) {
+        List<Behavior> userBehaviors = behaviorRepository.findByUserAndActiveTrueOrderByRankAsc(user);
+        List<Behavior> globalBehaviors = behaviorRepository.findByUserIsNullAndActiveTrueOrderByRankAsc();
+        userBehaviors.addAll(globalBehaviors);
+        return userBehaviors;
+    }
+
+    @Transactional
+    public Behavior save(@NonNull Behavior behavior) {
+        return behaviorRepository.save(behavior);
+    }
+
     @Transactional
     public void updateBehaviorRanks(List<Long> behaviorIdsInOrder) {
         for (int i = 0; i < behaviorIdsInOrder.size(); i++) {
