@@ -39,6 +39,7 @@ public class SecurityConfig {
                 configuration.setAllowCredentials(true);
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/api/**", configuration);
+                source.registerCorsConfiguration("/oauth2/**", configuration); // OAuth2 endpoints
                 source.registerCorsConfiguration("/notifications/**", configuration); // Für WebView
                 return source;
         }
@@ -91,7 +92,7 @@ public class SecurityConfig {
                                 .formLogin(form -> form
                                                 .loginPage("/login")
                                                 .loginProcessingUrl("/perform_login")
-                                                .defaultSuccessUrl("/dashboard", true)
+                                                .defaultSuccessUrl("/dashboard", false) // false = use saved request (OAuth redirect)
                                                 .failureUrl("/login?error=true")
                                                 .permitAll())
                                 .rememberMe(remember -> remember

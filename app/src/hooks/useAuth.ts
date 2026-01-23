@@ -1,11 +1,34 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
+import * as Crypto from 'expo-crypto';
 import { useAuthStore } from '../store/authStore';
 import { getApiBaseUrl, API_CONFIG } from '../api/config';
+import { Platform } from 'react-native';
 
-// Required for web browser redirect
-WebBrowser.maybeCompleteAuthSession();
+// PKCE helpers
+function generateCodeVerifier(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return base64URLEncode(array);
+}
+
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return base64URLEncode(new Uint8Array(digest));
+}
+
+function base64URLEncode(buffer: Uint8Array): string {
+  let binary = '';
+  buffer.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
 
 export const useAuth = () => {
   const { setTokens, logout, isAuthenticated, isLoading, user } = useAuthStore();
@@ -38,29 +61,31 @@ export const useAuth = () => {
       // Create auth request with PKCE
       const redirectUri = AuthSession.makeRedirectUri({
         scheme: 'openfamilycompass',
-        path: 'callback',
       });
+      
+      console.log('Redirect URI:', redirectUri);
+      console.log('Base URL:', baseUrl);
+
+      // Generate PKCE code verifier and challenge
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      
+      // Store code verifier for token exchange
+      sessionStorage.setItem('pkce_code_verifier', codeVerifier);
+      sessionStorage.setItem('pkce_redirect_uri', redirectUri);
 
       const authUrl = `${baseUrl}${API_CONFIG.oauth.authorizationEndpoint}?` +
         `client_id=${API_CONFIG.oauth.clientId}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `response_type=code&` +
-        `scope=${API_CONFIG.oauth.scopes.join(' ')}&` +
+        `scope=${encodeURIComponent(API_CONFIG.oauth.scopes.join(' '))}&` +
+        `code_challenge=${codeChallenge}&` +
         `code_challenge_method=S256`;
 
-      // Open browser for auth
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
-      
-      if (result.type === 'success' && result.url) {
-        // Extract authorization code from URL
-        const url = new URL(result.url);
-        const code = url.searchParams.get('code');
-        
-        if (code) {
-          // Exchange code for tokens
-          await exchangeCodeForTokens(code, redirectUri);
-        }
-      }
+      console.log('Auth URL:', authUrl);
+
+      // For web, redirect directly instead of popup
+      window.location.href = authUrl;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
