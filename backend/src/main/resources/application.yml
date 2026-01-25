@@ -94,3 +94,10 @@ app:
 
 # Firebase Cloud Messaging Configuration
 # Project ID is read from firebase-service-account.json at runtime
+
+# Swagger UI OAuth2 Configuration
+springdoc:
+  swagger-ui:
+    oauth:
+      client-id: openfamilycompass-client
+      use-pkce-with-authorization-code-grant: true
