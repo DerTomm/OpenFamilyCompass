@@ -99,5 +99,10 @@ app:
 springdoc:
   swagger-ui:
     oauth:
-      client-id: openfamilycompass-client
+      client-id: swagger-ui
       use-pkce-with-authorization-code-grant: true
+      scopes:
+        - openid
+        - profile
+        - read
+        - write

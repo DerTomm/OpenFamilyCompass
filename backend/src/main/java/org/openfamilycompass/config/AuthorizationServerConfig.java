@@ -15,6 +15,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
+
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -80,7 +81,7 @@ public class AuthorizationServerConfig {
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         // Public client with PKCE for Web and Mobile apps
-        RegisteredClient client = RegisteredClient.withId(UUID.randomUUID().toString())
+        RegisteredClient appClient = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId("openfamilycompass-client")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
@@ -92,8 +93,6 @@ public class AuthorizationServerConfig {
                 .redirectUri("http://localhost:19006")
                 .redirectUri("http://localhost:8081")
                 .redirectUri("http://localhost:3000")
-                // Swagger UI redirect URI
-                .redirectUri("http://localhost:8080/swagger-ui/oauth2-redirect.html")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope("read")
@@ -109,7 +108,26 @@ public class AuthorizationServerConfig {
                         .build())
                 .build();
 
-        return new InMemoryRegisteredClientRepository(client);
+        // Swagger UI client (public client with PKCE)
+        RegisteredClient swaggerClient = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("swagger-ui")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .redirectUri("http://localhost:8080/swagger-ui/oauth2-redirect.html")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope("read")
+                .scope("write")
+                .clientSettings(ClientSettings.builder()
+                        .requireAuthorizationConsent(false)
+                        .requireProofKey(true)
+                        .build())
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(Duration.ofMinutes(60))
+                        .build())
+                .build();
+
+        return new InMemoryRegisteredClientRepository(appClient, swaggerClient);
     }
 
     @Bean
