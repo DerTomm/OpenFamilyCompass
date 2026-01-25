@@ -92,6 +92,8 @@ public class AuthorizationServerConfig {
                 .redirectUri("http://localhost:19006")
                 .redirectUri("http://localhost:8081")
                 .redirectUri("http://localhost:3000")
+                // Swagger UI redirect URI
+                .redirectUri("http://localhost:8080/swagger-ui/oauth2-redirect.html")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope("read")
