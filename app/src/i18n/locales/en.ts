@@ -2,6 +2,19 @@ export const en = {
     // App
     'app.name': 'OpenFamilyCompass',
 
+    // Setup
+    'setup.server.title': 'Server Setup',
+    'setup.server.subtitle': 'Please enter the URL of your OpenFamilyCompass server',
+    'setup.server.url.label': 'Server URL',
+    'setup.server.url.hint': 'e.g. https://example.com or http://192.168.1.100:8080',
+    'setup.server.url.required': 'Please enter a server URL',
+    'setup.server.url.invalid': 'Invalid URL format',
+    'setup.server.connection.failed': 'Connection to server failed',
+    'setup.server.connection.error': 'Error connecting to server',
+    'setup.server.connect': 'Connect',
+    'setup.server.use.dev': 'Use Development Server (localhost)',
+    'setup.server.info': 'You can change the server URL later in settings',
+
     // Admin
     'admin.dashboard.subtitle': 'Manage users and system settings',
     'admin.dashboard.title': 'Administrator Dashboard',

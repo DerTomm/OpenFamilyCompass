@@ -6,6 +6,7 @@ import { UserProfileResponse, UserRole } from '../types/api';
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
+  isSetupComplete: boolean;
   user: UserProfileResponse | null;
 
   // Actions
@@ -13,15 +14,26 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string, expiresIn: number) => Promise<void>;
   fetchUser: () => Promise<void>;
   logout: () => Promise<void>;
+  completeSetup: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: true,
+  isSetupComplete: false,
   user: null,
 
   initialize: async () => {
     try {
+      // Check if server URL is configured
+      const serverUrl = await secureStorage.getItem(STORAGE_KEYS.SERVER_URL);
+      if (!serverUrl) {
+        set({ isLoading: false, isSetupComplete: false });
+        return;
+      }
+
+      set({ isSetupComplete: true });
+
       const accessToken = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
       const tokenExpiry = await secureStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
 
@@ -85,6 +97,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     await secureStorage.clear();
     set({ isAuthenticated: false, user: null });
+  },
+
+  completeSetup: () => {
+    set({ isSetupComplete: true });
   },
 }));
 

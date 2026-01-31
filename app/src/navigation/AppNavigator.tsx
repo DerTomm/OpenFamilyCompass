@@ -2,8 +2,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Appbar, Avatar, Divider, Menu, Text, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Appbar, Avatar, Divider, Drawer, Menu, Modal, Portal, Text, useTheme } from 'react-native-paper';
 import { useI18n } from '../i18n/I18nContext';
 import { selectIsAdmin, selectIsChild, useAuthStore } from '../store/authStore';
 
@@ -14,6 +14,7 @@ import { ChildDashboardScreen } from '../screens/child/DashboardScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { ParentDashboardScreen } from '../screens/parent/DashboardScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { ServerSetupScreen } from '../screens/setup/ServerSetupScreen';
 import { PendingRedemptionsScreen } from '../screens/shop/PendingRedemptionsScreen';
 import { RewardListScreen } from '../screens/shop/RewardListScreen';
 import { PendingApprovalScreen } from '../screens/tasks/PendingApprovalScreen';
@@ -164,6 +165,20 @@ interface CustomHeaderProps {
   onNavigate: (route: string) => void;
 }
 
+// Check if we're on a small screen (mobile)
+const useIsSmallScreen = () => {
+  const [isSmall, setIsSmall] = useState(Dimensions.get('window').width < 768);
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setIsSmall(window.width < 768);
+    });
+    return () => subscription?.remove();
+  }, []);
+
+  return isSmall;
+};
+
 const CustomHeader: React.FC<CustomHeaderProps> = ({ currentRoute, onNavigate }) => {
   const theme = useTheme();
   const { t } = useI18n();
@@ -172,6 +187,8 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ currentRoute, onNavigate })
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const [userMenuVisible, setUserMenuVisible] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const isSmallScreen = useIsSmallScreen();
 
   const menuItems = [
     { route: 'Dashboard', icon: 'home', label: t('nav.parent.dashboard'), show: true },
@@ -183,86 +200,173 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ currentRoute, onNavigate })
 
   const handleLogout = () => {
     setUserMenuVisible(false);
+    setDrawerVisible(false);
     logout();
   };
 
   const handleProfileClick = () => {
     setUserMenuVisible(false);
+    setDrawerVisible(false);
     onNavigate('Profile');
   };
 
-  return (
-    <Appbar.Header style={{ backgroundColor: theme.colors.surface }} elevated>
-      <View style={styles.headerContent}>
-        <View style={styles.headerLeft}>
-          <MaterialCommunityIcons
-            name="compass"
-            size={28}
-            color={theme.colors.primary}
-            style={{ marginRight: 8 }}
-          />
-          <Text variant="titleLarge" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
-            OpenFamilyCompass
-          </Text>
-        </View>
+  const handleNavigation = (route: string) => {
+    setDrawerVisible(false);
+    onNavigate(route);
+  };
 
-        <View style={styles.headerNav}>
+  // Mobile Drawer Navigation
+  const renderMobileDrawer = () => (
+    <Portal>
+      <Modal
+        visible={drawerVisible}
+        onDismiss={() => setDrawerVisible(false)}
+        contentContainerStyle={[
+          styles.drawerModal,
+          { backgroundColor: theme.colors.surface }
+        ]}
+      >
+        <View style={styles.drawerHeader}>
+          <Avatar.Text
+            size={48}
+            label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
+            style={{ backgroundColor: theme.colors.primary }}
+          />
+          <View style={styles.drawerUserInfo}>
+            <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
+              {user?.firstName} {user?.lastName}
+            </Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              {user?.username}
+            </Text>
+          </View>
+        </View>
+        <Divider />
+        <View style={styles.drawerContent}>
           {menuItems.filter(item => item.show).map((item) => (
-            <Appbar.Action
+            <Drawer.Item
               key={item.route}
               icon={item.icon}
-              onPress={() => onNavigate(item.route)}
-              color={currentRoute === item.route ? theme.colors.primary : theme.colors.onSurfaceVariant}
-              style={[
-                styles.navButton,
-                currentRoute === item.route && { backgroundColor: theme.colors.primaryContainer }
-              ]}
+              label={item.label}
+              active={currentRoute === item.route}
+              onPress={() => handleNavigation(item.route)}
             />
           ))}
+          <Divider style={{ marginVertical: 8 }} />
+          <Drawer.Item
+            icon="account-circle"
+            label="Profil & Einstellungen"
+            onPress={handleProfileClick}
+          />
+          <Drawer.Item
+            icon="logout"
+            label={t('nav.logout')}
+            onPress={handleLogout}
+          />
         </View>
+      </Modal>
+    </Portal>
+  );
 
-        <View style={styles.headerRight}>
-          <Menu
-            visible={userMenuVisible}
-            onDismiss={() => setUserMenuVisible(false)}
-            anchor={
-              <TouchableOpacity
-                style={styles.userMenuButton}
-                onPress={() => setUserMenuVisible(true)}
+  return (
+    <>
+      {isSmallScreen && renderMobileDrawer()}
+      <Appbar.Header style={{ backgroundColor: theme.colors.surface }} elevated>
+        <View style={styles.headerContent}>
+          {/* Mobile: Hamburger Menu */}
+          {isSmallScreen && (
+            <Appbar.Action
+              icon="menu"
+              onPress={() => setDrawerVisible(true)}
+              color={theme.colors.onSurface}
+            />
+          )}
+
+          {/* Logo - always visible */}
+          <View style={styles.headerLeft}>
+            <MaterialCommunityIcons
+              name="compass"
+              size={isSmallScreen ? 24 : 28}
+              color={theme.colors.primary}
+              style={{ marginRight: isSmallScreen ? 4 : 8 }}
+            />
+            {!isSmallScreen && (
+              <Text variant="titleLarge" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
+                OpenFamilyCompass
+              </Text>
+            )}
+          </View>
+
+          {/* Desktop: Navigation Buttons */}
+          {!isSmallScreen && (
+            <View style={styles.headerNav}>
+              {menuItems.filter(item => item.show).map((item) => (
+                <Appbar.Action
+                  key={item.route}
+                  icon={item.icon}
+                  onPress={() => onNavigate(item.route)}
+                  color={currentRoute === item.route ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                  style={[
+                    styles.navButton,
+                    currentRoute === item.route && { backgroundColor: theme.colors.primaryContainer }
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Desktop: User Menu / Mobile: Just Avatar */}
+          <View style={styles.headerRight}>
+            {isSmallScreen ? (
+              <Avatar.Text
+                size={32}
+                label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
+                style={{ backgroundColor: theme.colors.primary }}
+              />
+            ) : (
+              <Menu
+                visible={userMenuVisible}
+                onDismiss={() => setUserMenuVisible(false)}
+                anchor={
+                  <TouchableOpacity
+                    style={styles.userMenuButton}
+                    onPress={() => setUserMenuVisible(true)}
+                  >
+                    <Avatar.Text
+                      size={36}
+                      label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
+                      style={{ backgroundColor: theme.colors.primary }}
+                    />
+                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, marginLeft: 12 }}>
+                      {user?.firstName}
+                    </Text>
+                    <MaterialCommunityIcons
+                      name={userMenuVisible ? 'chevron-up' : 'chevron-down'}
+                      size={20}
+                      color={theme.colors.onSurfaceVariant}
+                      style={{ marginLeft: 4 }}
+                    />
+                  </TouchableOpacity>
+                }
+                anchorPosition="bottom"
               >
-                <Avatar.Text
-                  size={36}
-                  label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
-                  style={{ backgroundColor: theme.colors.primary }}
+                <Menu.Item
+                  onPress={handleProfileClick}
+                  leadingIcon="account-circle"
+                  title="Profil & Einstellungen"
                 />
-                <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, marginLeft: 12 }}>
-                  {user?.firstName}
-                </Text>
-                <MaterialCommunityIcons
-                  name={userMenuVisible ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={theme.colors.onSurfaceVariant}
-                  style={{ marginLeft: 4 }}
+                <Divider />
+                <Menu.Item
+                  onPress={handleLogout}
+                  leadingIcon="logout"
+                  title={t('nav.logout')}
                 />
-              </TouchableOpacity>
-            }
-            anchorPosition="bottom"
-          >
-            <Menu.Item
-              onPress={handleProfileClick}
-              leadingIcon="account-circle"
-              title="Profil & Einstellungen"
-            />
-            <Divider />
-            <Menu.Item
-              onPress={handleLogout}
-              leadingIcon="logout"
-              title={t('nav.logout')}
-            />
-          </Menu>
+              </Menu>
+            )}
+          </View>
         </View>
-      </View>
-    </Appbar.Header>
+      </Appbar.Header>
+    </>
   );
 };
 
@@ -342,7 +446,7 @@ const MainStackNavigator: React.FC = () => {
     <View style={{ flex: 1 }}>
       <CustomHeader currentRoute={currentRoute} onNavigate={handleNavigate} />
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+      <View style={{ flex: 1 }}>
         <MainStack.Navigator
           screenOptions={{
             headerShown: false,
@@ -366,7 +470,7 @@ const MainStackNavigator: React.FC = () => {
             <MainStack.Screen name="Admin" component={AdminStackNavigator} />
           )}
         </MainStack.Navigator>
-      </ScrollView>
+      </View>
 
       <CustomFooter />
     </View>
@@ -375,7 +479,7 @@ const MainStackNavigator: React.FC = () => {
 
 // Root Navigator
 export const AppNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading, initialize } = useAuthStore();
+  const { isAuthenticated, isLoading, isSetupComplete, initialize, completeSetup } = useAuthStore();
   const theme = useTheme();
 
   useEffect(() => {
@@ -387,6 +491,19 @@ export const AppNavigator: React.FC = () => {
       <View style={[styles.loading, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
+    );
+  }
+
+  // Show setup screen if server URL not configured
+  if (!isSetupComplete) {
+    return (
+      <NavigationContainer>
+        <RootStack.Navigator screenOptions={{ headerShown: false }}>
+          <RootStack.Screen name="ServerSetup">
+            {() => <ServerSetupScreen onComplete={completeSetup} />}
+          </RootStack.Screen>
+        </RootStack.Navigator>
+      </NavigationContainer>
     );
   }
 
@@ -408,11 +525,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   headerNav: {
     flexDirection: 'row',
@@ -429,7 +547,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
-    cursor: 'pointer',
   },
   navButton: {
     marginHorizontal: 2,
@@ -450,5 +567,29 @@ const styles = StyleSheet.create({
   footerSection: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  // Mobile Drawer Styles
+  drawerModal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    width: 280,
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  drawerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: 48,
+  },
+  drawerUserInfo: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  drawerContent: {
+    flex: 1,
+    paddingTop: 8,
   },
 });
