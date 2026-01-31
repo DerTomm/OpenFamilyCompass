@@ -95,7 +95,6 @@ export const useAuth = () => {
     }
 
     const tokens = await tokenResponse.json();
-    console.log('Token response:', JSON.stringify(tokens));
 
     // Ensure tokens are strings before storing
     const accessToken = tokens.access_token?.toString() || '';
@@ -120,9 +119,6 @@ export const useAuth = () => {
         path: 'callback',
       });
 
-      console.log('Redirect URI:', redirectUri);
-      console.log('Base URL:', baseUrl);
-
       // Generate PKCE code verifier and challenge
       const codeVerifier = await generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -138,8 +134,6 @@ export const useAuth = () => {
         `scope=${encodeURIComponent(API_CONFIG.oauth.scopes.join(' '))}&` +
         `code_challenge=${codeChallenge}&` +
         `code_challenge_method=S256`;
-
-      console.log('Auth URL:', authUrl);
 
       // Platform-specific navigation
       if (Platform.OS === 'web') {
