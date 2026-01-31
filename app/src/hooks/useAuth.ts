@@ -1,30 +1,47 @@
-import { useCallback, useEffect } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import * as Crypto from 'expo-crypto';
-import { useAuthStore } from '../store/authStore';
-import { getApiBaseUrl, API_CONFIG } from '../api/config';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
+import { useCallback } from 'react';
 import { Platform } from 'react-native';
+import { API_CONFIG, getApiBaseUrl, secureStorage, STORAGE_KEYS } from '../api/config';
+import { useAuthStore } from '../store/authStore';
+
+// Base64 encoding that works on both Web and Native
+function base64Encode(bytes: Uint8Array): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let result = '';
+  const len = bytes.length;
+  for (let i = 0; i < len; i += 3) {
+    const b1 = bytes[i];
+    const b2 = i + 1 < len ? bytes[i + 1] : 0;
+    const b3 = i + 2 < len ? bytes[i + 2] : 0;
+
+    result += chars[b1 >> 2];
+    result += chars[((b1 & 3) << 4) | (b2 >> 4)];
+    result += i + 1 < len ? chars[((b2 & 15) << 2) | (b3 >> 6)] : '=';
+    result += i + 2 < len ? chars[b3 & 63] : '=';
+  }
+  return result;
+}
 
 // PKCE helpers
-function generateCodeVerifier(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return base64URLEncode(array);
+async function generateCodeVerifier(): Promise<string> {
+  const randomBytes = await Crypto.getRandomBytesAsync(32);
+  const base64 = base64Encode(randomBytes);
+  return base64
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 async function generateCodeChallenge(verifier: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return base64URLEncode(new Uint8Array(digest));
-}
-
-function base64URLEncode(buffer: Uint8Array): string {
-  let binary = '';
-  buffer.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary)
+  const digest = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    verifier,
+    { encoding: Crypto.CryptoEncoding.BASE64 }
+  );
+  return digest
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
@@ -36,7 +53,7 @@ export const useAuth = () => {
   // Create PKCE auth request
   const useAuthRequest = () => {
     const discovery = AuthSession.useAutoDiscovery(API_CONFIG.baseUrl);
-    
+
     const [request, response, promptAsync] = AuthSession.useAuthRequest(
       {
         clientId: API_CONFIG.oauth.clientId,
@@ -53,26 +70,66 @@ export const useAuth = () => {
     return { request, response, promptAsync, discovery };
   };
 
+  // Exchange authorization code for tokens
+  const exchangeCodeForTokens = useCallback(async (code: string, redirectUri: string, codeVerifier: string) => {
+    const baseUrl = await getApiBaseUrl();
+
+    const tokenResponse = await fetch(`${baseUrl}${API_CONFIG.oauth.tokenEndpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: API_CONFIG.oauth.clientId,
+        code,
+        redirect_uri: redirectUri,
+        code_verifier: codeVerifier,
+      }).toString(),
+    });
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('Token exchange failed:', errorText);
+      throw new Error('Token exchange failed');
+    }
+
+    const tokens = await tokenResponse.json();
+    console.log('Token response:', JSON.stringify(tokens));
+
+    // Ensure tokens are strings before storing
+    const accessToken = tokens.access_token?.toString() || '';
+    const refreshToken = tokens.refresh_token?.toString() || '';
+    const expiresIn = tokens.expires_in || 3600;
+
+    if (!accessToken) {
+      throw new Error('No access token received');
+    }
+
+    await setTokens(accessToken, refreshToken, expiresIn);
+  }, [setTokens]);
+
   // Handle login with OAuth2 PKCE
   const login = useCallback(async () => {
     try {
       const baseUrl = await getApiBaseUrl();
-      
+
       // Create auth request with PKCE
       const redirectUri = AuthSession.makeRedirectUri({
         scheme: 'openfamilycompass',
+        path: 'callback',
       });
-      
+
       console.log('Redirect URI:', redirectUri);
       console.log('Base URL:', baseUrl);
 
       // Generate PKCE code verifier and challenge
-      const codeVerifier = generateCodeVerifier();
+      const codeVerifier = await generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
-      
+
       // Store code verifier for token exchange
-      sessionStorage.setItem('pkce_code_verifier', codeVerifier);
-      sessionStorage.setItem('pkce_redirect_uri', redirectUri);
+      await secureStorage.setItem(STORAGE_KEYS.PKCE_CODE_VERIFIER, codeVerifier);
+      await secureStorage.setItem(STORAGE_KEYS.PKCE_REDIRECT_URI, redirectUri);
 
       const authUrl = `${baseUrl}${API_CONFIG.oauth.authorizationEndpoint}?` +
         `client_id=${API_CONFIG.oauth.clientId}&` +
@@ -84,38 +141,29 @@ export const useAuth = () => {
 
       console.log('Auth URL:', authUrl);
 
-      // For web, redirect directly instead of popup
-      window.location.href = authUrl;
+      // Platform-specific navigation
+      if (Platform.OS === 'web') {
+        window.location.href = authUrl;
+      } else {
+        // For native apps, use WebBrowser to open auth URL
+        const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+
+        if (result.type === 'success' && result.url) {
+          // Extract authorization code from callback URL
+          const url = Linking.parse(result.url);
+          const code = url.queryParams?.code as string | undefined;
+
+          if (code) {
+            // Exchange code for tokens
+            await exchangeCodeForTokens(code, redirectUri, codeVerifier);
+          }
+        }
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
-  }, []);
-
-  // Exchange authorization code for tokens
-  const exchangeCodeForTokens = async (code: string, redirectUri: string) => {
-    const baseUrl = await getApiBaseUrl();
-    
-    const tokenResponse = await fetch(`${baseUrl}${API_CONFIG.oauth.tokenEndpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: API_CONFIG.oauth.clientId,
-        code,
-        redirect_uri: redirectUri,
-      }).toString(),
-    });
-
-    if (!tokenResponse.ok) {
-      throw new Error('Token exchange failed');
-    }
-
-    const tokens = await tokenResponse.json();
-    await setTokens(tokens.access_token, tokens.refresh_token, tokens.expires_in);
-  };
+  }, [exchangeCodeForTokens]);
 
   // Handle logout
   const handleLogout = useCallback(async () => {

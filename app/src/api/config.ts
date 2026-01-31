@@ -6,7 +6,7 @@ export const API_CONFIG = {
   // Default to localhost for development - can be changed in settings
   baseUrl: 'http://localhost:8080',
   apiVersion: 'v1',
-  
+
   // OAuth2 PKCE Configuration
   oauth: {
     clientId: 'openfamilycompass-client',
@@ -23,6 +23,8 @@ export const STORAGE_KEYS = {
   TOKEN_EXPIRY: 'token_expiry',
   SERVER_URL: 'server_url',
   USER_PROFILE: 'user_profile',
+  PKCE_CODE_VERIFIER: 'pkce_code_verifier',
+  PKCE_REDIRECT_URI: 'pkce_redirect_uri',
 };
 
 // Web storage fallback using localStorage

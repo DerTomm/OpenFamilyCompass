@@ -92,6 +92,8 @@ public class AuthorizationServerConfig {
                 .redirectUri("exp://localhost:19000/--/callback")
                 .redirectUri("exp://192.168.0.0/--/callback")
                 .redirectUri("openfamilycompass://callback")
+                .redirectUri("openfamilycompass://")
+                .redirectUri("openfamilycompass:/")
                 .redirectUri("http://localhost:19006")
                 .redirectUri("http://localhost:8081")
                 .redirectUri("http://localhost:3000")
