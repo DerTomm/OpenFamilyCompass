@@ -138,10 +138,31 @@ public class UserDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateProfileRequest {
+        private String username;
         private String firstName;
         private String theme;
         private String language;
         private String avatarType;
         private String avatarIconName;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChangePasswordRequest {
+        @NotBlank(message = "Current password is required")
+        private String currentPassword;
+
+        @NotBlank(message = "New password is required")
+        @Size(min = 6, message = "Password must be at least 6 characters")
+        private String newPassword;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UsernameCheckResponse {
+        private boolean available;
+        private String message;
     }
 }

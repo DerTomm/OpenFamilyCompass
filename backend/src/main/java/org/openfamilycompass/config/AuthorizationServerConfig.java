@@ -15,7 +15,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
-
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -51,19 +50,20 @@ public class AuthorizationServerConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(Customizer.withDefaults());
-
         http
+                .securityMatcher("/.well-known/**", "/oauth2/**")
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .cors(cors -> cors.configurationSource(authServerCorsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .with(OAuth2AuthorizationServerConfigurer.authorizationServer(),
+                        authServer -> authServer.oidc(Customizer.withDefaults()))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
 
         return http.build();
     }
-    
+
     private CorsConfigurationSource authServerCorsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:8081");
@@ -75,6 +75,8 @@ public class AuthorizationServerConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/oauth2/**", configuration);
         source.registerCorsConfiguration("/.well-known/**", configuration);
+        source.registerCorsConfiguration("/login/**", configuration); // Login endpoint
+        source.registerCorsConfiguration("/perform_login", configuration); // Login processing
         return source;
     }
 

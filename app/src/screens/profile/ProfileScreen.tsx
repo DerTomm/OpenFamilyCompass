@@ -1,154 +1,446 @@
-import React from 'react';
+import { useMutation } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
   Alert,
+  ScrollView,
+  StyleSheet,
+  View,
 } from 'react-native';
+import {
+  Avatar,
+  Button,
+  Dialog,
+  Divider,
+  HelperText,
+  List,
+  Portal,
+  RadioButton,
+  Snackbar,
+  Surface,
+  Text,
+  TextInput,
+  useTheme
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuthStore, selectIsChild } from '../../store/authStore';
+import { profileApi } from '../../api/services';
 import { usePointTransactions } from '../../hooks/useApi';
-
-interface MenuItemProps {
-  icon: string;
-  title: string;
-  subtitle?: string;
-  onPress: () => void;
-  showBadge?: boolean;
-}
-
-const MenuItem: React.FC<MenuItemProps> = ({ icon, title, subtitle, onPress, showBadge }) => (
-  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-    <Text style={styles.menuIcon}>{icon}</Text>
-    <View style={styles.menuContent}>
-      <Text style={styles.menuTitle}>{title}</Text>
-      {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
-    </View>
-    {showBadge && <View style={styles.badge} />}
-    <Text style={styles.menuArrow}>›</Text>
-  </TouchableOpacity>
-);
+import { useI18n } from '../../i18n/I18nContext';
+import { selectIsChild, useAuthStore } from '../../store/authStore';
+import { useTheme as useAppTheme } from '../../theme/ThemeContext';
+import { spacing } from '../../theme/theme';
 
 export const ProfileScreen: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, fetchUser } = useAuthStore();
   const isChild = useAuthStore(selectIsChild);
-  
-  const { data: transactions, isLoading } = usePointTransactions({ 
-    userId: user?.id, 
-    limit: 5 
+  const theme = useTheme();
+  const { isDark, toggleTheme } = useAppTheme();
+  const { t, language, setLanguage, availableLanguages } = useI18n();
+
+  const [languageDialogVisible, setLanguageDialogVisible] = useState(false);
+  const [usernameDialogVisible, setUsernameDialogVisible] = useState(false);
+  const [firstNameDialogVisible, setFirstNameDialogVisible] = useState(false);
+  const [passwordDialogVisible, setPasswordDialogVisible] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+
+  const [newUsername, setNewUsername] = useState('');
+  const [newFirstName, setNewFirstName] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const { data: transactions, isLoading } = usePointTransactions({
+    userId: user?.id,
+    limit: 5
   });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: profileApi.update,
+    onSuccess: async () => {
+      await fetchUser();
+      setFirstNameDialogVisible(false);
+      setSnackbarMessage(t('profile.update.success'));
+      setSnackbarType('success');
+      setSnackbarVisible(true);
+    },
+    onError: (error: any) => {
+      console.error('Profile update error - Status:', error?.response?.status);
+      console.error('Profile update error - Message:', error?.response?.data?.message);
+
+      const status = error?.response?.status;
+      const backendMessage = error?.response?.data?.message;
+      const errorMessage = error?.message;
+
+      let message = t('common.error');
+
+      if (backendMessage) {
+        message = backendMessage;
+      } else if (errorMessage) {
+        message = errorMessage;
+      }
+
+      console.log('Showing snackbar with message:', message);
+      setSnackbarMessage(message);
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+    },
+  });
+
+  const updateUsernameMutation = useMutation({
+    mutationFn: profileApi.update,
+    onSuccess: async () => {
+      setUsernameDialogVisible(false);
+      setSnackbarMessage(t('profile.username.success'));
+      setSnackbarType('success');
+      setSnackbarVisible(true);
+      // Logout immediately after username change to avoid token issues
+      // The snackbar will still be visible during logout/navigation
+      await logout();
+    },
+    onError: (error: any) => {
+      console.error('Username update error - Status:', error?.response?.status);
+      console.error('Username update error - Message:', error?.response?.data?.message);
+
+      const status = error?.response?.status;
+      const backendMessage = error?.response?.data?.message;
+      const errorMessage = error?.message;
+
+      let message = t('common.error');
+
+      // Check for username conflict
+      if (status === 409 || (backendMessage && backendMessage.includes('Username'))) {
+        console.log('Username conflict detected');
+        message = t('profile.username.taken');
+      } else if (status === 400 && backendMessage && backendMessage.includes('Username')) {
+        message = t('profile.username.taken');
+      } else if (backendMessage) {
+        message = backendMessage;
+      } else if (errorMessage) {
+        message = errorMessage;
+      }
+
+      console.log('Showing snackbar with message:', message);
+      setSnackbarMessage(message);
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: profileApi.changePassword,
+    onSuccess: () => {
+      setPasswordDialogVisible(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setSnackbarMessage(t('profile.password.success'));
+      setSnackbarType('success');
+      setSnackbarVisible(true);
+    },
+    onError: () => {
+      setSnackbarMessage(t('profile.password.error'));
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+    },
+  });
+
+  const handleUsernameUpdate = () => {
+    if (!newUsername || newUsername === user?.username) {
+      setUsernameDialogVisible(false);
+      return;
+    }
+    updateUsernameMutation.mutate({ username: newUsername });
+  };
+
+  const handleFirstNameUpdate = () => {
+    if (!newFirstName || newFirstName === user?.firstName) {
+      setFirstNameDialogVisible(false);
+      return;
+    }
+    updateProfileMutation.mutate({ firstName: newFirstName });
+  };
+
+  const handlePasswordUpdate = () => {
+    if (newPassword !== confirmPassword) {
+      setSnackbarMessage(t('profile.password.mismatch'));
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+      return;
+    }
+    if (newPassword.length < 6) {
+      setSnackbarMessage(t('profile.password.min'));
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+      return;
+    }
+    changePasswordMutation.mutate({
+      currentPassword,
+      newPassword,
+    });
+  };
 
   const handleLogout = () => {
     Alert.alert(
-      'Log Out',
+      t('nav.logout'),
       'Are you sure you want to log out?',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Log Out', style: 'destructive', onPress: logout },
+        { text: t('button.cancel'), style: 'cancel' },
+        { text: t('nav.logout'), style: 'destructive', onPress: logout },
       ]
     );
   };
 
   const getRoleLabel = (role?: string) => {
     switch (role) {
-      case 'ADMIN': return 'Administrator';
-      case 'PARENT': return 'Parent';
-      case 'CHILD': return 'Child';
+      case 'ADMIN': return t('role.admin');
+      case 'PARENT': return t('role.parent');
+      case 'CHILD': return t('role.child');
       default: return role;
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
       <ScrollView>
-        <View style={styles.header}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.firstName?.charAt(0).toUpperCase() || '?'}
-            </Text>
-          </View>
-          <Text style={styles.name}>{user?.firstName}</Text>
-          <Text style={styles.role}>{getRoleLabel(user?.role)}</Text>
-          
+        {/* Profile Header */}
+        <Surface style={[styles.header, { backgroundColor: theme.colors.primary }]} elevation={2}>
+          <Avatar.Text
+            size={80}
+            label={user?.firstName?.charAt(0).toUpperCase() || '?'}
+            style={styles.avatar}
+          />
+          <Text variant="headlineSmall" style={styles.name}>
+            {user?.firstName}
+          </Text>
+          <Text variant="bodyMedium" style={styles.role}>
+            {getRoleLabel(user?.role)}
+          </Text>
+
           {isChild && (
-            <View style={styles.pointsCard}>
-              <Text style={styles.pointsLabel}>Total Points</Text>
-              <Text style={styles.pointsValue}>{user?.totalPoints || 0}</Text>
-            </View>
+            <Surface style={styles.pointsCard} elevation={1}>
+              <Text variant="bodyMedium" style={styles.pointsLabel}>
+                {t('child.dashboard.points.badge')}
+              </Text>
+              <Text variant="displaySmall" style={styles.pointsValue}>
+                {user?.totalPoints || 0}
+              </Text>
+            </Surface>
           )}
-        </View>
+        </Surface>
 
-        {isChild && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recent Points Activity</Text>
-            {isLoading ? (
-              <ActivityIndicator style={styles.activityLoader} />
-            ) : transactions?.transactions.length ? (
-              transactions.transactions.map((tx) => (
-                <View key={tx.id} style={styles.transactionItem}>
-                  <View style={styles.transactionInfo}>
-                    <Text style={styles.transactionDesc}>
-                      {tx.description || tx.type}
-                    </Text>
-                    <Text style={styles.transactionDate}>
-                      {new Date(tx.createdAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  <Text style={[
-                    styles.transactionPoints,
-                    tx.points >= 0 ? styles.pointsPositive : styles.pointsNegative
-                  ]}>
-                    {tx.points >= 0 ? '+' : ''}{tx.points}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.noActivity}>No recent activity</Text>
-            )}
-          </View>
-        )}
-
+        {/* Settings Menu */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
-          <View style={styles.menuGroup}>
-            <MenuItem
-              icon="👤"
-              title="Edit Profile"
-              subtitle="Change your name and avatar"
-              onPress={() => {}}
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
+            {t('settings.title')}
+          </Text>
+          <Surface style={styles.menuGroup} elevation={1}>
+            {/* Edit Username */}
+            <List.Item
+              title={t('profile.username')}
+              description={user?.username}
+              left={props => <List.Icon {...props} icon="account" />}
+              right={props => <List.Icon {...props} icon="pencil" />}
+              onPress={() => {
+                setNewUsername(user?.username || '');
+                setUsernameDialogVisible(true);
+              }}
             />
-            <MenuItem
-              icon="🔔"
-              title="Notifications"
-              onPress={() => {}}
+            <Divider />
+
+            {/* Edit First Name */}
+            <List.Item
+              title={t('profile.firstName')}
+              description={user?.firstName}
+              left={props => <List.Icon {...props} icon="card-account-details" />}
+              right={props => <List.Icon {...props} icon="pencil" />}
+              onPress={() => {
+                setNewFirstName(user?.firstName || '');
+                setFirstNameDialogVisible(true);
+              }}
             />
-            <MenuItem
-              icon="🎨"
-              title="Appearance"
-              subtitle={user?.theme === 'DARK' ? 'Dark mode' : 'Light mode'}
-              onPress={() => {}}
+            <Divider />
+
+            {/* Change Password */}
+            <List.Item
+              title={t('profile.edit.password')}
+              left={props => <List.Icon {...props} icon="lock" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => setPasswordDialogVisible(true)}
             />
-            <MenuItem
-              icon="🔒"
-              title="Change Password"
-              onPress={() => {}}
+            <Divider />
+
+            {/* Language Selection */}
+            <List.Item
+              title={t('profile.language')}
+              description={availableLanguages[language].nativeName}
+              left={props => <List.Icon {...props} icon="translate" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => setLanguageDialogVisible(true)}
             />
-          </View>
+            <Divider />
+
+            {/* Theme Toggle */}
+            <List.Item
+              title={t('settings.theme.title')}
+              description={isDark ? t('settings.theme.dark') : t('settings.theme.light')}
+              left={props => <List.Icon {...props} icon={isDark ? 'weather-night' : 'weather-sunny'} />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={toggleTheme}
+            />
+            <Divider />
+
+            {/* Notifications */}
+            <List.Item
+              title={t('nav.settings')}
+              left={props => <List.Icon {...props} icon="cog" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => { }}
+            />
+          </Surface>
         </View>
 
+        {/* Logout Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Log Out</Text>
-          </TouchableOpacity>
+          <List.Item
+            title={t('nav.logout')}
+            titleStyle={{ color: theme.colors.error }}
+            left={props => <List.Icon {...props} icon="logout" color={theme.colors.error} />}
+            onPress={handleLogout}
+            style={[styles.logoutButton, { backgroundColor: theme.colors.surface }]}
+          />
         </View>
 
+        {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>OpenFamilyCompass v1.0.0</Text>
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            {t('app.name')} v1.0.0
+          </Text>
         </View>
       </ScrollView>
+
+      {/* Language Selection Dialog */}
+      <Portal>
+        <Dialog visible={languageDialogVisible} onDismiss={() => setLanguageDialogVisible(false)}>
+          <Dialog.Title>{t('settings.language.select')}</Dialog.Title>
+          <Dialog.Content>
+            <RadioButton.Group
+              onValueChange={(value) => {
+                setLanguage(value as any);
+                setLanguageDialogVisible(false);
+              }}
+              value={language}
+            >
+              {Object.entries(availableLanguages).map(([code, lang]) => (
+                <RadioButton.Item
+                  key={code}
+                  label={lang.nativeName}
+                  value={code}
+                />
+              ))}
+            </RadioButton.Group>
+          </Dialog.Content>
+        </Dialog>
+
+        {/* Edit Username Dialog */}
+        <Dialog visible={usernameDialogVisible} onDismiss={() => setUsernameDialogVisible(false)}>
+          <Dialog.Title>{t('profile.edit.username')}</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label={t('profile.username')}
+              value={newUsername}
+              onChangeText={setNewUsername}
+              autoCapitalize="none"
+              mode="outlined"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setUsernameDialogVisible(false)}>{t('button.cancel')}</Button>
+            <Button onPress={handleUsernameUpdate}>
+              {t('button.save')}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        {/* Edit First Name Dialog */}
+        <Dialog visible={firstNameDialogVisible} onDismiss={() => setFirstNameDialogVisible(false)}>
+          <Dialog.Title>{t('profile.edit.firstName')}</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label={t('profile.firstName')}
+              value={newFirstName}
+              onChangeText={setNewFirstName}
+              mode="outlined"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setFirstNameDialogVisible(false)}>{t('button.cancel')}</Button>
+            <Button onPress={handleFirstNameUpdate}>{t('button.save')}</Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        {/* Change Password Dialog */}
+        <Dialog visible={passwordDialogVisible} onDismiss={() => setPasswordDialogVisible(false)}>
+          <Dialog.Title>{t('profile.edit.password')}</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label={t('profile.password.current')}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              secureTextEntry
+              mode="outlined"
+              style={styles.dialogInput}
+            />
+            <TextInput
+              label={t('profile.password.new')}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              secureTextEntry
+              mode="outlined"
+              style={styles.dialogInput}
+            />
+            <TextInput
+              label={t('profile.password.confirm')}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              mode="outlined"
+              style={styles.dialogInput}
+            />
+            {newPassword && newPassword.length < 6 && (
+              <HelperText type="error">{t('profile.password.min')}</HelperText>
+            )}
+            {confirmPassword && newPassword !== confirmPassword && (
+              <HelperText type="error">{t('profile.password.mismatch')}</HelperText>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setPasswordDialogVisible(false)}>{t('button.cancel')}</Button>
+            <Button
+              onPress={handlePasswordUpdate}
+              disabled={!currentPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6}
+            >
+              {t('button.save')}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* Snackbar for feedback */}
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={4000}
+        style={{
+          backgroundColor: snackbarType === 'error' ? theme.colors.error : theme.colors.primary,
+        }}
+        action={{
+          label: t('button.close'),
+          onPress: () => setSnackbarVisible(false),
+        }}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </SafeAreaView>
   );
 };
@@ -156,160 +448,60 @@ export const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#2196F3',
-    padding: 24,
+    padding: spacing.lg,
     alignItems: 'center',
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    marginBottom: spacing.md,
     backgroundColor: 'rgba(255,255,255,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
   },
   name: {
-    fontSize: 24,
-    fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 4,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
   },
   role: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
   },
   pointsCard: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
+    borderRadius: 16,
+    padding: spacing.md,
+    marginTop: spacing.md,
     alignItems: 'center',
     minWidth: 150,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   pointsLabel: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
   },
   pointsValue: {
     color: '#fff',
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: '900',
   },
   section: {
-    padding: 16,
+    padding: spacing.md,
   },
   sectionTitle: {
-    fontSize: 14,
     fontWeight: '600',
-    color: '#666',
     textTransform: 'uppercase',
-    marginBottom: 12,
-    marginLeft: 4,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
   },
   menuGroup: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     overflow: 'hidden',
   },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  menuIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  menuContent: {
-    flex: 1,
-  },
-  menuTitle: {
-    fontSize: 16,
-    color: '#333',
-  },
-  menuSubtitle: {
-    fontSize: 13,
-    color: '#999',
-    marginTop: 2,
-  },
-  badge: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#F44336',
-    marginRight: 8,
-  },
-  menuArrow: {
-    fontSize: 20,
-    color: '#ccc',
-  },
-  activityLoader: {
-    padding: 20,
-  },
-  transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  transactionInfo: {
-    flex: 1,
-  },
-  transactionDesc: {
-    fontSize: 15,
-    color: '#333',
-  },
-  transactionDate: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 2,
-  },
-  transactionPoints: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  pointsPositive: {
-    color: '#4CAF50',
-  },
-  pointsNegative: {
-    color: '#F44336',
-  },
-  noActivity: {
-    textAlign: 'center',
-    color: '#999',
-    padding: 20,
-  },
   logoutButton: {
-    backgroundColor: '#fff',
-    padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    overflow: 'hidden',
   },
-  logoutText: {
-    color: '#F44336',
-    fontSize: 16,
-    fontWeight: '600',
+  dialogInput: {
+    marginBottom: spacing.sm,
   },
   footer: {
-    padding: 24,
+    padding: spacing.lg,
     alignItems: 'center',
-  },
-  footerText: {
-    color: '#999',
-    fontSize: 12,
   },
 });

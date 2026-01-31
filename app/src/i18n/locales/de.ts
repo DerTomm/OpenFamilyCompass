@@ -1,0 +1,292 @@
+export const de = {
+    // App
+    'app.name': 'OpenFamilyCompass',
+
+    // Admin
+    'admin.dashboard.subtitle': 'Verwaltung von Benutzern und Systemeinstellungen',
+    'admin.dashboard.title': 'Administrator Dashboard',
+    'admin.user.management': 'Benutzerverwaltung',
+    'admin.users.all': 'Alle Benutzer',
+    'admin.users.username': 'Benutzername',
+    'admin.users.role': 'Rolle',
+    'admin.users.status': 'Status',
+
+    // Navigation
+    'nav.behavior': 'Verhalten',
+    'nav.child.dashboard': 'Kinder Dashboard',
+    'nav.logout': 'Abmelden',
+    'nav.management': 'Verwaltung',
+    'nav.parent.dashboard': 'Eltern Dashboard',
+    'nav.rewards': 'Belohnungen',
+    'nav.settings': 'Einstellungen',
+    'nav.tasks': 'Aufgaben',
+
+    // Login
+    'login.button': 'Anmelden',
+    'login.error': '❌ Ungültiger Benutzername oder Passwort!',
+    'login.logout.success': '✅ Du wurdest erfolgreich abgemeldet.',
+    'login.password': 'Passwort',
+    'login.username': 'Benutzername',
+    'login.subtitle': 'Melde dich mit deinem Namen und Passwort an',
+
+    // Dashboard - Parent
+    'dashboard.title': 'Dashboard',
+    'dashboard.welcome': 'Willkommen zurück,',
+    'dashboard.subtitle': 'Das passiert gerade in deiner Familie',
+    'dashboard.quick.actions': 'Schnellzugriff',
+    'dashboard.approve.tasks': 'Aufgaben freigeben',
+    'dashboard.approve.tasks.button': 'Aufgaben prüfen',
+    'dashboard.approve.rewards': 'Belohnungen genehmigen',
+    'dashboard.approve.rewards.button': 'Belohnungen prüfen',
+    'dashboard.evaluate.behavior': 'Verhalten bewerten',
+    'dashboard.evaluate.behavior.desc': 'Belohne positives Verhalten deiner Kinder',
+    'dashboard.children.overview': 'Kinder-Übersicht',
+    'dashboard.manage.points': 'Bonus- und Minuspunkte',
+
+    // Dashboard - Child
+    'child.dashboard.title': 'Mein Dashboard',
+    'child.dashboard.welcome': 'Hallo,',
+    'child.dashboard.points.badge': 'Deine Punkte',
+    'child.dashboard.tasks.available': 'Verfügbare Aufgaben',
+    'child.dashboard.shop.title': 'Belohnungs-Shop',
+    'child.dashboard.shop.subtitle': 'Diese Belohnungen kannst du einlösen',
+    'child.dashboard.pending.review': 'Warten auf Überprüfung',
+    'child.dashboard.parents.reviewing': 'Deine Eltern überprüfen das noch! 🕐',
+
+    // Tasks
+    'tasks.title': 'Aufgabenverwaltung',
+    'tasks.my.title': 'Meine Aufgaben',
+    'tasks.available': 'Verfügbare Aufgaben',
+    'tasks.create': 'Aufgabe erstellen',
+    'tasks.name': 'Name',
+    'tasks.description': 'Beschreibung',
+    'tasks.points': 'Punkte',
+    'tasks.actions': 'Aktionen',
+    'tasks.complete': 'Erledigt',
+    'tasks.completed': 'Erledigt! 🎉',
+    'tasks.pending.title': 'Aufgaben genehmigen',
+    'tasks.pending.none': 'Keine Aufgaben warten auf Genehmigung.',
+    'tasks.pending.approve': 'Genehmigen',
+    'tasks.pending.reject': 'Ablehnen',
+    'task.create.title': 'Neue Aufgabe erstellen',
+    'task.create.button': 'Aufgabe erstellen',
+    'task.name': 'Aufgabenname',
+    'task.description': 'Beschreibung',
+    'task.points.label': 'Belohnungspunkte',
+    'task.deadline': 'Frist (optional)',
+    'task.status.PENDING': 'Ausstehend',
+    'task.status.IN_PROGRESS': 'In Bearbeitung',
+    'task.status.CHILD_COMPLETED': 'Freigabe ausstehend',
+    'task.status.APPROVED': 'Genehmigt',
+    'task.status.REJECTED': 'Abgelehnt',
+
+    // Rewards / Shop
+    'rewards.title': 'Belohnungen',
+    'shop.title.page': 'Belohnungs-Shop',
+    'shop.available.rewards': 'Verfügbare Belohnungen',
+    'shop.my.redemptions': 'Meine Belohnungen',
+    'shop.no.rewards': 'Aktuell keine Belohnungen verfügbar',
+    'shop.no.rewards.desc': 'Deine Eltern werden bald tolle Belohnungen hinzufügen!',
+    'shop.reward.name': 'Belohnung',
+    'shop.reward.not.enough': 'Nicht genug Punkte',
+    'shop.reward.pending': 'Deine Belohnung wartet auf die Genehmigung deiner Eltern.',
+    'shop.status': 'Status',
+    'shop.status.requested': '⏳ Warte auf Genehmigung',
+    'shop.status.approved': '✅ Genehmigt',
+    'shop.status.delivered': '🎉 Erhalten!',
+    'shop.status.cancelled': '❌ Storniert',
+    'rewards.create': 'Belohnung erstellen',
+    'rewards.all': 'Alle Belohnungen',
+    'rewards.none': 'Keine Belohnungen vorhanden. Erstelle die erste Belohnung!',
+    'rewards.pending.title': 'Belohnungen genehmigen',
+    'rewards.pending.none': 'Keine Belohnungen warten auf Genehmigung.',
+    'reward.create.title': 'Neue Belohnung erstellen',
+    'reward.name': 'Belohnungsname',
+    'reward.description': 'Beschreibung',
+    'reward.cost.label': 'Kosten in Punkten',
+
+    // Behavior
+    'behavior.title': 'Verhaltensregeln',
+    'behavior.subtitle': 'Wähle ein Kind aus, um das Verhalten der aktuellen Woche zu bewerten.',
+    'behavior.rules': 'Verhaltensregeln',
+    'behavior.all': 'Alle Verhaltensregeln',
+    'behavior.create': 'Neue Verhaltensregel',
+    'behavior.none': 'Keine Verhaltensregeln definiert. Klicke auf "Neues Verhalten" um eine zu erstellen.',
+    'behavior.evaluate.title': 'Verhalten bewerten',
+    'behavior.evaluate.subtitle': 'Bewerte das Verhalten der aktuellen Woche',
+    'behavior.weekly.total': 'Wochensumme',
+    'child.behaviors.title': 'Mein Verhalten',
+    'child.behaviors.subtitle': 'Verfolge deinen wöchentlichen Verhaltensfortschritt',
+    'child.behaviors.current': 'Aktuelle Wochen-Verhaltensweisen',
+    'child.behaviors.no.behaviors': 'Noch keine Verhaltensweisen',
+    'child.behaviors.no.behaviors.desc': 'Deine Eltern haben noch keine Verhaltensziele für diese Woche festgelegt.',
+
+    // Points
+    'points.title': 'Bonus- und Minuspunkte',
+    'points.subtitle': 'Wähle ein Kind aus, um Bonus- oder Minuspunkte zu vergeben',
+    'points.current.points': 'Aktuelle Punkte: {0}',
+    'points.type.bonus': 'Bonuspunkte',
+    'points.type.penalty': 'Minuspunkte',
+    'point.transaction.type.TASK': 'Aufgabe',
+    'point.transaction.type.REWARD': 'Belohnung',
+    'point.transaction.type.BEHAVIOR': 'Verhalten',
+    'point.transaction.type.BONUS': 'Bonuspunkt',
+    'point.transaction.type.PENALTY': 'Minuspunkt',
+
+    // History
+    'history.title': 'Mein Verlauf',
+    'history.points.history': 'Punkte-Verlauf',
+    'history.no.activities': 'Noch keine Aktivitäten vorhanden.',
+    'history.date': 'Datum',
+    'history.description': 'Beschreibung',
+    'history.points': 'Punkte',
+    'history.balance': 'Saldo',
+    'history.current.balance': 'Aktueller Punktestand:',
+
+    // Profile / Settings
+    'settings.title': 'Benutzereinstellungen',
+    'settings.language.select': 'Sprache auswählen:',
+    'settings.theme.title': 'Design-Einstellungen',
+    'settings.theme.select': 'Farbschema wählen:',
+    'settings.theme.light': 'Light Mode',
+    'settings.theme.light.desc': 'Helles Design mit weißem Hintergrund',
+    'settings.theme.dark': 'Dark Mode',
+    'settings.theme.dark.desc': 'Dunkles Design mit schwarzem Hintergrund',
+    'profile.language': 'Sprache',
+    'profile.language.en': 'Englisch',
+    'profile.language.de': 'Deutsch',
+    'profile.edit.username': 'Benutzername ändern',
+    'profile.edit.firstName': 'Vorname ändern',
+    'profile.edit.password': 'Passwort ändern',
+    'profile.username': 'Benutzername',
+    'profile.firstName': 'Vorname',
+    'profile.password.current': 'Aktuelles Passwort',
+    'profile.password.new': 'Neues Passwort',
+    'profile.password.confirm': 'Passwort bestätigen',
+    'profile.username.check': 'Verfügbarkeit prüfen',
+    'profile.username.available': 'Verfügbar',
+    'profile.username.taken': 'Bereits vergeben',
+    'profile.username.checking': 'Prüfe...',
+    'profile.username.success': 'Benutzername erfolgreich geändert. Du wirst abgemeldet...',
+    'profile.password.mismatch': 'Passwörter stimmen nicht überein',
+    'profile.password.min': 'Mindestens 6 Zeichen',
+    'profile.update.success': 'Profil erfolgreich aktualisiert',
+    'profile.password.success': 'Passwort erfolgreich geändert',
+    'profile.password.error': 'Aktuelles Passwort ist falsch',
+
+    // Roles
+    'role.admin': 'Administrator',
+    'role.parent': 'Eltern',
+    'role.child': 'Kind',
+
+    // Status
+    'status.active': 'Aktiv',
+    'status.inactive': 'Inaktiv',
+
+    // Buttons
+    'button.save': 'Speichern',
+    'button.cancel': 'Abbrechen',
+    'button.close': 'Schließen',
+    'button.edit': 'Bearbeiten',
+    'button.back': 'Zurück',
+
+    // Common
+    'message.no.data': 'Keine Daten verfügbar',
+    'children.all': 'Alle Kinder',
+
+    // Days
+    'day.monday': 'Montag',
+    'day.tuesday': 'Dienstag',
+    'day.wednesday': 'Mittwoch',
+    'day.thursday': 'Donnerstag',
+    'day.friday': 'Freitag',
+    'day.saturday': 'Samstag',
+    'day.sunday': 'Sonntag',
+
+    // Recurrence
+    'recurrence.once': 'Einmalig',
+    'recurrence.weekly': 'Wöchentlich',
+
+    // Empty States
+    'empty.no_children': 'Noch keine Kinder',
+    'empty.no_children.desc': 'Füge deine Kinder hinzu, um ihre Fortschritte zu sehen',
+    'empty.no_activities': 'Keine Aktivitäten',
+    'empty.no_activities.desc': 'Hier erscheinen die neuesten Aktivitäten deiner Familie',
+    'empty.no_tasks': 'Keine Aufgaben',
+    'empty.no_tasks.desc': 'Du hast heute noch keine Aufgaben zu erledigen',
+
+    // Login Screen
+    'login.app.subtitle': 'Gemeinsam Familie organisieren und Kinder motivieren',
+    'login.loading': 'Anmeldung läuft...',
+    'login.server.settings': 'Server-Einstellungen',
+    'login.footer': 'Open Source Familienmanagement',
+    'login.error.config': 'Login fehlgeschlagen. Bitte prüfe deine Server-Konfiguration.',
+
+    // Points Progress
+    'points.progress.next_reward': 'Noch {0} Punkte bis zur nächsten Belohnung',
+    'points.label': 'Punkte',
+
+    // Tasks - Additional
+    'tasks.base': 'Basis',
+    'tasks.pending.tap.review': 'Zum Überprüfen tippen',
+    'tasks.pending.award.points': 'Punkte vergeben',
+    'tasks.pending.parent.comment': 'Kommentar (optional)',
+    'tasks.pending.empty.title': 'Keine Aufgaben zur Genehmigung',
+    'tasks.pending.empty.subtitle': 'Alles erledigt!',
+
+    // Rewards - Additional
+    'rewards.redeem': 'Einlösen',
+    'rewards.not.enough.points': 'Nicht genug Punkte',
+    'rewards.redeem.confirm.title': 'Belohnung einlösen',
+    'rewards.redeem.confirm.message': 'Möchtest du wirklich "{0}" für {1} Punkte einlösen?',
+    'rewards.check.later': 'Schau später noch einmal vorbei!',
+    'rewards.approve.title': 'Belohnung genehmigen',
+    'rewards.approve.message': '{0}s Anfrage für "{1}" genehmigen?',
+    'rewards.reject.title': 'Belohnung ablehnen',
+    'rewards.reject.message': '{0}s Anfrage ablehnen? Die Punkte werden zurückerstattet.',
+    'rewards.deliver.title': 'Als geliefert markieren',
+    'rewards.deliver.message': 'Bestätige, dass "{0}" an {1} übergeben wurde?',
+    'rewards.mark.delivered': 'Als geliefert markieren',
+    'rewards.pending.approval': 'Warte auf Genehmigung',
+    'rewards.no.pending': 'Keine ausstehenden Einlösungen',
+    'rewards.pending.description': 'Belohnungsanfragen von Kindern erscheinen hier',
+    'empty.no_rewards': 'Keine Belohnungen verfügbar',
+
+    // Notifications
+    'notifications.unread.count': '{0} ungelesene Benachrichtigung(en)',
+    'notifications.empty.title': 'Noch keine Benachrichtigungen',
+    'notifications.empty.subtitle': 'Du erhältst hier Updates zu Aufgaben, Belohnungen und mehr',
+    'notifications.time.just_now': 'gerade eben',
+    'notifications.time.minutes_ago': 'vor {0}m',
+    'notifications.time.hours_ago': 'vor {0}h',
+    'notifications.time.days_ago': 'vor {0}d',
+
+    // Admin - Users
+    'admin.users.create.title': 'Neuen Benutzer erstellen',
+    'admin.users.first_name': 'Vorname',
+    'admin.users.password': 'Passwort',
+    'admin.users.create.button': 'Benutzer erstellen',
+    'admin.users.create.success': 'Benutzer erfolgreich erstellt',
+    'admin.users.create.error': 'Fehler beim Erstellen des Benutzers',
+    'admin.users.create.error.fields': 'Bitte fülle alle Felder aus',
+    'admin.users.activate': 'Aktivieren',
+    'admin.users.deactivate': 'Deaktivieren',
+    'admin.users.delete': 'Löschen',
+    'admin.users.activate.title': 'Benutzer aktivieren',
+    'admin.users.deactivate.title': 'Benutzer deaktivieren',
+    'admin.users.delete.title': 'Benutzer löschen',
+    'admin.users.toggle.message': 'Möchtest du wirklich {1} {0}?',
+    'admin.users.delete.message': 'Möchtest du {0} wirklich permanent löschen? Diese Aktion kann nicht rückgängig gemacht werden!',
+    'admin.users.no_users': 'Keine Benutzer gefunden',
+
+    // Common
+    'common.success': 'Erfolg',
+    'common.error': 'Fehler',
+    'button.confirm': 'Bestätigen',
+
+    // Child Dashboard
+    'child.dashboard.points.balance': 'Dein Punktestand',
+
+    // Behavior Modal
+    'behavior.modal.notes.placeholder': 'Feedback hinzufügen...',
+};

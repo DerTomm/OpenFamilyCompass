@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTaskInstances, useCompleteTask } from '../../hooks/useApi';
-import { useAuthStore, selectIsChild } from '../../store/authStore';
+import { useCompleteTask, useTaskInstances } from '../../hooks/useApi';
+import { useI18n } from '../../i18n/I18nContext';
+import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { TaskInstanceResponse, TaskStatus } from '../../types/api';
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
@@ -22,13 +23,8 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   EXPIRED: '#9E9E9E',
 };
 
-const STATUS_LABELS: Record<TaskStatus, string> = {
-  PENDING: 'To Do',
-  IN_PROGRESS: 'In Progress',
-  CHILD_COMPLETED: 'Awaiting Approval',
-  APPROVED: 'Completed',
-  REJECTED: 'Rejected',
-  EXPIRED: 'Expired',
+const getStatusLabel = (status: TaskStatus, t: (key: string) => string): string => {
+  return t(`task.status.${status}`);
 };
 
 interface TaskCardProps {
@@ -36,39 +32,40 @@ interface TaskCardProps {
   onComplete: () => void;
   isCompleting: boolean;
   isChild: boolean;
+  t: (key: string) => string;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isChild }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isChild, t }) => {
   const canComplete = isChild && (task.status === 'PENDING' || task.status === 'IN_PROGRESS');
-  
+
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.taskTitle}>{task.taskDefinition.title}</Text>
         <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[task.status] }]}>
-          <Text style={styles.statusText}>{STATUS_LABELS[task.status]}</Text>
+          <Text style={styles.statusText}>{getStatusLabel(task.status, t)}</Text>
         </View>
       </View>
-      
+
       {task.taskDefinition.description && (
         <Text style={styles.description}>{task.taskDefinition.description}</Text>
       )}
-      
+
       <View style={styles.cardFooter}>
         <View style={styles.pointsContainer}>
-          <Text style={styles.pointsLabel}>Points:</Text>
+          <Text style={styles.pointsLabel}>{t('tasks.points')}:</Text>
           <Text style={styles.pointsValue}>
             {task.awardedPoints ?? task.taskDefinition.basePoints}
           </Text>
         </View>
-        
+
         {task.dueDate && (
           <Text style={styles.dueDate}>
-            Due: {new Date(task.dueDate).toLocaleDateString()}
+            {new Date(task.dueDate).toLocaleDateString()}
           </Text>
         )}
       </View>
-      
+
       {canComplete && (
         <TouchableOpacity
           style={styles.completeButton}
@@ -78,7 +75,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isC
           {isCompleting ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={styles.completeButtonText}>Mark as Done</Text>
+            <Text style={styles.completeButtonText}>{t('tasks.complete')}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -92,13 +89,14 @@ export const TaskListScreen: React.FC = () => {
   const [filter, setFilter] = useState<FilterStatus>('active');
   const user = useAuthStore((state) => state.user);
   const isChild = useAuthStore(selectIsChild);
-  
+  const { t } = useI18n();
+
   const { data: tasks, isLoading, refetch, isRefetching } = useTaskInstances(
     isChild ? { assignedUserId: user?.id } : undefined
   );
-  
+
   const completeTask = useCompleteTask();
-  
+
   const filteredTasks = tasks?.filter((task) => {
     if (filter === 'active') {
       return ['PENDING', 'IN_PROGRESS', 'CHILD_COMPLETED'].includes(task.status);
@@ -123,12 +121,12 @@ export const TaskListScreen: React.FC = () => {
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === 'active' ? t('status.active') : f === 'completed' ? t('tasks.completed') : t('children.all')}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
-      
+
       {isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#2196F3" />
@@ -143,6 +141,7 @@ export const TaskListScreen: React.FC = () => {
               onComplete={() => handleComplete(item.id)}
               isCompleting={completeTask.isPending && completeTask.variables === item.id}
               isChild={isChild}
+              t={t}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -151,7 +150,7 @@ export const TaskListScreen: React.FC = () => {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No tasks found</Text>
+              <Text style={styles.emptyText}>{t('empty.no_tasks')}</Text>
             </View>
           }
         />

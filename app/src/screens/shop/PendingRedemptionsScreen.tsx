@@ -1,18 +1,19 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
   Alert,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { usePendingRedemptions } from '../../hooks/useApi';
 import { redemptionsApi } from '../../api/services';
+import { usePendingRedemptions } from '../../hooks/useApi';
+import { useI18n } from '../../i18n/I18nContext';
 import { RewardRedemptionResponse } from '../../types/api';
 
 interface RedemptionCardProps {
@@ -21,6 +22,7 @@ interface RedemptionCardProps {
   onReject: () => void;
   onDeliver: () => void;
   isLoading: boolean;
+  t: (key: string) => string;
 }
 
 const RedemptionCard: React.FC<RedemptionCardProps> = ({
@@ -29,6 +31,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
   onReject,
   onDeliver,
   isLoading,
+  t,
 }) => {
   const isRequested = redemption.status === 'REQUESTED';
   const isApproved = redemption.status === 'APPROVED';
@@ -51,7 +54,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
 
       <View style={styles.rewardInfo}>
         <Text style={styles.rewardTitle}>{redemption.reward.title}</Text>
-        <Text style={styles.pointsSpent}>{redemption.pointsSpent} pts</Text>
+        <Text style={styles.pointsSpent}>{redemption.pointsSpent} {t('points.label')}</Text>
       </View>
 
       {redemption.reward.description && (
@@ -66,7 +69,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
               onPress={onReject}
               disabled={isLoading}
             >
-              <Text style={styles.rejectButtonText}>Reject</Text>
+              <Text style={styles.rejectButtonText}>{t('tasks.pending.reject')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, styles.approveButton]}
@@ -76,7 +79,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
               {isLoading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.approveButtonText}>Approve</Text>
+                <Text style={styles.approveButtonText}>{t('tasks.pending.approve')}</Text>
               )}
             </TouchableOpacity>
           </>
@@ -90,7 +93,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
             {isLoading ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.deliverButtonText}>Mark as Delivered</Text>
+              <Text style={styles.deliverButtonText}>{t('rewards.mark.delivered')}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -102,6 +105,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
 export const PendingRedemptionsScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const { data: redemptions, isLoading, refetch, isRefetching } = usePendingRedemptions();
+  const { t } = useI18n();
 
   const approveRedemption = useMutation({
     mutationFn: (id: number) => redemptionsApi.approve(id),
@@ -112,7 +116,7 @@ export const PendingRedemptionsScreen: React.FC = () => {
   });
 
   const rejectRedemption = useMutation({
-    mutationFn: ({ id, notes }: { id: number; notes?: string }) => 
+    mutationFn: ({ id, notes }: { id: number; notes?: string }) =>
       redemptionsApi.reject(id, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['redemptions'] });
@@ -130,23 +134,23 @@ export const PendingRedemptionsScreen: React.FC = () => {
 
   const handleApprove = (redemption: RewardRedemptionResponse) => {
     Alert.alert(
-      'Approve Redemption',
-      `Approve ${redemption.user.firstName}'s request for "${redemption.reward.title}"?`,
+      t('rewards.approve.title'),
+      t('rewards.approve.message', { 0: redemption.user.firstName, 1: redemption.reward.title }),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Approve', onPress: () => approveRedemption.mutate(redemption.id) },
+        { text: t('button.cancel'), style: 'cancel' },
+        { text: t('tasks.pending.approve'), onPress: () => approveRedemption.mutate(redemption.id) },
       ]
     );
   };
 
   const handleReject = (redemption: RewardRedemptionResponse) => {
     Alert.alert(
-      'Reject Redemption',
-      `Reject ${redemption.user.firstName}'s request? Points will be refunded.`,
+      t('rewards.reject.title'),
+      t('rewards.reject.message', { 0: redemption.user.firstName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('button.cancel'), style: 'cancel' },
         {
-          text: 'Reject',
+          text: t('tasks.pending.reject'),
           style: 'destructive',
           onPress: () => rejectRedemption.mutate({ id: redemption.id }),
         },
@@ -156,11 +160,11 @@ export const PendingRedemptionsScreen: React.FC = () => {
 
   const handleDeliver = (redemption: RewardRedemptionResponse) => {
     Alert.alert(
-      'Mark as Delivered',
-      `Confirm that "${redemption.reward.title}" has been delivered to ${redemption.user.firstName}?`,
+      t('rewards.deliver.title'),
+      t('rewards.deliver.message', { 0: redemption.reward.title, 1: redemption.user.firstName }),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Confirm', onPress: () => deliverRedemption.mutate(redemption.id) },
+        { text: t('button.cancel'), style: 'cancel' },
+        { text: t('button.confirm'), onPress: () => deliverRedemption.mutate(redemption.id) },
       ]
     );
   };
@@ -189,6 +193,7 @@ export const PendingRedemptionsScreen: React.FC = () => {
                 rejectRedemption.isPending ||
                 deliverRedemption.isPending
               }
+              t={t}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -199,7 +204,7 @@ export const PendingRedemptionsScreen: React.FC = () => {
             requestedRedemptions.length > 0 ? (
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>
-                  Pending Approval ({requestedRedemptions.length})
+                  {t('rewards.pending.approval')} ({requestedRedemptions.length})
                 </Text>
               </View>
             ) : null
@@ -207,9 +212,9 @@ export const PendingRedemptionsScreen: React.FC = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>🎁</Text>
-              <Text style={styles.emptyText}>No pending redemptions</Text>
+              <Text style={styles.emptyText}>{t('rewards.no.pending')}</Text>
               <Text style={styles.emptySubtext}>
-                Reward requests from children will appear here
+                {t('rewards.pending.description')}
               </Text>
             </View>
           }
