@@ -43,11 +43,22 @@ export interface UserProfileResponse {
 }
 
 export interface UpdateProfileRequest {
+  username?: string;
   firstName?: string;
   theme?: 'LIGHT' | 'DARK';
   language?: 'en' | 'de';
   avatarType?: 'DEFAULT' | 'ICON' | 'PHOTO';
   avatarIconName?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface UsernameCheckResponse {
+  available: boolean;
+  message: string;
 }
 
 // Auth

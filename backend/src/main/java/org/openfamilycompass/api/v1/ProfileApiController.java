@@ -54,6 +54,15 @@ public class ProfileApiController {
 
         User currentUser = getCurrentUser(jwt);
 
+        // Update username if provided and different
+        if (request.getUsername() != null && !request.getUsername().equals(currentUser.getUsername())) {
+            String newUsername = request.getUsername().toLowerCase().trim();
+            if (userService.existsByUsername(newUsername)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+            }
+            currentUser.setUsername(newUsername);
+        }
+
         if (request.getFirstName() != null) {
             currentUser.setFirstName(request.getFirstName());
         }
@@ -72,6 +81,47 @@ public class ProfileApiController {
 
         User saved = userService.save(currentUser);
         return ResponseEntity.ok(UserDto.ProfileResponse.fromEntity(saved));
+    }
+
+    @PostMapping("/password")
+    @Operation(summary = "Change current user password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody UserDto.ChangePasswordRequest request) {
+
+        User currentUser = getCurrentUser(jwt);
+        boolean success = userService.changePassword(
+                currentUser.getId(),
+                request.getCurrentPassword(),
+                request.getNewPassword());
+
+        if (!success) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/username/check")
+    @Operation(summary = "Check if username is available")
+    public ResponseEntity<UserDto.UsernameCheckResponse> checkUsername(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam String username) {
+
+        User currentUser = getCurrentUser(jwt);
+        String checkUsername = username.toLowerCase().trim();
+
+        // Username is available if it doesn't exist OR if it's the current user's
+        // username
+        boolean isCurrentUsername = checkUsername.equals(currentUser.getUsername().toLowerCase());
+        boolean exists = userService.existsByUsername(checkUsername);
+        boolean available = isCurrentUsername || !exists;
+
+        String message = available
+                ? (isCurrentUsername ? "This is your current username" : "Username is available")
+                : "Username already taken";
+
+        return ResponseEntity.ok(new UserDto.UsernameCheckResponse(available, message));
     }
 
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -1,11 +1,15 @@
-import React, { useEffect } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { API_CONFIG, getApiBaseUrl } from './src/api/config';
+import { I18nProvider } from './src/i18n/I18nContext';
+import './src/i18n/config'; // Initialize i18n
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { useAuthStore } from './src/store/authStore';
-import { API_CONFIG, getApiBaseUrl } from './src/api/config';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -27,7 +31,7 @@ function useOAuthCallback() {
     const handleCallback = async () => {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
-      
+
       if (!code) return;
 
       const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
@@ -78,12 +82,13 @@ function useOAuthCallback() {
 
 function AppContent() {
   useOAuthCallback();
-  
+  const { theme, isDark } = useTheme();
+
   return (
-    <>
-      <StatusBar style="auto" />
+    <PaperProvider theme={theme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <AppNavigator />
-    </>
+    </PaperProvider>
   );
 }
 
@@ -91,7 +96,11 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <AppContent />
+        <I18nProvider>
+          <ThemeProvider>
+            <AppContent />
+          </ThemeProvider>
+        </I18nProvider>
       </SafeAreaProvider>
     </QueryClientProvider>
   );

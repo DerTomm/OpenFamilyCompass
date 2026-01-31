@@ -1,19 +1,21 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
   Alert,
+  FlatList,
   Modal,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from '../../api/services';
+import { useI18n } from '../../i18n/I18nContext';
 import { UserResponse, UserRole } from '../../types/api';
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -26,9 +28,11 @@ interface UserCardProps {
   user: UserResponse;
   onEdit: () => void;
   onToggleActive: () => void;
+  onDelete: () => void;
+  t: (key: string) => string;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user, onEdit, onToggleActive }) => (
+const UserCard: React.FC<UserCardProps> = ({ user, onEdit, onToggleActive, onDelete, t }) => (
   <View style={[styles.card, !user.active && styles.cardInactive]}>
     <View style={styles.cardHeader}>
       <View style={styles.avatar}>
@@ -44,24 +48,32 @@ const UserCard: React.FC<UserCardProps> = ({ user, onEdit, onToggleActive }) => 
         <Text style={styles.roleText}>{user.role}</Text>
       </View>
     </View>
-    
+
     {user.role === 'CHILD' && (
       <View style={styles.statsRow}>
-        <Text style={styles.statsLabel}>Points:</Text>
+        <Text style={styles.statsLabel}>{t('points.label')}:</Text>
         <Text style={styles.statsValue}>{user.totalPoints}</Text>
       </View>
     )}
-    
+
     <View style={styles.cardActions}>
       <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-        <Text style={styles.actionButtonText}>Edit</Text>
+        <Text style={styles.actionButtonText}>{t('button.edit')}</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={[styles.actionButton, user.active ? styles.deactivateButton : styles.activateButton]} 
+      <TouchableOpacity
+        style={[styles.actionButton, user.active ? styles.deactivateButton : styles.activateButton]}
         onPress={onToggleActive}
       >
         <Text style={[styles.actionButtonText, user.active ? styles.deactivateText : styles.activateText]}>
-          {user.active ? 'Deactivate' : 'Activate'}
+          {user.active ? t('admin.users.deactivate') : t('admin.users.activate')}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.actionButton, styles.deleteButton]}
+        onPress={onDelete}
+      >
+        <Text style={[styles.actionButtonText, styles.deleteText]}>
+          {t('admin.users.delete')}
         </Text>
       </TouchableOpacity>
     </View>
@@ -73,9 +85,10 @@ interface CreateUserModalProps {
   onClose: () => void;
   onSubmit: (data: { username: string; password: string; firstName: string; role: string }) => void;
   isLoading: boolean;
+  t: (key: string) => string;
 }
 
-const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onSubmit, isLoading }) => {
+const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onSubmit, isLoading, t }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -83,7 +96,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onS
 
   const handleSubmit = () => {
     if (!username || !password || !firstName) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t('common.error'), t('admin.users.create.error.fields'));
       return;
     }
     onSubmit({ username, password, firstName, role });
@@ -104,42 +117,42 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onS
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Create New User</Text>
-          
+          <Text style={styles.modalTitle}>{t('admin.users.create.title')}</Text>
+
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Username</Text>
+            <Text style={styles.inputLabel}>{t('admin.users.username')}</Text>
             <TextInput
               style={styles.input}
               value={username}
               onChangeText={setUsername}
-              placeholder="username"
+              placeholder={t('admin.users.username')}
               autoCapitalize="none"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Password</Text>
+            <Text style={styles.inputLabel}>{t('admin.users.password')}</Text>
             <TextInput
               style={styles.input}
               value={password}
               onChangeText={setPassword}
-              placeholder="password"
+              placeholder={t('admin.users.password')}
               secureTextEntry
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>First Name</Text>
+            <Text style={styles.inputLabel}>{t('admin.users.first_name')}</Text>
             <TextInput
               style={styles.input}
               value={firstName}
               onChangeText={setFirstName}
-              placeholder="First Name"
+              placeholder={t('admin.users.first_name')}
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Role</Text>
+            <Text style={styles.inputLabel}>{t('admin.users.role')}</Text>
             <View style={styles.roleSelector}>
               {(['CHILD', 'PARENT', 'ADMIN'] as UserRole[]).map((r) => (
                 <TouchableOpacity
@@ -154,7 +167,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onS
               ))}
             </View>
           </View>
-          
+
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}
@@ -163,12 +176,12 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onS
             {isLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.submitButtonText}>Create User</Text>
+              <Text style={styles.submitButtonText}>{t('admin.users.create.button')}</Text>
             )}
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>{t('button.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -180,10 +193,16 @@ export const UserListScreen: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [roleFilter, setRoleFilter] = useState<UserRole | 'ALL'>('ALL');
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
-  const { data: users, isLoading, refetch, isRefetching } = useQuery({
+  const { data: users, isLoading, refetch, isRefetching, error } = useQuery({
     queryKey: ['users', roleFilter],
-    queryFn: () => usersApi.list(roleFilter === 'ALL' ? undefined : roleFilter),
+    queryFn: async () => {
+      console.log('Fetching users with role filter:', roleFilter);
+      const result = await usersApi.list(roleFilter === 'ALL' ? undefined : roleFilter);
+      console.log('Users fetched:', result);
+      return result;
+    },
   });
 
   const createUser = useMutation({
@@ -191,10 +210,10 @@ export const UserListScreen: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowCreateModal(false);
-      Alert.alert('Success', 'User created successfully');
+      Alert.alert(t('common.success'), t('admin.users.create.success'));
     },
     onError: () => {
-      Alert.alert('Error', 'Failed to create user');
+      Alert.alert(t('common.error'), t('admin.users.create.error'));
     },
   });
 
@@ -205,19 +224,61 @@ export const UserListScreen: React.FC = () => {
     },
   });
 
+  const deleteUserPermanent = useMutation({
+    mutationFn: usersApi.deletePermanent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+
   const handleToggleActive = (user: UserResponse) => {
-    Alert.alert(
-      user.active ? 'Deactivate User' : 'Activate User',
-      `Are you sure you want to ${user.active ? 'deactivate' : 'activate'} ${user.firstName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: user.active ? 'Deactivate' : 'Activate',
-          style: user.active ? 'destructive' : 'default',
-          onPress: () => deactivateUser.mutate(user.id),
-        },
-      ]
-    );
+    const message = `${user.active ? t('admin.users.deactivate').toLowerCase() : t('admin.users.activate').toLowerCase()} ${user.firstName}?`;
+
+    if (Platform.OS === 'web') {
+      // Use browser confirm dialog for web
+      if (window.confirm(message)) {
+        deactivateUser.mutate(user.id);
+      }
+    } else {
+      // Use React Native Alert for mobile
+      Alert.alert(
+        user.active ? t('admin.users.deactivate.title') : t('admin.users.activate.title'),
+        t('admin.users.toggle.message', { 0: user.active ? t('admin.users.deactivate').toLowerCase() : t('admin.users.activate').toLowerCase(), 1: user.firstName }),
+        [
+          { text: t('button.cancel'), style: 'cancel' },
+          {
+            text: user.active ? t('admin.users.deactivate') : t('admin.users.activate'),
+            style: user.active ? 'destructive' : 'default',
+            onPress: () => deactivateUser.mutate(user.id),
+          },
+        ]
+      );
+    }
+  };
+
+  const handleDelete = (user: UserResponse) => {
+    const message = t('admin.users.delete.message', { 0: user.firstName });
+
+    if (Platform.OS === 'web') {
+      // Use browser confirm dialog for web
+      if (window.confirm(message)) {
+        deleteUserPermanent.mutate(user.id);
+      }
+    } else {
+      // Use React Native Alert for mobile
+      Alert.alert(
+        t('admin.users.delete.title'),
+        message,
+        [
+          { text: t('button.cancel'), style: 'cancel' },
+          {
+            text: t('admin.users.delete'),
+            style: 'destructive',
+            onPress: () => deleteUserPermanent.mutate(user.id),
+          },
+        ]
+      );
+    }
   };
 
   return (
@@ -236,6 +297,14 @@ export const UserListScreen: React.FC = () => {
         ))}
       </View>
 
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            Fehler beim Laden: {(error as Error).message}
+          </Text>
+        </View>
+      )}
+
       {isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#2196F3" />
@@ -247,8 +316,10 @@ export const UserListScreen: React.FC = () => {
           renderItem={({ item }) => (
             <UserCard
               user={item}
-              onEdit={() => {}}
+              onEdit={() => { }}
               onToggleActive={() => handleToggleActive(item)}
+              onDelete={() => handleDelete(item)}
+              t={t}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -257,7 +328,7 @@ export const UserListScreen: React.FC = () => {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No users found</Text>
+              <Text style={styles.emptyText}>{t('admin.users.no_users')}</Text>
             </View>
           }
         />
@@ -275,6 +346,7 @@ export const UserListScreen: React.FC = () => {
         onClose={() => setShowCreateModal(false)}
         onSubmit={(data) => createUser.mutate(data)}
         isLoading={createUser.isPending}
+        t={t}
       />
     </SafeAreaView>
   );
@@ -410,6 +482,12 @@ const styles = StyleSheet.create({
   },
   activateText: {
     color: '#4CAF50',
+  },
+  deleteButton: {
+    backgroundColor: '#ffebee',
+  },
+  deleteText: {
+    color: '#D32F2F',
   },
   fab: {
     position: 'absolute',

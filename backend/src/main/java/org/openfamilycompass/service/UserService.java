@@ -50,6 +50,10 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
+    public boolean existsByUsername(@NonNull String username) {
+        return userRepository.existsByUsername(username);
+    }
+
     @Transactional
     public User updatePassword(@NonNull Long userId, @NonNull String newPassword) {
         User user = userRepository.findById(userId)
@@ -82,6 +86,20 @@ public class UserService implements UserDetailsService {
 
         user.setActive(false);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void delete(@NonNull User user) {
+        // Delete all related data (devices, etc.)
+        userDeviceRepository.deleteAllByUser(user);
+
+        // Delete the user
+        userRepository.delete(user);
+    }
+
+    @Transactional
+    public void deleteById(@NonNull Long userId) {
+        userRepository.deleteById(userId);
     }
 
     public Optional<User> findById(@NonNull Long id) {

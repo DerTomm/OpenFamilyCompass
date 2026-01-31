@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
-  TextInput,
+  FlatList,
   Modal,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { usePendingTasks, useApproveTask, useRejectTask } from '../../hooks/useApi';
+import { useApproveTask, usePendingTasks, useRejectTask } from '../../hooks/useApi';
+import { useI18n } from '../../i18n/I18nContext';
 import { TaskInstanceResponse } from '../../types/api';
 
 interface ApprovalModalProps {
@@ -21,6 +22,7 @@ interface ApprovalModalProps {
   onApprove: (points: number, notes: string) => void;
   onReject: (notes: string) => void;
   isLoading: boolean;
+  t: (key: string) => string;
 }
 
 const ApprovalModal: React.FC<ApprovalModalProps> = ({
@@ -30,6 +32,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
   onApprove,
   onReject,
   isLoading,
+  t,
 }) => {
   const [points, setPoints] = useState(task?.taskDefinition.basePoints.toString() || '0');
   const [notes, setNotes] = useState('');
@@ -45,41 +48,41 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Review Task</Text>
+          <Text style={styles.modalTitle}>{t('tasks.pending.title')}</Text>
           <Text style={styles.modalTaskTitle}>{task?.taskDefinition.title}</Text>
-          
+
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Points to Award</Text>
+            <Text style={styles.inputLabel}>{t('tasks.pending.award.points')}</Text>
             <TextInput
               style={styles.input}
               value={points}
               onChangeText={setPoints}
               keyboardType="numeric"
-              placeholder="Points"
+              placeholder={t('tasks.points')}
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Notes (optional)</Text>
+            <Text style={styles.inputLabel}>{t('tasks.pending.parent.comment')}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={notes}
               onChangeText={setNotes}
-              placeholder="Add feedback..."
+              placeholder={t('behavior.modal.notes.placeholder')}
               multiline
               numberOfLines={3}
             />
           </View>
-          
+
           <View style={styles.modalButtons}>
             <TouchableOpacity
               style={[styles.modalButton, styles.rejectButton]}
               onPress={() => onReject(notes)}
               disabled={isLoading}
             >
-              <Text style={styles.rejectButtonText}>Reject</Text>
+              <Text style={styles.rejectButtonText}>{t('tasks.pending.reject')}</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.modalButton, styles.approveButton]}
               onPress={() => onApprove(parseInt(points, 10), notes)}
@@ -88,13 +91,13 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
               {isLoading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.approveButtonText}>Approve</Text>
+                <Text style={styles.approveButtonText}>{t('tasks.pending.approve')}</Text>
               )}
             </TouchableOpacity>
           </View>
-          
+
           <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>{t('button.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -106,7 +109,8 @@ export const PendingApprovalScreen: React.FC = () => {
   const { data: tasks, isLoading, refetch, isRefetching } = usePendingTasks();
   const approveTask = useApproveTask();
   const rejectTask = useRejectTask();
-  
+  const { t } = useI18n();
+
   const [selectedTask, setSelectedTask] = useState<TaskInstanceResponse | null>(null);
 
   const handleApprove = (points: number, notes: string) => {
@@ -138,9 +142,9 @@ export const PendingApprovalScreen: React.FC = () => {
       <Text style={styles.taskTitle}>{item.taskDefinition.title}</Text>
       <View style={styles.cardFooter}>
         <Text style={styles.basePoints}>
-          Base: {item.taskDefinition.basePoints} pts
+          {t('tasks.base')}: {item.taskDefinition.basePoints} {t('points.label')}
         </Text>
-        <Text style={styles.tapToReview}>Tap to review →</Text>
+        <Text style={styles.tapToReview}>{t('tasks.pending.tap.review')} →</Text>
       </View>
     </TouchableOpacity>
   );
@@ -163,13 +167,13 @@ export const PendingApprovalScreen: React.FC = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>✅</Text>
-              <Text style={styles.emptyText}>No tasks pending approval</Text>
-              <Text style={styles.emptySubtext}>All caught up!</Text>
+              <Text style={styles.emptyText}>{t('tasks.pending.empty.title')}</Text>
+              <Text style={styles.emptySubtext}>{t('tasks.pending.empty.subtitle')}</Text>
             </View>
           }
         />
       )}
-      
+
       <ApprovalModal
         visible={!!selectedTask}
         task={selectedTask}
@@ -177,6 +181,7 @@ export const PendingApprovalScreen: React.FC = () => {
         onApprove={handleApprove}
         onReject={handleReject}
         isLoading={approveTask.isPending || rejectTask.isPending}
+        t={t}
       />
     </SafeAreaView>
   );

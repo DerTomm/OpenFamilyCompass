@@ -1,15 +1,16 @@
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNotifications, useMarkAsRead } from '../../hooks/useApi';
+import { useMarkAsRead, useNotifications } from '../../hooks/useApi';
+import { useI18n } from '../../i18n/I18nContext';
 import { NotificationResponse, NotificationType } from '../../types/api';
 
 const NOTIFICATION_ICONS: Record<NotificationType, string> = {
@@ -37,14 +38,15 @@ const NOTIFICATION_COLORS: Record<NotificationType, string> = {
 interface NotificationCardProps {
   notification: NotificationResponse;
   onPress: () => void;
+  t: (key: string, params?: Record<string, string>) => string;
 }
 
-const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onPress }) => {
-  const timeAgo = getTimeAgo(new Date(notification.createdAt));
-  
+const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onPress, t }) => {
+  const timeAgo = getTimeAgo(new Date(notification.createdAt), t);
+
   return (
-    <TouchableOpacity 
-      style={[styles.card, !notification.read && styles.cardUnread]} 
+    <TouchableOpacity
+      style={[styles.card, !notification.read && styles.cardUnread]}
       onPress={onPress}
     >
       <View style={[styles.iconContainer, { backgroundColor: NOTIFICATION_COLORS[notification.type] + '20' }]}>
@@ -64,19 +66,20 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onPre
   );
 };
 
-function getTimeAgo(date: Date): string {
+function getTimeAgo(date: Date, t: (key: string, params?: Record<string, string>) => string): string {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-  
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+
+  if (seconds < 60) return t('notifications.time.just_now');
+  if (seconds < 3600) return t('notifications.time.minutes_ago', { 0: Math.floor(seconds / 60).toString() });
+  if (seconds < 86400) return t('notifications.time.hours_ago', { 0: Math.floor(seconds / 3600).toString() });
+  if (seconds < 604800) return t('notifications.time.days_ago', { 0: Math.floor(seconds / 86400).toString() });
   return date.toLocaleDateString();
 }
 
 export const NotificationsScreen: React.FC = () => {
   const { data: notifications, isLoading, refetch, isRefetching } = useNotifications({ limit: 50 });
   const markAsRead = useMarkAsRead();
+  const { t } = useI18n();
 
   const handlePress = (notification: NotificationResponse) => {
     if (!notification.read) {
@@ -92,7 +95,7 @@ export const NotificationsScreen: React.FC = () => {
       {unreadCount > 0 && (
         <View style={styles.header}>
           <Text style={styles.headerText}>
-            {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+            {t('notifications.unread.count', { 0: unreadCount.toString() })}
           </Text>
         </View>
       )}
@@ -109,6 +112,7 @@ export const NotificationsScreen: React.FC = () => {
             <NotificationCard
               notification={item}
               onPress={() => handlePress(item)}
+              t={t}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -118,9 +122,9 @@ export const NotificationsScreen: React.FC = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>🔔</Text>
-              <Text style={styles.emptyText}>No notifications yet</Text>
+              <Text style={styles.emptyText}>{t('notifications.empty.title')}</Text>
               <Text style={styles.emptySubtext}>
-                You'll see updates about tasks, rewards, and more here
+                {t('notifications.empty.subtitle')}
               </Text>
             </View>
           }

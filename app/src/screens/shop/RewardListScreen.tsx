@@ -1,17 +1,18 @@
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
   Alert,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRewards, useRequestRedemption } from '../../hooks/useApi';
-import { useAuthStore, selectIsChild } from '../../store/authStore';
+import { useRequestRedemption, useRewards } from '../../hooks/useApi';
+import { useI18n } from '../../i18n/I18nContext';
+import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { RewardResponse } from '../../types/api';
 
 interface RewardCardProps {
@@ -20,6 +21,7 @@ interface RewardCardProps {
   onRedeem: () => void;
   isRedeeming: boolean;
   isChild: boolean;
+  t: (key: string) => string;
 }
 
 const RewardCard: React.FC<RewardCardProps> = ({
@@ -28,9 +30,10 @@ const RewardCard: React.FC<RewardCardProps> = ({
   onRedeem,
   isRedeeming,
   isChild,
+  t,
 }) => {
   const canAfford = userPoints >= reward.pointsCost;
-  
+
   return (
     <View style={styles.card}>
       <View style={styles.cardContent}>
@@ -48,11 +51,11 @@ const RewardCard: React.FC<RewardCardProps> = ({
             <Text style={[styles.costValue, !canAfford && styles.costInsufficient]}>
               {reward.pointsCost}
             </Text>
-            <Text style={styles.costLabel}> points</Text>
+            <Text style={styles.costLabel}> {t('points.label')}</Text>
           </View>
         </View>
       </View>
-      
+
       {isChild && (
         <TouchableOpacity
           style={[
@@ -66,7 +69,7 @@ const RewardCard: React.FC<RewardCardProps> = ({
             <ActivityIndicator color="#fff" size="small" />
           ) : (
             <Text style={styles.redeemButtonText}>
-              {canAfford ? 'Redeem' : 'Not enough points'}
+              {canAfford ? t('rewards.redeem') : t('rewards.not.enough.points')}
             </Text>
           )}
         </TouchableOpacity>
@@ -78,18 +81,19 @@ const RewardCard: React.FC<RewardCardProps> = ({
 export const RewardListScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const isChild = useAuthStore(selectIsChild);
-  
+  const { t } = useI18n();
+
   const { data: rewards, isLoading, refetch, isRefetching } = useRewards(true);
   const requestRedemption = useRequestRedemption();
 
   const handleRedeem = (reward: RewardResponse) => {
     Alert.alert(
-      'Redeem Reward',
-      `Are you sure you want to redeem "${reward.title}" for ${reward.pointsCost} points?`,
+      t('rewards.redeem.confirm.title'),
+      t('rewards.redeem.confirm.message', { 0: reward.title, 1: reward.pointsCost }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('button.cancel'), style: 'cancel' },
         {
-          text: 'Redeem',
+          text: t('rewards.redeem'),
           onPress: () => requestRedemption.mutate(reward.id),
         },
       ]
@@ -100,11 +104,11 @@ export const RewardListScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       {isChild && (
         <View style={styles.balanceHeader}>
-          <Text style={styles.balanceLabel}>Your Balance</Text>
-          <Text style={styles.balanceValue}>{user?.totalPoints || 0} points</Text>
+          <Text style={styles.balanceLabel}>{t('child.dashboard.points.balance')}</Text>
+          <Text style={styles.balanceValue}>{user?.totalPoints || 0} {t('points.label')}</Text>
         </View>
       )}
-      
+
       {isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#2196F3" />
@@ -120,6 +124,7 @@ export const RewardListScreen: React.FC = () => {
               onRedeem={() => handleRedeem(item)}
               isRedeeming={requestRedemption.isPending && requestRedemption.variables === item.id}
               isChild={isChild}
+              t={t}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -129,8 +134,8 @@ export const RewardListScreen: React.FC = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>🏪</Text>
-              <Text style={styles.emptyText}>No rewards available</Text>
-              <Text style={styles.emptySubtext}>Check back later!</Text>
+              <Text style={styles.emptyText}>{t('empty.no_rewards')}</Text>
+              <Text style={styles.emptySubtext}>{t('rewards.check.later')}</Text>
             </View>
           }
         />

@@ -1,81 +1,103 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Divider, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Card, EmptyState, QuickActionCard } from '../../components/ui';
+import { useI18n } from '../../i18n/I18nContext';
 import { useAuthStore } from '../../store/authStore';
-
-interface QuickActionProps {
-  title: string;
-  count?: number;
-  color: string;
-  onPress: () => void;
-}
-
-const QuickAction: React.FC<QuickActionProps> = ({ title, count, color, onPress }) => (
-  <TouchableOpacity style={[styles.quickAction, { borderLeftColor: color }]} onPress={onPress}>
-    <Text style={styles.quickActionTitle}>{title}</Text>
-    {count !== undefined && (
-      <View style={[styles.badge, { backgroundColor: color }]}>
-        <Text style={styles.badgeText}>{count}</Text>
-      </View>
-    )}
-  </TouchableOpacity>
-);
+import { spacing } from '../../theme/theme';
 
 export const ParentDashboardScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
+  const theme = useTheme();
+  const { t } = useI18n();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Welcome Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>
-            Welcome back, {user?.firstName || 'Parent'}!
+          <Text variant="headlineMedium" style={{ color: theme.colors.onBackground }}>
+            {t('dashboard.welcome')}
           </Text>
-          <Text style={styles.subGreeting}>
-            Here's what's happening in your family
+          <Text
+            variant="headlineMedium"
+            style={[styles.userName, { color: theme.colors.primary }]}
+          >
+            {user?.firstName || t('role.parent')}! 👋
+          </Text>
+          <Text
+            variant="bodyMedium"
+            style={[styles.subGreeting, { color: theme.colors.onSurfaceVariant }]}
+          >
+            {t('dashboard.subtitle')}
           </Text>
         </View>
 
+        {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            <QuickAction
-              title="Tasks to Approve"
-              count={0}
-              color="#FF9800"
-              onPress={() => {}}
-            />
-            <QuickAction
-              title="Reward Requests"
-              count={0}
-              color="#9C27B0"
-              onPress={() => {}}
-            />
-            <QuickAction
-              title="Evaluate Behaviors"
-              count={0}
-              color="#2196F3"
-              onPress={() => {}}
-            />
-          </View>
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+            {t('dashboard.quick.actions')}
+          </Text>
+
+          <QuickActionCard
+            title={t('dashboard.approve.tasks')}
+            icon="clipboard-check"
+            count={3}
+            color={theme.colors.tertiary}
+            onPress={() => { }}
+          />
+
+          <QuickActionCard
+            title={t('dashboard.approve.rewards')}
+            icon="gift"
+            count={1}
+            color={theme.colors.secondary}
+            onPress={() => { }}
+          />
+
+          <QuickActionCard
+            title={t('dashboard.evaluate.behavior')}
+            icon="star-circle"
+            count={2}
+            color={theme.colors.info}
+            onPress={() => { }}
+          />
         </View>
 
+        <Divider style={styles.divider} />
+
+        {/* Children Overview */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Children Overview</Text>
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>
-              Children cards will appear here
-            </Text>
-          </View>
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+            {t('dashboard.children.overview')}
+          </Text>
+
+          <Card elevation={1}>
+            <EmptyState
+              icon="account-child"
+              title={t('empty.no_children')}
+              message={t('empty.no_children.desc')}
+            />
+          </Card>
         </View>
 
+        {/* Recent Activity */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>
-              Activity feed coming soon
-            </Text>
-          </View>
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+            Letzte Aktivitäten
+          </Text>
+
+          <Card elevation={1}>
+            <EmptyState
+              icon="history"
+              title="Keine Aktivitäten"
+              message="Hier erscheinen die neuesten Aktivitäten deiner Familie"
+            />
+          </Card>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -85,72 +107,29 @@ export const ParentDashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   content: {
-    padding: 16,
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: spacing.lg,
+    paddingTop: spacing.sm,
   },
-  greeting: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+  userName: {
+    fontWeight: '700',
   },
   subGreeting: {
-    fontSize: 16,
-    color: '#666',
+    marginTop: spacing.xs,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
-    fontSize: 20,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
-  quickActionsGrid: {
-    gap: 12,
-  },
-  quickAction: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderLeftWidth: 4,
-  },
-  quickActionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-  },
-  badge: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  badgeText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  placeholder: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 100,
-  },
-  placeholderText: {
-    color: '#999',
-    fontSize: 16,
+  divider: {
+    marginVertical: spacing.md,
   },
 });

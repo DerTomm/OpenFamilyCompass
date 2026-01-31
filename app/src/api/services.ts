@@ -1,23 +1,24 @@
-import { api } from './client';
 import {
-  UserResponse,
-  ChildResponse,
-  UserProfileResponse,
-  UpdateProfileRequest,
-  TaskDefinitionResponse,
-  CreateTaskDefinitionRequest,
-  TaskInstanceResponse,
   ApproveTaskRequest,
-  RewardResponse,
-  CreateRewardRequest,
-  RewardRedemptionResponse,
-  BehaviorResponse,
   BehaviorEvaluationResponse,
+  BehaviorResponse,
+  ChangePasswordRequest,
+  ChildResponse,
+  CreateRewardRequest,
+  CreateTaskDefinitionRequest,
+  NotificationResponse,
   PointBalanceResponse,
   PointTransactionsResponse,
-  NotificationResponse,
-  ChangePasswordRequest,
+  RewardRedemptionResponse,
+  RewardResponse,
+  TaskDefinitionResponse,
+  TaskInstanceResponse,
+  UpdateProfileRequest,
+  UsernameCheckResponse,
+  UserProfileResponse,
+  UserResponse,
 } from '../types/api';
+import { api } from './client';
 
 // Auth & Profile
 export const authApi = {
@@ -28,28 +29,35 @@ export const authApi = {
 export const profileApi = {
   get: () => api.get<UserProfileResponse>('/profile'),
   update: (data: UpdateProfileRequest) => api.put<UserProfileResponse>('/profile', data),
+  changePassword: (data: ChangePasswordRequest) => api.post<void>('/profile/password', data),
+  checkUsername: (username: string) => api.get<UsernameCheckResponse>('/profile/username/check', { username }),
   getAvatarIcons: () => api.get<string[]>('/profile/avatar/icons'),
 };
 
 // Users (Admin)
 export const usersApi = {
-  list: (role?: string, active?: boolean) => 
-    api.get<UserResponse[]>('/users', { role, active }),
+  list: (role?: string, active?: boolean) => {
+    const params: Record<string, any> = {};
+    if (role) params.role = role;
+    if (active !== undefined) params.active = active;
+    return api.get<UserResponse[]>('/users', params);
+  },
   getById: (id: number) => api.get<UserResponse>(`/users/${id}`),
   create: (data: { username: string; password: string; firstName: string; role: string }) =>
     api.post<UserResponse>('/users', data),
   update: (id: number, data: Partial<{ firstName: string; password: string; active: boolean; role: string }>) =>
     api.put<UserResponse>(`/users/${id}`, data),
   deactivate: (id: number) => api.delete<void>(`/users/${id}`),
+  deletePermanent: (id: number) => api.delete<void>(`/users/${id}/permanent`),
   listChildren: () => api.get<ChildResponse[]>('/users/children'),
 };
 
 // Task Definitions
 export const taskDefinitionsApi = {
-  list: (assignedUserId?: number) => 
+  list: (assignedUserId?: number) =>
     api.get<TaskDefinitionResponse[]>('/tasks/definitions', { assignedUserId }),
   getById: (id: number) => api.get<TaskDefinitionResponse>(`/tasks/definitions/${id}`),
-  create: (data: CreateTaskDefinitionRequest) => 
+  create: (data: CreateTaskDefinitionRequest) =>
     api.post<TaskDefinitionResponse>('/tasks/definitions', data),
   update: (id: number, data: Partial<CreateTaskDefinitionRequest>) =>
     api.put<TaskDefinitionResponse>(`/tasks/definitions/${id}`, data),
@@ -62,9 +70,9 @@ export const taskInstancesApi = {
     api.get<TaskInstanceResponse[]>('/tasks/instances', params),
   getById: (id: number) => api.get<TaskInstanceResponse>(`/tasks/instances/${id}`),
   complete: (id: number) => api.post<TaskInstanceResponse>(`/tasks/instances/${id}/complete`),
-  approve: (id: number, data?: ApproveTaskRequest) => 
+  approve: (id: number, data?: ApproveTaskRequest) =>
     api.post<TaskInstanceResponse>(`/tasks/instances/${id}/approve`, data),
-  reject: (id: number, notes?: string) => 
+  reject: (id: number, notes?: string) =>
     api.post<TaskInstanceResponse>(`/tasks/instances/${id}/reject`, { notes }),
   getPending: () => api.get<TaskInstanceResponse[]>('/tasks/pending'),
 };
@@ -83,10 +91,10 @@ export const rewardsApi = {
 export const redemptionsApi = {
   list: (params?: { userId?: number; status?: string }) =>
     api.get<RewardRedemptionResponse[]>('/rewards/redemptions', params),
-  request: (rewardId: number) => 
+  request: (rewardId: number) =>
     api.post<RewardRedemptionResponse>('/rewards/redemptions', { rewardId }),
   approve: (id: number) => api.post<RewardRedemptionResponse>(`/rewards/redemptions/${id}/approve`),
-  reject: (id: number, notes?: string) => 
+  reject: (id: number, notes?: string) =>
     api.post<RewardRedemptionResponse>(`/rewards/redemptions/${id}/reject`, { notes }),
   deliver: (id: number) => api.post<RewardRedemptionResponse>(`/rewards/redemptions/${id}/deliver`),
   getPending: () => api.get<RewardRedemptionResponse[]>('/rewards/redemptions/pending'),
@@ -110,7 +118,7 @@ export const evaluationsApi = {
     api.get<BehaviorEvaluationResponse[]>('/behaviors/evaluations', params),
   save: (data: { behaviorId: number; userId: number; currentPoints: number; remarks?: string }) =>
     api.post<BehaviorEvaluationResponse>('/behaviors/evaluations', data),
-  commit: (userId: number) => 
+  commit: (userId: number) =>
     api.post<{ totalPointsAwarded: number; evaluationsCommitted: number }>('/behaviors/evaluations/commit', { userId }),
 };
 

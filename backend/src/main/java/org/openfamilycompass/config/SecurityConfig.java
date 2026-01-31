@@ -10,12 +10,21 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +40,34 @@ public class SecurityConfig {
         }
 
         @Bean
+        public JwtAuthenticationConverter jwtAuthenticationConverter() {
+                JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+
+                // Custom converter für "roles" Claim im JWT
+                converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+                        // Standard scopes
+                        JwtGrantedAuthoritiesConverter scopeConverter = new JwtGrantedAuthoritiesConverter();
+                        Collection<? extends GrantedAuthority> scopeAuthorities = scopeConverter.convert(jwt);
+
+                        // Custom roles aus "roles" Claim
+                        List<?> roles = jwt.getClaimAsStringList("roles");
+                        Collection<GrantedAuthority> roleAuthorities = roles != null
+                                        ? roles.stream()
+                                                        .map(role -> (GrantedAuthority) new SimpleGrantedAuthority(
+                                                                        "ROLE_" + role))
+                                                        .collect(Collectors.toList())
+                                        : List.of();
+
+                        // Kombiniere scope und role authorities
+                        return Stream.concat(
+                                        scopeAuthorities != null ? scopeAuthorities.stream() : Stream.empty(),
+                                        roleAuthorities.stream()).collect(Collectors.toSet());
+                });
+
+                return converter;
+        }
+
+        @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
                 configuration.setAllowedOriginPatterns(java.util.List.of("*")); // Erlaube alle Origins für WebView
@@ -40,6 +77,8 @@ public class SecurityConfig {
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/api/**", configuration);
                 source.registerCorsConfiguration("/oauth2/**", configuration); // OAuth2 endpoints
+                source.registerCorsConfiguration("/login/**", configuration); // Login endpoints
+                source.registerCorsConfiguration("/perform_login", configuration); // Login processing
                 source.registerCorsConfiguration("/notifications/**", configuration); // Für WebView
                 return source;
         }
@@ -47,7 +86,8 @@ public class SecurityConfig {
         // API Security: Stateless with OIDC JWT
         @Bean
         @Order(3)
-        public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
+        public SecurityFilterChain apiFilterChain(HttpSecurity http,
+                        JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
                 http
                                 .securityMatcher("/api/**")
                                 .cors(Customizer.withDefaults()) // CORS aktivieren
@@ -55,7 +95,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/api/avatar/icons").permitAll()
                                                 .anyRequest().authenticated())
-                                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                                .oauth2ResourceServer(oauth2 -> oauth2
+                                                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .csrf(csrf -> csrf.disable())
@@ -92,7 +133,8 @@ public class SecurityConfig {
                                 .formLogin(form -> form
                                                 .loginPage("/login")
                                                 .loginProcessingUrl("/perform_login")
-                                                .defaultSuccessUrl("/dashboard", false) // false = use saved request (OAuth redirect)
+                                                .defaultSuccessUrl("/dashboard", false) // false = use saved request
+                                                                                        // (OAuth redirect)
                                                 .failureUrl("/login?error=true")
                                                 .permitAll())
                                 .rememberMe(remember -> remember

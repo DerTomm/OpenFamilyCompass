@@ -1,0 +1,292 @@
+export const en = {
+    // App
+    'app.name': 'OpenFamilyCompass',
+
+    // Admin
+    'admin.dashboard.subtitle': 'Manage users and system settings',
+    'admin.dashboard.title': 'Administrator Dashboard',
+    'admin.user.management': 'User Management',
+    'admin.users.all': 'All Users',
+    'admin.users.username': 'Username',
+    'admin.users.role': 'Role',
+    'admin.users.status': 'Status',
+
+    // Navigation
+    'nav.behavior': 'Behavior',
+    'nav.child.dashboard': 'Child Dashboard',
+    'nav.logout': 'Logout',
+    'nav.management': 'Management',
+    'nav.parent.dashboard': 'Parent Dashboard',
+    'nav.rewards': 'Rewards',
+    'nav.settings': 'Settings',
+    'nav.tasks': 'Tasks',
+
+    // Login
+    'login.button': 'Sign In',
+    'login.error': '❌ Invalid username or password!',
+    'login.logout.success': '✅ You have been logged out successfully.',
+    'login.password': 'Password',
+    'login.username': 'Username',
+    'login.subtitle': 'Log in with your username and password',
+
+    // Dashboard - Parent
+    'dashboard.title': 'Dashboard',
+    'dashboard.welcome': 'Welcome back,',
+    'dashboard.subtitle': "Here's what's happening in your family",
+    'dashboard.quick.actions': 'Quick Actions',
+    'dashboard.approve.tasks': 'Approve Tasks',
+    'dashboard.approve.tasks.button': 'Check Tasks',
+    'dashboard.approve.rewards': 'Approve Rewards',
+    'dashboard.approve.rewards.button': 'Check Rewards',
+    'dashboard.evaluate.behavior': 'Evaluate Behavior',
+    'dashboard.evaluate.behavior.desc': "Reward your children's positive behavior",
+    'dashboard.children.overview': 'Children Overview',
+    'dashboard.manage.points': 'Bonus and Penalty Points',
+
+    // Dashboard - Child
+    'child.dashboard.title': 'My Dashboard',
+    'child.dashboard.welcome': 'Hello,',
+    'child.dashboard.points.badge': 'Your Points',
+    'child.dashboard.tasks.available': 'Available Tasks',
+    'child.dashboard.shop.title': 'Reward Shop',
+    'child.dashboard.shop.subtitle': 'You can redeem these rewards',
+    'child.dashboard.pending.review': 'Waiting for Review',
+    'child.dashboard.parents.reviewing': 'Your parents are still checking this! 🕐',
+
+    // Tasks
+    'tasks.title': 'Task Management',
+    'tasks.my.title': 'My Tasks',
+    'tasks.available': 'Available Tasks',
+    'tasks.create': 'Create Task',
+    'tasks.name': 'Name',
+    'tasks.description': 'Description',
+    'tasks.points': 'Points',
+    'tasks.actions': 'Actions',
+    'tasks.complete': 'Complete',
+    'tasks.completed': 'Completed! 🎉',
+    'tasks.pending.title': 'Approve Tasks',
+    'tasks.pending.none': 'No tasks awaiting approval.',
+    'tasks.pending.approve': 'Approve',
+    'tasks.pending.reject': 'Reject',
+    'task.create.title': 'Create New Task',
+    'task.create.button': 'Create Task',
+    'task.name': 'Task Name',
+    'task.description': 'Description',
+    'task.points.label': 'Reward Points',
+    'task.deadline': 'Deadline (optional)',
+    'task.status.PENDING': 'Pending',
+    'task.status.IN_PROGRESS': 'In Progress',
+    'task.status.CHILD_COMPLETED': 'Pending Approval',
+    'task.status.APPROVED': 'Approved',
+    'task.status.REJECTED': 'Rejected',
+
+    // Rewards / Shop
+    'rewards.title': 'Rewards',
+    'shop.title.page': 'Reward Shop',
+    'shop.available.rewards': 'Available Rewards',
+    'shop.my.redemptions': 'My Rewards',
+    'shop.no.rewards': 'No rewards available at the moment',
+    'shop.no.rewards.desc': 'Your parents will add great rewards soon!',
+    'shop.reward.name': 'Reward',
+    'shop.reward.not.enough': 'Not enough points',
+    'shop.reward.pending': 'Your reward is awaiting approval from your parents.',
+    'shop.status': 'Status',
+    'shop.status.requested': '⏳ Awaiting Approval',
+    'shop.status.approved': '✅ Approved',
+    'shop.status.delivered': '🎉 Received!',
+    'shop.status.cancelled': '❌ Cancelled',
+    'rewards.create': 'Create Reward',
+    'rewards.all': 'All Rewards',
+    'rewards.none': 'No rewards available. Create the first reward!',
+    'rewards.pending.title': 'Approve Rewards',
+    'rewards.pending.none': 'No rewards awaiting approval.',
+    'reward.create.title': 'Create New Reward',
+    'reward.name': 'Reward Name',
+    'reward.description': 'Description',
+    'reward.cost.label': 'Cost in Points',
+
+    // Behavior
+    'behavior.title': 'Behavior Rules',
+    'behavior.subtitle': 'Select a child to evaluate their behavior for the current week.',
+    'behavior.rules': 'Behavior Rules',
+    'behavior.all': 'All Behavior Rules',
+    'behavior.create': 'New Behavior Rule',
+    'behavior.none': 'No behavior rules defined. Click "New Behavior" to create one.',
+    'behavior.evaluate.title': 'Evaluate Behavior',
+    'behavior.evaluate.subtitle': 'Evaluate the behavior of the current week',
+    'behavior.weekly.total': 'Weekly Total',
+    'child.behaviors.title': 'My Behaviors',
+    'child.behaviors.subtitle': 'Track your weekly behavior progress',
+    'child.behaviors.current': 'Current Week Behaviors',
+    'child.behaviors.no.behaviors': 'No Behaviors Yet',
+    'child.behaviors.no.behaviors.desc': "Your parents haven't set up any behavior goals for this week yet.",
+
+    // Points
+    'points.title': 'Bonus and Penalty Points',
+    'points.subtitle': 'Select a child to give bonus or penalty points',
+    'points.current.points': 'Current points: {0}',
+    'points.type.bonus': 'Bonus Points',
+    'points.type.penalty': 'Penalty Points',
+    'point.transaction.type.TASK': 'Task',
+    'point.transaction.type.REWARD': 'Reward',
+    'point.transaction.type.BEHAVIOR': 'Behavior',
+    'point.transaction.type.BONUS': 'Bonus Point',
+    'point.transaction.type.PENALTY': 'Penalty Point',
+
+    // History
+    'history.title': 'My History',
+    'history.points.history': 'Points History',
+    'history.no.activities': 'No activities yet.',
+    'history.date': 'Date',
+    'history.description': 'Description',
+    'history.points': 'Points',
+    'history.balance': 'Balance',
+    'history.current.balance': 'Current Points:',
+
+    // Profile / Settings
+    'settings.title': 'User Settings',
+    'settings.language.select': 'Choose language:',
+    'settings.theme.title': 'Design Settings',
+    'settings.theme.select': 'Choose color scheme:',
+    'settings.theme.light': 'Light Mode',
+    'settings.theme.light.desc': 'Light design with white background',
+    'settings.theme.dark': 'Dark Mode',
+    'settings.theme.dark.desc': 'Dark design with black background',
+    'profile.language': 'Language',
+    'profile.language.en': 'English',
+    'profile.language.de': 'German',
+    'profile.edit.username': 'Change Username',
+    'profile.edit.firstName': 'Change First Name',
+    'profile.edit.password': 'Change Password',
+    'profile.username': 'Username',
+    'profile.firstName': 'First Name',
+    'profile.password.current': 'Current Password',
+    'profile.password.new': 'New Password',
+    'profile.password.confirm': 'Confirm Password',
+    'profile.username.check': 'Check availability',
+    'profile.username.available': 'Available',
+    'profile.username.taken': 'Already taken',
+    'profile.username.checking': 'Checking...',
+    'profile.username.success': 'Username changed successfully. Logging you out...',
+    'profile.password.mismatch': 'Passwords do not match',
+    'profile.password.min': 'At least 6 characters',
+    'profile.update.success': 'Profile updated successfully',
+    'profile.password.success': 'Password changed successfully',
+    'profile.password.error': 'Current password is incorrect',
+
+    // Roles
+    'role.admin': 'Administrator',
+    'role.parent': 'Parent',
+    'role.child': 'Child',
+
+    // Status
+    'status.active': 'Active',
+    'status.inactive': 'Inactive',
+
+    // Buttons
+    'button.save': 'Save',
+    'button.cancel': 'Cancel',
+    'button.close': 'Close',
+    'button.edit': 'Edit',
+    'button.back': 'Back',
+
+    // Common
+    'message.no.data': 'No data available',
+    'children.all': 'All Children',
+
+    // Days
+    'day.monday': 'Monday',
+    'day.tuesday': 'Tuesday',
+    'day.wednesday': 'Wednesday',
+    'day.thursday': 'Thursday',
+    'day.friday': 'Friday',
+    'day.saturday': 'Saturday',
+    'day.sunday': 'Sunday',
+
+    // Recurrence
+    'recurrence.once': 'Once',
+    'recurrence.weekly': 'Weekly',
+
+    // Empty States
+    'empty.no_children': 'No children yet',
+    'empty.no_children.desc': 'Add your children to see their progress',
+    'empty.no_activities': 'No activities',
+    'empty.no_activities.desc': "Your family's latest activities will appear here",
+    'empty.no_tasks': 'No tasks',
+    'empty.no_tasks.desc': 'You have no tasks to complete today',
+
+    // Login Screen
+    'login.app.subtitle': 'Organize family together and motivate children',
+    'login.loading': 'Signing in...',
+    'login.server.settings': 'Server Settings',
+    'login.footer': 'Open Source Family Management',
+    'login.error.config': 'Login failed. Please check your server configuration.',
+
+    // Points Progress
+    'points.progress.next_reward': 'More {0} points until next reward',
+    'points.label': 'points',
+
+    // Tasks - Additional
+    'tasks.base': 'Base',
+    'tasks.pending.tap.review': 'Tap to review',
+    'tasks.pending.award.points': 'Points to Award',
+    'tasks.pending.parent.comment': 'Notes (optional)',
+    'tasks.pending.empty.title': 'No tasks pending approval',
+    'tasks.pending.empty.subtitle': 'All caught up!',
+
+    // Rewards - Additional
+    'rewards.redeem': 'Redeem',
+    'rewards.not.enough.points': 'Not enough points',
+    'rewards.redeem.confirm.title': 'Redeem Reward',
+    'rewards.redeem.confirm.message': 'Are you sure you want to redeem "{0}" for {1} points?',
+    'rewards.check.later': 'Check back later!',
+    'rewards.approve.title': 'Approve Redemption',
+    'rewards.approve.message': "Approve {0}'s request for \"{1}\"?",
+    'rewards.reject.title': 'Reject Redemption',
+    'rewards.reject.message': "Reject {0}'s request? Points will be refunded.",
+    'rewards.deliver.title': 'Mark as Delivered',
+    'rewards.deliver.message': 'Confirm that "{0}" has been delivered to {1}?',
+    'rewards.mark.delivered': 'Mark as Delivered',
+    'rewards.pending.approval': 'Pending Approval',
+    'rewards.no.pending': 'No pending redemptions',
+    'rewards.pending.description': 'Reward requests from children will appear here',
+    'empty.no_rewards': 'No rewards available',
+
+    // Notifications
+    'notifications.unread.count': '{0} unread notification(s)',
+    'notifications.empty.title': 'No notifications yet',
+    'notifications.empty.subtitle': "You'll see updates about tasks, rewards, and more here",
+    'notifications.time.just_now': 'just now',
+    'notifications.time.minutes_ago': '{0}m ago',
+    'notifications.time.hours_ago': '{0}h ago',
+    'notifications.time.days_ago': '{0}d ago',
+
+    // Admin - Users
+    'admin.users.create.title': 'Create New User',
+    'admin.users.first_name': 'First Name',
+    'admin.users.password': 'Password',
+    'admin.users.create.button': 'Create User',
+    'admin.users.create.success': 'User created successfully',
+    'admin.users.create.error': 'Failed to create user',
+    'admin.users.create.error.fields': 'Please fill in all fields',
+    'admin.users.activate': 'Activate',
+    'admin.users.deactivate': 'Deactivate',
+    'admin.users.delete': 'Delete',
+    'admin.users.activate.title': 'Activate User',
+    'admin.users.deactivate.title': 'Deactivate User',
+    'admin.users.delete.title': 'Delete User',
+    'admin.users.toggle.message': 'Are you sure you want to {0} {1}?',
+    'admin.users.delete.message': 'Are you sure you want to permanently delete {0}? This action cannot be undone!',
+    'admin.users.no_users': 'No users found',
+
+    // Common
+    'common.success': 'Success',
+    'common.error': 'Error',
+    'button.confirm': 'Confirm',
+
+    // Child Dashboard
+    'child.dashboard.points.balance': 'Your Balance',
+
+    // Behavior Modal
+    'behavior.modal.notes.placeholder': 'Add feedback...',
+};

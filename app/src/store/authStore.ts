@@ -1,13 +1,13 @@
 import { create } from 'zustand';
+import { api } from '../api/client';
 import { secureStorage, STORAGE_KEYS } from '../api/config';
 import { UserProfileResponse, UserRole } from '../types/api';
-import { api } from '../api/client';
 
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: UserProfileResponse | null;
-  
+
   // Actions
   initialize: () => Promise<void>;
   setTokens: (accessToken: string, refreshToken: string, expiresIn: number) => Promise<void>;
@@ -27,33 +27,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (accessToken && tokenExpiry) {
         const expiryTime = parseInt(tokenExpiry, 10);
-        
+
         if (Date.now() < expiryTime) {
           // Token still valid - fetch user profile
-          await get().fetchUser();
-          set({ isAuthenticated: true });
-        } else {
-          // Token expired - try refresh
-          const refreshToken = await secureStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-          if (refreshToken) {
-            // The API client interceptor will handle the refresh
-            try {
-              await get().fetchUser();
-              set({ isAuthenticated: true });
-            } catch {
-              await secureStorage.clear();
-              set({ isAuthenticated: false, user: null });
-            }
-          } else {
+          try {
+            await get().fetchUser();
+            set({ isAuthenticated: true });
+          } catch (error) {
+            console.error('Failed to fetch user profile during initialization:', error);
+            // If profile fetch fails, clear auth state to prevent loops
             await secureStorage.clear();
             set({ isAuthenticated: false, user: null });
           }
+        } else {
+          // Token expired - clear storage and let user log in again
+          console.warn('Token expired, clearing auth state');
+          await secureStorage.clear();
+          set({ isAuthenticated: false, user: null });
         }
       } else {
         set({ isAuthenticated: false, user: null });
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
+      await secureStorage.clear();
       set({ isAuthenticated: false, user: null });
     } finally {
       set({ isLoading: false });
@@ -67,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       STORAGE_KEYS.TOKEN_EXPIRY,
       (Date.now() + expiresIn * 1000).toString()
     );
-    
+
     await get().fetchUser();
     set({ isAuthenticated: true });
   },
@@ -75,6 +72,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchUser: async () => {
     try {
       const user = await api.get<UserProfileResponse>('/profile');
+      console.log('User profile fetched:', user);
+      console.log('User role:', user.role);
+      console.log('Is Admin:', user.role === 'ADMIN');
       set({ user });
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
