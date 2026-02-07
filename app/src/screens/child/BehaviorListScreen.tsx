@@ -196,7 +196,7 @@ export const BehaviorListScreen: React.FC = () => {
     enabled: !!user,
   });
 
-  const totalPoints = evaluations?.reduce((sum, eval) => sum + eval.currentPoints, 0) || 0;
+  const totalPoints = evaluations?.reduce((sum, item) => sum + item.currentPoints, 0) || 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>

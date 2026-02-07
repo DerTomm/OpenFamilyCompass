@@ -10,6 +10,7 @@ import { selectIsAdmin, selectIsChild, useAuthStore } from '../store/authStore';
 // Screens
 import { UserListScreen } from '../screens/admin/UserListScreen';
 import { BehaviorListScreen } from '../screens/child/BehaviorListScreen';
+import { BehaviorOverviewScreen } from '../screens/parent/BehaviorOverviewScreen';
 import { BehaviorManageScreen } from '../screens/parent/BehaviorManageScreen';
 import { BehaviorEvaluateScreen } from '../screens/parent/BehaviorEvaluateScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -18,10 +19,13 @@ import { NotificationsScreen } from '../screens/notifications/NotificationsScree
 import { ParentDashboardScreen } from '../screens/parent/DashboardScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { ServerSetupScreen } from '../screens/setup/ServerSetupScreen';
-import { PendingRedemptionsScreen } from '../screens/shop/PendingRedemptionsScreen';
 import { RewardListScreen } from '../screens/shop/RewardListScreen';
+import { RewardEditScreen } from '../screens/shop/RewardEditScreen';
+import { PendingRedemptionsScreen } from '../screens/shop/PendingRedemptionsScreen';
 import { PendingApprovalScreen } from '../screens/tasks/PendingApprovalScreen';
 import { TaskListScreen } from '../screens/tasks/TaskListScreen';
+import { TaskManagementScreen } from '../screens/tasks/TaskManagementScreen';
+import { TaskDefinitionEditScreen } from '../screens/tasks/TaskDefinitionEditScreen';
 
 // Types
 import { RootStackParamList } from './types';
@@ -36,8 +40,31 @@ const AdminStack = createNativeStackNavigator();
 
 // Behavior Stack Navigator
 const BehaviorStackNavigator: React.FC = () => {
+  const isChild = useAuthStore(selectIsChild);
   const theme = useTheme();
 
+  // Child sees their behavior list
+  if (isChild) {
+    return (
+      <BehaviorStack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: theme.colors.surface },
+          headerTintColor: theme.colors.onSurface,
+        }}
+      >
+        <BehaviorStack.Screen
+          name="BehaviorList"
+          component={BehaviorListScreen}
+          options={{
+            title: 'Meine Verhaltensziele',
+            headerLeft: () => null,
+          }}
+        />
+      </BehaviorStack.Navigator>
+    );
+  }
+
+  // Parent sees overview/manage
   return (
     <BehaviorStack.Navigator
       screenOptions={{
@@ -48,8 +75,8 @@ const BehaviorStackNavigator: React.FC = () => {
       }}
     >
       <BehaviorStack.Screen
-        name="BehaviorManage"
-        component={BehaviorManageScreen}
+        name="BehaviorOverview"
+        component={BehaviorOverviewScreen}
         options={{
           title: 'Verhalten bewerten',
           headerLeft: () => null,
@@ -60,6 +87,11 @@ const BehaviorStackNavigator: React.FC = () => {
         component={BehaviorEvaluateScreen}
         options={{ title: 'Bewertung' }}
       />
+      <BehaviorStack.Screen
+        name="BehaviorManage"
+        component={BehaviorManageScreen}
+        options={{ title: 'Regeln verwalten' }}
+      />
     </BehaviorStack.Navigator>
   );
 };
@@ -69,6 +101,28 @@ const TasksStackNavigator: React.FC = () => {
   const isChild = useAuthStore(selectIsChild);
   const theme = useTheme();
 
+  // Children see TaskList, Parents see TaskManagement
+  if (isChild) {
+    return (
+      <TasksStack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: theme.colors.surface },
+          headerTintColor: theme.colors.onSurface,
+        }}
+      >
+        <TasksStack.Screen
+          name="TaskList"
+          component={TaskListScreen}
+          options={{
+            title: 'Meine Aufgaben',
+            headerLeft: () => null,
+          }}
+        />
+      </TasksStack.Navigator>
+    );
+  }
+
+  // Parent view: Management, Edit, and Approval
   return (
     <TasksStack.Navigator
       screenOptions={{
@@ -79,20 +133,28 @@ const TasksStackNavigator: React.FC = () => {
       }}
     >
       <TasksStack.Screen
-        name="TaskList"
-        component={TaskListScreen}
+        name="TaskManagement"
+        component={TaskManagementScreen}
         options={{
-          title: 'Meine Aufgaben',
+          title: 'Aufgabenverwaltung',
           headerLeft: () => null,
         }}
       />
-      {!isChild && (
-        <TasksStack.Screen
-          name="PendingApproval"
-          component={PendingApprovalScreen}
-          options={{ title: 'Freigabe ausstehend' }}
-        />
-      )}
+      <TasksStack.Screen
+        name="TaskEdit"
+        component={TaskDefinitionEditScreen}
+        options={{ title: 'Aufgabe bearbeiten' }}
+      />
+      <TasksStack.Screen
+        name="PendingApproval"
+        component={PendingApprovalScreen}
+        options={{ title: 'Freigabe ausstehend' }}
+      />
+      <TasksStack.Screen
+        name="TaskList"
+        component={TaskListScreen}
+        options={{ title: 'Aufgabeninstanzen' }}
+      />
     </TasksStack.Navigator>
   );
 };
@@ -120,11 +182,23 @@ const ShopStackNavigator: React.FC = () => {
         }}
       />
       {!isChild && (
-        <ShopStack.Screen
-          name="PendingRedemptions"
-          component={PendingRedemptionsScreen}
-          options={{ title: 'Einlösungen ausstehend' }}
-        />
+        <>
+          <ShopStack.Screen
+            name="PendingRedemptions"
+            component={PendingRedemptionsScreen}
+            options={{ title: 'Einlösungen ausstehend' }}
+          />
+          <ShopStack.Screen
+            name="RewardCreate"
+            component={RewardEditScreen}
+            options={{ title: 'Belohnung erstellen' }}
+          />
+          <ShopStack.Screen
+            name="RewardEdit"
+            component={RewardEditScreen}
+            options={{ title: 'Belohnung bearbeiten' }}
+          />
+        </>
       )}
     </ShopStack.Navigator>
   );

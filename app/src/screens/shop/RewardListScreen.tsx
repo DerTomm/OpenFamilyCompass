@@ -10,15 +10,22 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRequestRedemption, useRewards } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { RewardResponse } from '../../types/api';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ShopStackParamList } from '../../navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<ShopStackParamList>;
 
 interface RewardCardProps {
   reward: RewardResponse;
   userPoints: number;
   onRedeem: () => void;
+  onEdit: () => void;
   isRedeeming: boolean;
   isChild: boolean;
   t: (key: string) => string;
@@ -28,6 +35,7 @@ const RewardCard: React.FC<RewardCardProps> = ({
   reward,
   userPoints,
   onRedeem,
+  onEdit,
   isRedeeming,
   isChild,
   t,
@@ -36,25 +44,40 @@ const RewardCard: React.FC<RewardCardProps> = ({
 
   return (
     <View style={styles.card}>
-      <View style={styles.cardContent}>
+      <TouchableOpacity 
+        style={styles.cardContent} 
+        onPress={!isChild ? onEdit : undefined}
+        activeOpacity={!isChild ? 0.7 : 1}
+      >
         <View style={styles.rewardIcon}>
           <Text style={styles.rewardEmoji}>🎁</Text>
         </View>
         <View style={styles.rewardInfo}>
-          <Text style={styles.rewardTitle}>{reward.title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.rewardTitle}>{reward.title}</Text>
+            {!isChild && !reward.active && (
+              <View style={styles.inactiveBadge}>
+                <Text style={styles.inactiveText}>{t('status.inactive')}</Text>
+              </View>
+            )}
+            {!isChild && (
+              <MaterialCommunityIcons name="pencil" size={20} color="#999" />
+            )}
+          </View>
+          
           {reward.description && (
             <Text style={styles.rewardDescription} numberOfLines={2}>
               {reward.description}
             </Text>
           )}
           <View style={styles.costContainer}>
-            <Text style={[styles.costValue, !canAfford && styles.costInsufficient]}>
+            <Text style={[styles.costValue, !canAfford && isChild && styles.costInsufficient]}>
               {reward.pointsCost}
             </Text>
             <Text style={styles.costLabel}> {t('points.label')}</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {isChild && (
         <TouchableOpacity
@@ -82,8 +105,10 @@ export const RewardListScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const isChild = useAuthStore(selectIsChild);
   const { t } = useI18n();
+  const navigation = useNavigation<NavigationProp>();
 
-  const { data: rewards, isLoading, refetch, isRefetching } = useRewards(true);
+  // If parent, fetch all (active and inactive), if child fetch only active
+  const { data: rewards, isLoading, refetch, isRefetching } = useRewards(isChild ? true : undefined);
   const requestRedemption = useRequestRedemption();
 
   const handleRedeem = (reward: RewardResponse) => {
@@ -98,6 +123,14 @@ export const RewardListScreen: React.FC = () => {
         },
       ]
     );
+  };
+
+  const handleEdit = (reward: RewardResponse) => {
+    navigation.navigate('RewardEdit', { rewardId: reward.id });
+  };
+
+  const handleCreate = () => {
+    navigation.navigate('RewardCreate');
   };
 
   return (
@@ -122,6 +155,7 @@ export const RewardListScreen: React.FC = () => {
               reward={item}
               userPoints={user?.totalPoints || 0}
               onRedeem={() => handleRedeem(item)}
+              onEdit={() => handleEdit(item)}
               isRedeeming={requestRedemption.isPending && requestRedemption.variables === item.id}
               isChild={isChild}
               t={t}
@@ -139,6 +173,12 @@ export const RewardListScreen: React.FC = () => {
             </View>
           }
         />
+      )}
+
+      {!isChild && (
+        <TouchableOpacity style={styles.fab} onPress={handleCreate}>
+          <MaterialCommunityIcons name="plus" size={24} color="#fff" />
+        </TouchableOpacity>
       )}
     </SafeAreaView>
   );
@@ -170,7 +210,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    flexGrow: 1,
+    paddingBottom: 80, // Space for FAB
   },
   card: {
     backgroundColor: '#fff',
@@ -201,11 +241,30 @@ const styles = StyleSheet.create({
   rewardInfo: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   rewardTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 4,
+    flex: 1,
+    marginRight: 8,
+  },
+  inactiveBadge: {
+    backgroundColor: '#eee',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  inactiveText: {
+    fontSize: 10,
+    color: '#666',
+    fontWeight: 'bold',
   },
   rewardDescription: {
     color: '#666',
@@ -244,10 +303,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 32,
+    alignItems: 'center',
   },
   emptyEmoji: {
     fontSize: 64,
@@ -261,5 +318,21 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     color: '#666',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#9C27B0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 });
