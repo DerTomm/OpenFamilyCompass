@@ -21,12 +21,14 @@ export type MainTabParamList = {
   Shop: NavigatorScreenParams<ShopStackParamList>;
   Profile: NavigatorScreenParams<ProfileStackParamList>;
   Behavior: NavigatorScreenParams<BehaviorStackParamList>;
+  Notifications: undefined;
   // Admin only
   Admin: NavigatorScreenParams<AdminStackParamList>;
 };
 
 // Behavior Stack
 export type BehaviorStackParamList = {
+  BehaviorOverview: undefined;
   BehaviorManage: undefined;
   BehaviorEvaluate: { userId: number };
 };
@@ -35,8 +37,8 @@ export type BehaviorStackParamList = {
 export type TasksStackParamList = {
   TaskList: undefined;
   TaskDetail: { taskId: number };
-  TaskCreate: undefined;
-  TaskEdit: { taskId: number };
+  TaskManagement: undefined;
+  TaskEdit: { taskId?: number };
   PendingApproval: undefined;
 };
 

@@ -15,8 +15,10 @@ import { useAuthStore } from '../store/authStore';
 export const queryKeys = {
   taskInstances: (params?: object) => ['taskInstances', params],
   taskDefinitions: (params?: object) => ['taskDefinitions', params],
+  taskDefinition: (id: number) => ['taskDefinitions', id],
   pendingTasks: ['pendingTasks'],
   rewards: (params?: object) => ['rewards', params],
+  reward: (id: number) => ['rewards', id],
   redemptions: (params?: object) => ['redemptions', params],
   pendingRedemptions: ['pendingRedemptions'],
   children: ['children'],
@@ -28,7 +30,60 @@ export const queryKeys = {
   profile: ['profile'],
 };
 
+import {
+  CreateTaskDefinitionRequest,
+  TaskDefinitionResponse,
+  CreateRewardRequest,
+} from '../types/api';
+
 // Task Hooks
+export const useTaskDefinitions = (assignedUserId?: number) => {
+  return useQuery({
+    queryKey: queryKeys.taskDefinitions({ assignedUserId }),
+    queryFn: () => taskDefinitionsApi.list(assignedUserId),
+  });
+};
+
+export const useTaskDefinition = (id: number) => {
+  return useQuery({
+    queryKey: queryKeys.taskDefinition(id),
+    queryFn: () => taskDefinitionsApi.getById(id),
+    enabled: !!id,
+  });
+};
+
+export const useCreateTaskDefinition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateTaskDefinitionRequest) => taskDefinitionsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskDefinitions'] });
+    },
+  });
+};
+
+export const useUpdateTaskDefinition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<CreateTaskDefinitionRequest> }) =>
+      taskDefinitionsApi.update(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['taskDefinitions'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.taskDefinition(id) });
+    },
+  });
+};
+
+export const useDeleteTaskDefinition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => taskDefinitionsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskDefinitions'] });
+    },
+  });
+};
+
 export const useTaskInstances = (params?: { assignedUserId?: number; status?: string }) => {
   return useQuery({
     queryKey: queryKeys.taskInstances(params),
@@ -82,6 +137,46 @@ export const useRewards = (active?: boolean) => {
   return useQuery({
     queryKey: queryKeys.rewards({ active }),
     queryFn: () => rewardsApi.list(active),
+  });
+};
+
+export const useReward = (id: number) => {
+  return useQuery({
+    queryKey: queryKeys.reward(id),
+    queryFn: () => rewardsApi.getById(id),
+    enabled: !!id,
+  });
+};
+
+export const useCreateReward = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateRewardRequest) => rewardsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+    },
+  });
+};
+
+export const useUpdateReward = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<CreateRewardRequest & { active: boolean }> }) =>
+      rewardsApi.update(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reward(id) });
+    },
+  });
+};
+
+export const useDeactivateReward = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => rewardsApi.deactivate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+    },
   });
 };
 
