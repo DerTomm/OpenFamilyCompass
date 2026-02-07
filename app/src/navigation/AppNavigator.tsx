@@ -9,6 +9,9 @@ import { selectIsAdmin, selectIsChild, useAuthStore } from '../store/authStore';
 
 // Screens
 import { UserListScreen } from '../screens/admin/UserListScreen';
+import { BehaviorListScreen } from '../screens/child/BehaviorListScreen';
+import { BehaviorManageScreen } from '../screens/parent/BehaviorManageScreen';
+import { BehaviorEvaluateScreen } from '../screens/parent/BehaviorEvaluateScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { ChildDashboardScreen } from '../screens/child/DashboardScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';

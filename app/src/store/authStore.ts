@@ -47,14 +47,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({ isAuthenticated: true });
           } catch (error) {
             console.error('Failed to fetch user profile during initialization:', error);
-            // If profile fetch fails, clear auth state to prevent loops
-            await secureStorage.clear();
+            // If profile fetch fails, clear only auth data (keep SERVER_URL)
+            await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+            await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+            await secureStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+            await secureStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
             set({ isAuthenticated: false, user: null });
           }
         } else {
-          // Token expired - clear storage and let user log in again
+          // Token expired - clear only auth data (keep SERVER_URL)
           console.warn('Token expired, clearing auth state');
-          await secureStorage.clear();
+          await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+          await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+          await secureStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+          await secureStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
           set({ isAuthenticated: false, user: null });
         }
       } else {
@@ -62,7 +68,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
-      await secureStorage.clear();
+      // Clear only auth data on error (keep SERVER_URL)
+      await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+      await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+      await secureStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+      await secureStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
       set({ isAuthenticated: false, user: null });
     } finally {
       set({ isLoading: false });
@@ -95,8 +105,54 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    await secureStorage.clear();
-    set({ isAuthenticated: false, user: null });
+    try {
+      console.log('[LOGOUT] Starting logout process...');
+
+      // Clear all auth-related data FIRST (keep SERVER_URL for re-login)
+      console.log('[LOGOUT] Clearing local storage...');
+      await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+      await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+      await secureStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+      await secureStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
+      await secureStorage.removeItem(STORAGE_KEYS.PKCE_CODE_VERIFIER);
+      await secureStorage.removeItem(STORAGE_KEYS.PKCE_REDIRECT_URI);
+      console.log('[LOGOUT] Local storage cleared');
+
+      // Delete all cookies to clear backend session (JSESSIONID)
+      if (typeof document !== 'undefined') {
+        console.log('[LOGOUT] Clearing all cookies...');
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i];
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+          
+          // Delete cookie for all possible paths and domains
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+          
+          console.log('[LOGOUT] Deleted cookie:', name);
+        }
+      }
+
+      // Verify tokens are really deleted
+      const checkToken = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+      console.log('[LOGOUT] Token after deletion:', checkToken === null ? 'NULL (OK)' : `STILL EXISTS: ${checkToken}`);
+
+      // Set state to logged out
+      set({ isAuthenticated: false, user: null, isLoading: false });
+      console.log('[LOGOUT] State updated to logged out');
+
+      // On web: Reload page to ensure clean state and prevent auto-login
+      if (typeof window !== 'undefined') {
+        console.log('[LOGOUT] Reloading page to ensure clean state...');
+        window.location.href = window.location.origin;
+      }
+    } catch (error) {
+      console.error('[LOGOUT] Logout error:', error);
+      set({ isAuthenticated: false, user: null, isLoading: false });
+    }
   },
 
   completeSetup: () => {
