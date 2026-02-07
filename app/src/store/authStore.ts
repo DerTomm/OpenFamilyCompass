@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../api/client';
-import { secureStorage, STORAGE_KEYS } from '../api/config';
+import { getApiBaseUrl, secureStorage, STORAGE_KEYS } from '../api/config';
 import { UserProfileResponse, UserRole } from '../types/api';
 
 interface AuthState {
@@ -55,7 +55,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({ isAuthenticated: false, user: null });
           }
         } else {
-          // Token expired - clear only auth data (keep SERVER_URL)
+            // Token expired - try to refresh it before giving up
+            try {
+                const refreshToken = await secureStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+                if (refreshToken) {
+                     const baseUrl = await getApiBaseUrl();
+                     const response = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ refreshToken })
+                     });
+
+                     if (response.ok) {
+                        const data = await response.json();
+                        await get().setTokens(data.accessToken, data.refreshToken, data.expiresIn);
+                        return; // Successfully refreshed and set tokens (which fetches user)
+                     }
+                }
+            } catch (refreshErr) {
+                console.error('Initial refresh failed', refreshErr);
+            }
+
+          // Token expired and refresh failed/not possible - clear only auth data (keep SERVER_URL)
           console.warn('Token expired, clearing auth state');
           await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
           await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
@@ -67,6 +90,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isAuthenticated: false, user: null });
       }
     } catch (error) {
+
       console.error('Auth initialization error:', error);
       // Clear only auth data on error (keep SERVER_URL)
       await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
@@ -80,15 +104,57 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   setTokens: async (accessToken, refreshToken, expiresIn) => {
-    await secureStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-    await secureStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
-    await secureStorage.setItem(
-      STORAGE_KEYS.TOKEN_EXPIRY,
-      (Date.now() + expiresIn * 1000).toString()
-    );
+    console.log('[AUTH] setTokens called');
+    console.log('[AUTH] Access token length:', accessToken?.length || 0);
+    console.log('[AUTH] Refresh token length:', refreshToken?.length || 0);
+    console.log('[AUTH] Expires in:', expiresIn, 'seconds');
 
-    await get().fetchUser();
-    set({ isAuthenticated: true });
+    if (!accessToken) {
+      console.error('[AUTH] No access token provided!');
+      throw new Error('No access token received from authorization server');
+    }
+
+    if (!refreshToken) {
+      console.warn('[AUTH] WARNING: No refresh token received! You will need to login again after token expiry.');
+    }
+
+    try {
+      await secureStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+      console.log('[AUTH] Access token stored');
+      
+      if (refreshToken) {
+        await secureStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+        console.log('[AUTH] Refresh token stored');
+      }
+      
+      const expiry = (Date.now() + expiresIn * 1000).toString();
+      await secureStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiry);
+      console.log('[AUTH] Token expiry stored:', new Date(parseInt(expiry)));
+
+      // Verify tokens were stored
+      const storedAccessToken = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+      const storedRefreshToken = await secureStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+      console.log('[AUTH] Verification - Access token stored:', !!storedAccessToken);
+      console.log('[AUTH] Verification - Refresh token stored:', !!storedRefreshToken);
+
+      console.log('[AUTH] Fetching user profile...');
+      try {
+          await get().fetchUser();
+          console.log('[AUTH] User profile fetched, setting authenticated=true');
+          set({ isAuthenticated: true });
+      } catch (err) {
+          console.error('[AUTH] Failed to fetch user profile after setting tokens:', err);
+          // Don't throw here, otherwise the login screen might show a generic error.
+          // The user might be logged in but the profile fetch failed (e.g. temporary network issue).
+          // However, for consistency, if profile fetch fails, we might want to consider it a failed login
+          // or just proceed with limited info. For now, let's re-throw to be safe so UI handles it.
+          throw err; 
+      }
+      console.log('[AUTH] setTokens complete');
+    } catch (error) {
+      console.error('[AUTH] setTokens error:', error);
+      throw error;
+    }
   },
 
   fetchUser: async () => {
@@ -106,45 +172,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
-      console.log('[LOGOUT] Starting logout process...');
+      console.log('[LOGOUT] Starting client-side logout...');
 
-      // Clear all auth-related data FIRST (keep SERVER_URL for re-login)
-      console.log('[LOGOUT] Clearing local storage...');
+      // 1. Clear all tokens from secure storage
+      console.log('[LOGOUT] Clearing tokens and auth data...');
       await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
       await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
       await secureStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
       await secureStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
-      await secureStorage.removeItem(STORAGE_KEYS.PKCE_CODE_VERIFIER);
-      await secureStorage.removeItem(STORAGE_KEYS.PKCE_REDIRECT_URI);
-      console.log('[LOGOUT] Local storage cleared');
+      console.log('[LOGOUT] All tokens cleared');
 
-      // Delete all cookies to clear backend session (JSESSIONID)
-      if (typeof document !== 'undefined') {
-        console.log('[LOGOUT] Clearing all cookies...');
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i];
-          const eqPos = cookie.indexOf('=');
-          const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
-          
-          // Delete cookie for all possible paths and domains
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
-          
-          console.log('[LOGOUT] Deleted cookie:', name);
-        }
-      }
-
-      // Verify tokens are really deleted
+      // 2. Verify tokens are deleted
       const checkToken = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-      console.log('[LOGOUT] Token after deletion:', checkToken === null ? 'NULL (OK)' : `STILL EXISTS: ${checkToken}`);
+      console.log('[LOGOUT] Token verification:', checkToken === null ? 'NULL (OK)' : `STILL EXISTS: ${checkToken}`);
 
-      // Set state to logged out
+      // 3. Set state to logged out
       set({ isAuthenticated: false, user: null, isLoading: false });
       console.log('[LOGOUT] State updated to logged out');
 
-      // On web: Reload page to ensure clean state and prevent auto-login
+      // 4. Reload page to ensure clean state
       if (typeof window !== 'undefined') {
         console.log('[LOGOUT] Reloading page to ensure clean state...');
         window.location.href = window.location.origin;

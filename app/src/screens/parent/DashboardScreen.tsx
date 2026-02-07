@@ -6,11 +6,17 @@ import { Card, EmptyState, QuickActionCard } from '../../components/ui';
 import { useI18n } from '../../i18n/I18nContext';
 import { useAuthStore } from '../../store/authStore';
 import { spacing } from '../../theme/theme';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const ParentDashboardScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const theme = useTheme();
   const { t } = useI18n();
+  const navigation = useNavigation<NavigationProp>();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -48,7 +54,7 @@ export const ParentDashboardScreen: React.FC = () => {
             icon="clipboard-check"
             count={3}
             color={theme.colors.tertiary}
-            onPress={() => { }}
+            onPress={() => navigation.navigate('Tasks', { screen: 'PendingApproval' })}
           />
 
           <QuickActionCard
@@ -56,7 +62,7 @@ export const ParentDashboardScreen: React.FC = () => {
             icon="gift"
             count={1}
             color={theme.colors.secondary}
-            onPress={() => { }}
+            onPress={() => navigation.navigate('Shop', { screen: 'PendingRedemptions' })}
           />
 
           <QuickActionCard
@@ -64,7 +70,7 @@ export const ParentDashboardScreen: React.FC = () => {
             icon="star-circle"
             count={2}
             color={theme.colors.info}
-            onPress={() => { }}
+            onPress={() => navigation.navigate('Behavior', { screen: 'BehaviorManage' })}
           />
         </View>
 

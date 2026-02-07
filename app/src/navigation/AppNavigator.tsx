@@ -31,7 +31,38 @@ const MainStack = createNativeStackNavigator();
 const TasksStack = createNativeStackNavigator();
 const ShopStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
+const BehaviorStack = createNativeStackNavigator();
 const AdminStack = createNativeStackNavigator();
+
+// Behavior Stack Navigator
+const BehaviorStackNavigator: React.FC = () => {
+  const theme = useTheme();
+
+  return (
+    <BehaviorStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+        },
+        headerTintColor: theme.colors.onSurface,
+      }}
+    >
+      <BehaviorStack.Screen
+        name="BehaviorManage"
+        component={BehaviorManageScreen}
+        options={{
+          title: 'Verhalten bewerten',
+          headerLeft: () => null,
+        }}
+      />
+      <BehaviorStack.Screen
+        name="BehaviorEvaluate"
+        component={BehaviorEvaluateScreen}
+        options={{ title: 'Bewertung' }}
+      />
+    </BehaviorStack.Navigator>
+  );
+};
 
 // Tasks Stack Navigator
 const TasksStackNavigator: React.FC = () => {
@@ -467,6 +498,7 @@ const MainStackNavigator: React.FC = () => {
           <MainStack.Screen name="Dashboard" component={DashboardComponent} />
           <MainStack.Screen name="Tasks" component={TasksStackNavigator} />
           <MainStack.Screen name="Shop" component={ShopStackNavigator} />
+          <MainStack.Screen name="Behavior" component={BehaviorStackNavigator} />
           <MainStack.Screen name="Notifications" component={NotificationsScreen} />
           <MainStack.Screen name="Profile" component={ProfileStackNavigator} />
           {isAdmin && (

@@ -4,8 +4,19 @@ import { API_CONFIG, getApiBaseUrl, secureStorage, STORAGE_KEYS } from './config
 
 // Track if we're currently refreshing to prevent multiple simultaneous refresh attempts
 let isRefreshing = false;
-let refreshAttempts = 0;
-const MAX_REFRESH_ATTEMPTS = 1;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
 
 // Create axios instance
 const createApiClient = (): AxiosInstance => {
@@ -19,13 +30,19 @@ const createApiClient = (): AxiosInstance => {
   // Request interceptor - add auth token
   client.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
-      // Set base URL dynamically
-      config.baseURL = `${await getApiBaseUrl()}/api/${API_CONFIG.apiVersion}`;
+      // Set base URL dynamically if not already set or if it's relative
+      if (!config.baseURL || !config.baseURL.startsWith('http')) {
+         config.baseURL = `${await getApiBaseUrl()}/api/${API_CONFIG.apiVersion}`;
+      }
 
       // Add auth token if available
-      const token = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      try {
+        const token = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+        if (token && !config.headers.Authorization) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (e) {
+        console.warn('Error reading token from storage:', e);
       }
 
       return config;
@@ -36,80 +53,70 @@ const createApiClient = (): AxiosInstance => {
   // Response interceptor - handle errors and token refresh
   client.interceptors.response.use(
     (response) => {
-      // Reset refresh attempts on successful request
-      refreshAttempts = 0;
       return response;
     },
     async (error: AxiosError<ApiErrorResponse>) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
       // Check if this is an authentication error
-      if (error.response?.status === 401) {
-        // Prevent infinite loops - don't retry if already retried or max attempts reached
-        if (originalRequest._retry || refreshAttempts >= MAX_REFRESH_ATTEMPTS || isRefreshing) {
-          console.warn('Token refresh failed or max attempts reached. Clearing auth state.');
-          await secureStorage.clear();
-          isRefreshing = false;
-          refreshAttempts = 0;
-          // Redirect to login will be handled by the navigation guard
-          return Promise.reject(error);
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          return new Promise(function(resolve, reject) {
+            failedQueue.push({resolve, reject});
+          }).then(token => {
+            originalRequest.headers.Authorization = 'Bearer ' + token;
+            return client(originalRequest);
+          }).catch(err => {
+            return Promise.reject(err);
+          });
         }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
 
         const refreshToken = await secureStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
 
         if (refreshToken) {
-          originalRequest._retry = true;
-          isRefreshing = true;
-          refreshAttempts++;
-
           try {
             const baseUrl = await getApiBaseUrl();
-            const response = await axios.post(`${baseUrl}/oauth2/token`, {
-              grant_type: 'refresh_token',
-              refresh_token: refreshToken,
-              client_id: API_CONFIG.oauth.clientId,
-            }, {
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            const response = await axios.post(`${baseUrl}/api/v1/auth/refresh`, {
+              refreshToken: refreshToken
             });
 
-            const { access_token, refresh_token, expires_in } = response.data;
+            const { accessToken, refreshToken: newRefreshToken, expiresIn } = response.data;
 
             // Store new tokens
-            await secureStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access_token);
-            await secureStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
+            await secureStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+            if (newRefreshToken) {
+              await secureStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken);
+            }
             await secureStorage.setItem(
               STORAGE_KEYS.TOKEN_EXPIRY,
-              (Date.now() + expires_in * 1000).toString()
+              (Date.now() + expiresIn * 1000).toString()
             );
 
-            isRefreshing = false;
-            refreshAttempts = 0;
+            // Update header for future requests
+            client.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
+            originalRequest.headers.Authorization = 'Bearer ' + accessToken;
 
-            // Retry original request with new token
-            originalRequest.headers.Authorization = `Bearer ${access_token}`;
+            processQueue(null, accessToken);
             return client(originalRequest);
           } catch (refreshError: any) {
+            processQueue(refreshError, null);
             console.error('Token refresh failed:', refreshError);
-
-            // Check for invalid_grant error (400) from OAuth2 token endpoint
-            const isInvalidGrant = refreshError?.response?.status === 400 &&
-              refreshError?.response?.data?.error === 'invalid_grant';
-
-            if (isInvalidGrant) {
-              console.warn('Invalid grant error - refresh token is invalid or expired');
-            }
 
             // Clear all auth state on any refresh error
             await secureStorage.clear();
-            isRefreshing = false;
-            refreshAttempts = 0;
+            
+            // Redirect will be handled by auth state change
             return Promise.reject(refreshError);
+          } finally {
+             isRefreshing = false;
           }
         } else {
           // No refresh token available - clear state
           await secureStorage.clear();
-          isRefreshing = false;
-          refreshAttempts = 0;
+          return Promise.reject(error);
         }
       }
 
@@ -119,6 +126,7 @@ const createApiClient = (): AxiosInstance => {
 
   return client;
 };
+
 
 export const apiClient = createApiClient();
 

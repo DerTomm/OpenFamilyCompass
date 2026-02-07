@@ -20,8 +20,15 @@ export type MainTabParamList = {
   Tasks: NavigatorScreenParams<TasksStackParamList>;
   Shop: NavigatorScreenParams<ShopStackParamList>;
   Profile: NavigatorScreenParams<ProfileStackParamList>;
+  Behavior: NavigatorScreenParams<BehaviorStackParamList>;
   // Admin only
   Admin: NavigatorScreenParams<AdminStackParamList>;
+};
+
+// Behavior Stack
+export type BehaviorStackParamList = {
+  BehaviorManage: undefined;
+  BehaviorEvaluate: { userId: number };
 };
 
 // Tasks Stack

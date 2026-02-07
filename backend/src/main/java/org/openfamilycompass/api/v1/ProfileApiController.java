@@ -1,13 +1,12 @@
 package org.openfamilycompass.api.v1;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.openfamilycompass.api.v1.dto.UserDto;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.service.UserService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,23 +35,20 @@ public class ProfileApiController {
 
     private final UserService userService;
 
-    @Value("${app.avatars.predefined:cat.png,dog.png,bear.png,lion.png,elephant.png,giraffe.png,panda.png,unicorn.png}")
-    private String[] predefinedAvatars;
-
     @GetMapping
     @Operation(summary = "Get current user profile")
-    public ResponseEntity<UserDto.ProfileResponse> getProfile(@AuthenticationPrincipal Jwt jwt) {
-        User currentUser = getCurrentUser(jwt);
+    public ResponseEntity<UserDto.ProfileResponse> getProfile(@AuthenticationPrincipal Jwt principal) {
+        User currentUser = getCurrentUser(principal);
         return ResponseEntity.ok(UserDto.ProfileResponse.fromEntity(currentUser));
     }
 
     @PutMapping
     @Operation(summary = "Update current user profile")
     public ResponseEntity<UserDto.ProfileResponse> updateProfile(
-            @AuthenticationPrincipal Jwt jwt,
+            @AuthenticationPrincipal Jwt principal,
             @Valid @RequestBody UserDto.UpdateProfileRequest request) {
 
-        User currentUser = getCurrentUser(jwt);
+        User currentUser = getCurrentUser(principal);
 
         // Update username if provided and different
         if (request.getUsername() != null && !request.getUsername().equals(currentUser.getUsername())) {
@@ -86,10 +82,10 @@ public class ProfileApiController {
     @PostMapping("/password")
     @Operation(summary = "Change current user password")
     public ResponseEntity<Void> changePassword(
-            @AuthenticationPrincipal Jwt jwt,
+            @AuthenticationPrincipal Jwt principal,
             @Valid @RequestBody UserDto.ChangePasswordRequest request) {
 
-        User currentUser = getCurrentUser(jwt);
+        User currentUser = getCurrentUser(principal);
         boolean success = userService.changePassword(
                 currentUser.getId(),
                 request.getCurrentPassword(),
@@ -105,10 +101,10 @@ public class ProfileApiController {
     @GetMapping("/username/check")
     @Operation(summary = "Check if username is available")
     public ResponseEntity<UserDto.UsernameCheckResponse> checkUsername(
-            @AuthenticationPrincipal Jwt jwt,
+            @AuthenticationPrincipal Jwt principal,
             @RequestParam String username) {
 
-        User currentUser = getCurrentUser(jwt);
+        User currentUser = getCurrentUser(principal);
         String checkUsername = username.toLowerCase().trim();
 
         // Username is available if it doesn't exist OR if it's the current user's
@@ -127,10 +123,10 @@ public class ProfileApiController {
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload avatar image")
     public ResponseEntity<UserDto.ProfileResponse> uploadAvatar(
-            @AuthenticationPrincipal Jwt jwt,
+            @AuthenticationPrincipal Jwt principal,
             @RequestParam("file") MultipartFile file) {
 
-        User currentUser = getCurrentUser(jwt);
+        User currentUser = getCurrentUser(principal);
 
         if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
@@ -158,14 +154,15 @@ public class ProfileApiController {
     @GetMapping("/avatar/icons")
     @Operation(summary = "Get available avatar icons")
     public ResponseEntity<List<String>> getAvatarIcons() {
-        List<String> icons = Arrays.stream(predefinedAvatars)
-                .map(name -> name.replace(".png", "").replace(".svg", ""))
-                .toList();
-        return ResponseEntity.ok(icons);
+        // No predefined icons available
+        return ResponseEntity.ok(Collections.emptyList());
     }
 
-    private User getCurrentUser(Jwt jwt) {
-        String username = jwt.getSubject();
+    private User getCurrentUser(Jwt principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+        String username = principal.getSubject();
         return userService.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
     }
