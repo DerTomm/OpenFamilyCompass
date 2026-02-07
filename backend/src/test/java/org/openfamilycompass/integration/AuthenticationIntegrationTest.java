@@ -1,11 +1,7 @@
 package org.openfamilycompass.integration;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,26 +14,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Integration-Tests für die formularbasierte Web-Authentifizierung.
- * 
- * Hinweis: Die Anwendung verwendet derzeit Session-basierte Authentifizierung
- * für die Web-UI. Eine REST API mit JWT/OIDC-Authentifizierung ist noch nicht
- * implementiert. Diese Tests validieren die vorhandene formularbasierte
- * Authentifizierung.
+ * Integration Tests for REST API Authentication (JWT).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-@DisplayName("Web-Authentifizierung Integration Tests")
+@DisplayName("REST Auth Integration Tests")
 class AuthenticationIntegrationTest {
 
     @Autowired
@@ -64,49 +55,38 @@ class AuthenticationIntegrationTest {
     }
 
     @Test
-    @DisplayName("Login sollte mit gültigen Zugangsdaten erfolgreich sein")
+    @DisplayName("Login should return 200 and tokens with valid credentials")
     void login_WithValidCredentials_ShouldSucceed() throws Exception {
-        mockMvc.perform(formLogin("/perform_login")
-                .user("username", "testparent")
-                .password("password", "testpassword"))
-                .andExpect(authenticated())
-                .andExpect(redirectedUrlPattern("/**/dashboard"));
+        // Since we are using TestSecurityConfig which mocks the security chain,
+        // we might not get actual JWTs unless the AuthController is fully functional in this context.
+        // However, the AuthController logic (password check, token generation) should run if the endpoint is reachable.
+        
+        // Note: The TokenService requires RSA keys. If they are generated at runtime, this should work.
+        
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"testparent\",\"password\":\"testpassword\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.refreshToken").exists())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"));
     }
 
     @Test
-    @DisplayName("Login sollte mit ungültigem Passwort fehlschlagen")
+    @DisplayName("Login should return 401 with invalid password")
     void login_WithInvalidPassword_ShouldFail() throws Exception {
-        mockMvc.perform(formLogin("/perform_login")
-                .user("username", "testparent")
-                .password("password", "wrongpassword"))
-                .andExpect(unauthenticated())
-                .andExpect(redirectedUrlPattern("/**/login?error*"));
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"testparent\",\"password\":\"wrongpassword\"}"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Login sollte mit nicht existierendem Benutzer fehlschlagen")
+    @DisplayName("Login should return 401 with non-existent user")
     void login_WithNonExistentUser_ShouldFail() throws Exception {
-        mockMvc.perform(formLogin("/perform_login")
-                .user("username", "nonexistent")
-                .password("password", "password"))
-                .andExpect(unauthenticated())
-                .andExpect(redirectedUrlPattern("/**/login?error*"));
-    }
-
-    @Test
-    @DisplayName("Zugriff auf geschützte Ressource ohne Authentifizierung sollte zur Login-Seite umleiten")
-    void accessProtectedResource_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
-        mockMvc.perform(get("/admin/users"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
-    }
-
-    @Test
-    @WithMockUser(username = "testparent", roles = "PARENT")
-    @DisplayName("Zugriff auf Dashboard mit Authentifizierung sollte erfolgreich sein")
-    void accessDashboard_WithAuthentication_ShouldSucceed() throws Exception {
-        mockMvc.perform(get("/dashboard"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/parent/dashboard"));
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"nonexistent\",\"password\":\"password\"}"))
+                .andExpect(status().isUnauthorized());
     }
 }

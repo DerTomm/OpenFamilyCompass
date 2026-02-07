@@ -33,12 +33,6 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
 
-  thymeleaf:
-    cache: false
-    prefix: classpath:/templates/
-    suffix: .html
-    mode: HTML
-
   messages:
     basename: messages
     encoding: UTF-8
@@ -56,16 +50,26 @@ spring:
       # The application creates a proper admin user (see app.admin below)
       name: admin
       password: admin # ⚠️ FOR DEVELOPMENT ONLY!
-    oauth2:
-      client:
-        # ⚠️ SECURITY WARNING: Change this secret in production!
-        # Use environment variable: SPRING_SECURITY_OAUTH2_CLIENT_SECRET=your_secure_secret
-        secret: change-me-in-production # ⚠️ CHANGE IN PRODUCTION!
 
 server:
   port: 8080
   error:
     include-message: always
+
+# Spring Boot Actuator - Health checks and monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized # Show details only for authenticated users
+      show-components: when-authorized
+  health:
+    defaults:
+      enabled: true
 
 logging:
   level:
@@ -76,15 +80,6 @@ logging:
 app:
   avatars:
     upload-dir: uploads/avatars
-    predefined:
-      - cat.png
-      - dog.png
-      - bear.png
-      - lion.png
-      - elephant.png
-      - giraffe.png
-      - panda.png
-      - unicorn.png
   admin:
     # ⚠️ SECURITY WARNING: These are default credentials for first-time setup only!
     # IMMEDIATELY change the admin password after first login in production!
@@ -95,14 +90,11 @@ app:
 # Firebase Cloud Messaging Configuration
 # Project ID is read from firebase-service-account.json at runtime
 
-# Swagger UI OAuth2 Configuration
+# Swagger UI Configuration (JWT)
 springdoc:
+  api-docs:
+    path: /v3/api-docs
   swagger-ui:
-    oauth:
-      client-id: swagger-ui
-      use-pkce-with-authorization-code-grant: true
-      scopes:
-        - openid
-        - profile
-        - read
-        - write
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+

@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  Image,
   Modal,
   TextInput as RNTextInput,
   StyleSheet,
@@ -22,6 +23,10 @@ export const LoginScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showServerDialog, setShowServerDialog] = useState(false);
   const [serverUrl, setServerUrl] = useState(API_CONFIG.baseUrl);
+
+  // Login Form State
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     // Lade die gespeicherte Server-URL beim Start
@@ -44,7 +49,7 @@ export const LoginScreen: React.FC = () => {
     try {
       // Validiere die URL
       if (!serverUrl || !serverUrl.startsWith('http')) {
-        Alert.alert(t('common.error'), 'Bitte gib eine gültige URL ein (z.B. http://localhost:8080)');
+        Alert.alert(t('common.error'), t('login.server.url.invalid'));
         return;
       }
 
@@ -55,21 +60,26 @@ export const LoginScreen: React.FC = () => {
       API_CONFIG.baseUrl = cleanUrl;
 
       setShowServerDialog(false);
-      Alert.alert(t('common.success'), 'Server-URL wurde gespeichert');
+      Alert.alert(t('common.success'), t('login.server.save.success'));
     } catch (err) {
       console.error('Error saving server URL:', err);
-      Alert.alert(t('common.error'), 'Fehler beim Speichern der Server-URL');
+      Alert.alert(t('common.error'), t('login.server.save.error'));
     }
   };
 
   const handleLogin = async () => {
+    if (!username || !password) {
+      setError(t('login.enter_credentials'));
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      await login();
+      await login(username, password);
     } catch (err) {
-      setError(t('login.error.config'));
+      setError(t('login.error.credentials'));
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
@@ -82,26 +92,17 @@ export const LoginScreen: React.FC = () => {
         {/* Logo Section */}
         <View style={styles.logoContainer}>
           <Surface style={[styles.logoCircle, { backgroundColor: theme.colors.primary + '20' }]} elevation={2}>
-            <MaterialCommunityIcons
-              name="compass"
-              size={80}
-              color={theme.colors.primary}
+            <Image 
+              source={require('../../../assets/icon.png')} 
+              style={{ width: 100, height: 100 }} 
+              resizeMode="contain" 
             />
           </Surface>
 
           <Text variant="displaySmall" style={[styles.title, { color: theme.colors.onBackground }]}>
-            OpenFamily
-          </Text>
-          <Text variant="displaySmall" style={[styles.titleAccent, { color: theme.colors.primary }]}>
-            Compass
+            {t('app.name')}
           </Text>
 
-          <Text
-            variant="bodyLarge"
-            style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}
-          >
-            {t('login.app.subtitle')}
-          </Text>
         </View>
 
         {/* Error Message */}
@@ -122,12 +123,53 @@ export const LoginScreen: React.FC = () => {
           </Surface>
         )}
 
+        {/* Username Input */}
+        <View style={styles.inputContainer}>
+          <Text variant="labelMedium" style={{ marginBottom: 4, color: theme.colors.onSurfaceVariant }}>
+            {t('login.username')}
+          </Text>
+          <RNTextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.surfaceVariant,
+                color: theme.colors.onSurface,
+                borderColor: theme.colors.outline,
+              }
+            ]}
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <Text variant="labelMedium" style={{ marginBottom: 4, color: theme.colors.onSurfaceVariant }}>
+            {t('login.password')}
+          </Text>
+          <RNTextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.surfaceVariant,
+                color: theme.colors.onSurface,
+                borderColor: theme.colors.outline,
+              }
+            ]}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+        </View>
+
         {/* Login Button */}
         <Button
           mode="contained"
           onPress={handleLogin}
           loading={isLoading}
-          disabled={isLoading}
+          disabled={isLoading || !username || !password}
           icon="login"
           style={styles.loginButton}
         >
@@ -179,12 +221,12 @@ export const LoginScreen: React.FC = () => {
             </View>
 
             <Text variant="bodyMedium" style={[styles.modalDescription, { color: theme.colors.onSurfaceVariant }]}>
-              Gib die URL deines OpenFamilyCompass Backend-Servers ein:
+              {t('login.server.url.description')}
             </Text>
 
             <View style={styles.inputContainer}>
               <Text variant="labelMedium" style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant }]}>
-                Server-URL
+                {t('login.server.url.label')}
               </Text>
               <RNTextInput
                 style={[
@@ -197,14 +239,14 @@ export const LoginScreen: React.FC = () => {
                 ]}
                 value={serverUrl}
                 onChangeText={setServerUrl}
-                placeholder="http://localhost:8080"
+                placeholder={t('login.server.url.placeholder')}
                 placeholderTextColor={theme.colors.onSurfaceVariant}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
               />
               <Text variant="bodySmall" style={[styles.inputHint, { color: theme.colors.onSurfaceVariant }]}>
-                Beispiel: http://192.168.1.100:8080
+                {t('login.server.url.hint')}
               </Text>
             </View>
 
@@ -282,7 +324,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   loginButton: {
-    width: '100%',
+    width: 200,
+    alignSelf: 'center',
     marginBottom: 8,
   },
   configButton: {
@@ -348,3 +391,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+

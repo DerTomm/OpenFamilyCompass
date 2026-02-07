@@ -41,6 +41,14 @@ export const en = {
     'login.password': 'Password',
     'login.username': 'Username',
     'login.subtitle': 'Log in with your username and password',
+    'login.enter_credentials': 'Please enter username and password',
+    'login.server.url.label': 'Server URL',
+    'login.server.url.description': 'Enter the URL of your OpenFamilyCompass backend server:',
+    'login.server.url.hint': 'Example: http://192.168.1.100:8080',
+    'login.server.url.placeholder': 'http://localhost:8080',
+    'login.server.url.invalid': 'Please enter a valid URL (e.g., http://localhost:8080)',
+    'login.server.save.success': 'Server URL saved',
+    'login.server.save.error': 'Error saving server URL',
 
     // Dashboard - Parent
     'dashboard.title': 'Dashboard',

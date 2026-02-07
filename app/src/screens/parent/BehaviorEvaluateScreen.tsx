@@ -317,8 +317,8 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
     }
   };
 
-  const weeklyTotal = evaluations?.reduce((sum, eval) => sum + eval.currentPoints, 0) || 0;
-  const existingEval = selectedBehavior
+  const weeklyTotal = evaluations?.reduce((sum, item) => sum + item.currentPoints, 0) || 0;
+  const existingEvaluation = selectedBehavior
     ? evaluations?.find((e) => e.behavior.id === selectedBehavior.id)
     : null;
 
@@ -425,7 +425,7 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
       <EvaluationModal
         visible={showEvalModal}
         behavior={selectedBehavior}
-        existingEvaluation={existingEval || null}
+        existingEvaluation={existingEvaluation || null}
         childId={childId}
         onClose={() => {
           setShowEvalModal(false);

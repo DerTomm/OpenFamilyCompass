@@ -13,11 +13,7 @@ app/node_modules/
 app/.expo/
 app/dist/
 app/web-build/
-app/*.jks
-app/*.p8
-app/*.p12
 app/*.mobileprovision
-app/.env.local
 
 ### Security & Secrets ###
 .env
@@ -26,6 +22,10 @@ app/.env.local
 keystore.properties
 local.properties
 *.keystore
+*.jks
+*.p8
+*.p12
+*.pfx
 
 ### STS ###
 .apt_generated

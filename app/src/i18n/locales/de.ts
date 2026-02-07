@@ -41,6 +41,20 @@ export const de = {
     'login.password': 'Passwort',
     'login.username': 'Benutzername',
     'login.subtitle': 'Melde dich mit deinem Namen und Passwort an',
+    'login.enter_credentials': 'Bitte Benutzername und Passwort eingeben',
+    'login.server.url.label': 'Server-URL',
+    'login.server.url.description': 'Gib die URL deines OpenFamilyCompass Backend-Servers ein:',
+    'login.server.url.hint': 'Beispiel: http://192.168.1.100:8080',
+    'login.server.url.placeholder': 'http://localhost:8080',
+    'login.server.url.invalid': 'Bitte gib eine gültige URL ein (z.B. http://localhost:8080)',
+    'login.server.save.success': 'Server-URL wurde gespeichert',
+    'login.server.save.error': 'Fehler beim Speichern der Server-URL',
+    'login.loading': 'Anmeldung läuft...',
+    'login.server.settings': 'Server-Einstellungen',
+    'login.footer': 'Open Source Familienmanagement',
+    'login.error.config': 'Login fehlgeschlagen. Bitte prüfe deine Server-Konfiguration.',
+    'login.error.credentials': 'Benutzername oder Passwort falsch',
+    'login.app.subtitle': 'Gemeinsam Familie organisieren und Kinder motivieren',
 
     // Dashboard - Parent
     'dashboard.title': 'Dashboard',
@@ -228,13 +242,6 @@ export const de = {
     'empty.no_activities.desc': 'Hier erscheinen die neuesten Aktivitäten deiner Familie',
     'empty.no_tasks': 'Keine Aufgaben',
     'empty.no_tasks.desc': 'Du hast heute noch keine Aufgaben zu erledigen',
-
-    // Login Screen
-    'login.app.subtitle': 'Gemeinsam Familie organisieren und Kinder motivieren',
-    'login.loading': 'Anmeldung läuft...',
-    'login.server.settings': 'Server-Einstellungen',
-    'login.footer': 'Open Source Familienmanagement',
-    'login.error.config': 'Login fehlgeschlagen. Bitte prüfe deine Server-Konfiguration.',
 
     // Points Progress
     'points.progress.next_reward': 'Noch {0} Punkte bis zur nächsten Belohnung',

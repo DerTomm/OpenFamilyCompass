@@ -3,6 +3,8 @@ package org.openfamilycompass.integration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -30,26 +32,21 @@ public class TestSecurityConfig {
 
         @Bean
         @Primary
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
+
+        @Bean
+        @Primary
         public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+                // Simplified security chain for tests - allows all requests or basic auth
+                // This replaces the complex OAuth2/JWT setup for integration tests
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
-                                                                "/favicon.ico")
-                                                .permitAll()
-                                                .anyRequest().authenticated())
-                                .formLogin(form -> form
-                                                .loginPage("/login")
-                                                .defaultSuccessUrl("/dashboard", true)
-                                                .failureUrl("/login?error=true")
-                                                .permitAll())
-                                .logout(logout -> logout
-                                                .logoutUrl("/logout")
-                                                .logoutSuccessUrl("/login?logout=true")
-                                                .permitAll())
+                                                .anyRequest().permitAll()) // Allow everything in tests by default unless specific tests override
                                 .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                                .sessionFixation().migrateSession());
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
                 return http.build();
         }

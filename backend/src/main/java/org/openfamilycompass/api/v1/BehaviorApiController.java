@@ -184,7 +184,7 @@ public class BehaviorApiController {
             @Valid @RequestBody BehaviorDto.SaveEvaluationRequest request) {
 
         User currentUser = getCurrentUser(jwt);
-        Behavior behavior = behaviorService.findById(request.getBehaviorId())
+        behaviorService.findById(request.getBehaviorId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Behavior not found"));
         User user = userService.findById(request.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
