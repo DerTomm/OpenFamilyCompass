@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { API_CONFIG, getApiBaseUrl } from './src/api/config';
+import { API_CONFIG, getApiBaseUrl, secureStorage, STORAGE_KEYS } from './src/api/config';
 import { I18nProvider } from './src/i18n/I18nContext';
 import './src/i18n/config'; // Initialize i18n
 import { AppNavigator } from './src/navigation/AppNavigator';
@@ -22,6 +22,9 @@ const queryClient = new QueryClient({
 });
 
 // Handle OAuth callback on web
+// On web, the OAuth redirect causes a page reload, so we need to handle the callback here.
+// On native platforms, WebBrowser.openAuthSessionAsync waits synchronously and returns the callback URL,
+// so the callback is handled directly in useAuth.ts.
 function useOAuthCallback() {
   const { setTokens } = useAuthStore();
 
@@ -34,8 +37,8 @@ function useOAuthCallback() {
 
       if (!code) return;
 
-      const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
-      const redirectUri = sessionStorage.getItem('pkce_redirect_uri');
+      const codeVerifier = await secureStorage.getItem(STORAGE_KEYS.PKCE_CODE_VERIFIER);
+      const redirectUri = await secureStorage.getItem(STORAGE_KEYS.PKCE_REDIRECT_URI);
 
       if (!codeVerifier || !redirectUri) {
         console.error('Missing PKCE data');
@@ -68,8 +71,8 @@ function useOAuthCallback() {
         await setTokens(tokens.access_token, tokens.refresh_token, tokens.expires_in);
 
         // Clear PKCE data and URL params
-        sessionStorage.removeItem('pkce_code_verifier');
-        sessionStorage.removeItem('pkce_redirect_uri');
+        await secureStorage.removeItem(STORAGE_KEYS.PKCE_CODE_VERIFIER);
+        await secureStorage.removeItem(STORAGE_KEYS.PKCE_REDIRECT_URI);
         window.history.replaceState({}, '', window.location.pathname);
       } catch (error) {
         console.error('OAuth callback error:', error);

@@ -114,16 +114,22 @@ export const useAuth = () => {
       const baseUrl = await getApiBaseUrl();
 
       // Create auth request with PKCE
-      const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'openfamilycompass',
-        path: 'callback',
-      });
+      // For web, use the current origin without a path (matches backend registered redirect URIs)
+      // For native, use the custom scheme with callback path
+      const redirectUri = Platform.OS === 'web'
+        ? window.location.origin
+        : AuthSession.makeRedirectUri({
+            scheme: 'openfamilycompass',
+            path: 'callback',
+          });
 
       // Generate PKCE code verifier and challenge
       const codeVerifier = await generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-      // Store code verifier for token exchange
+      // Store PKCE data in secure storage
+      // Web: Persisted in localStorage for retrieval after redirect (App.tsx handles callback)
+      // Native: Stored in SecureStore, but we use the closure variable below since WebBrowser waits synchronously
       await secureStorage.setItem(STORAGE_KEYS.PKCE_CODE_VERIFIER, codeVerifier);
       await secureStorage.setItem(STORAGE_KEYS.PKCE_REDIRECT_URI, redirectUri);
 
@@ -133,7 +139,8 @@ export const useAuth = () => {
         `response_type=code&` +
         `scope=${encodeURIComponent(API_CONFIG.oauth.scopes.join(' '))}&` +
         `code_challenge=${codeChallenge}&` +
-        `code_challenge_method=S256`;
+        `code_challenge_method=S256&` +
+        `prompt=login`; // Force re-authentication after logout
 
       // Platform-specific navigation
       if (Platform.OS === 'web') {
