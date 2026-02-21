@@ -63,7 +63,7 @@ class AuthenticationIntegrationTest {
         
         // Note: The TokenService requires RSA keys. If they are generated at runtime, this should work.
         
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"username\":\"testparent\",\"password\":\"testpassword\"}"))
                 .andExpect(status().isOk())
@@ -75,7 +75,7 @@ class AuthenticationIntegrationTest {
     @Test
     @DisplayName("Login should return 401 with invalid password")
     void login_WithInvalidPassword_ShouldFail() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"username\":\"testparent\",\"password\":\"wrongpassword\"}"))
                 .andExpect(status().isUnauthorized());
@@ -84,7 +84,7 @@ class AuthenticationIntegrationTest {
     @Test
     @DisplayName("Login should return 401 with non-existent user")
     void login_WithNonExistentUser_ShouldFail() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"username\":\"nonexistent\",\"password\":\"password\"}"))
                 .andExpect(status().isUnauthorized());

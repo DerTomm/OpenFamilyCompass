@@ -342,7 +342,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ currentRoute, onNavigate })
           />
           <View style={styles.drawerUserInfo}>
             <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-              {user?.firstName} {user?.lastName}
+              {user?.firstName}
             </Text>
             <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
               {user?.username}

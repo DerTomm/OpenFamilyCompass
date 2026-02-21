@@ -25,7 +25,7 @@ i18n
         },
         lng: deviceLanguage, // Will be overridden by user preference if set
         fallbackLng: 'en',
-        compatibilityJSON: 'v3', // Important for React Native
+        compatibilityJSON: 'v4',
         interpolation: {
             escapeValue: false, // React already escapes
         },
