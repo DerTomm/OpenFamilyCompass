@@ -95,9 +95,9 @@ public class AuthApiController {
             // Create a dummy authentication to pass to generateToken (which likely pulls name/authorities)
              // We can use UsernamePasswordAuthenticationToken or similar
             Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user.getUsername(), 
-                null, 
-                java.util.Collections.emptyList() // Or fetch actual roles if needed for the token claims
+                user.getUsername(),
+                null,
+                user.getAuthorities()
             );
             
             String newToken = tokenService.generateToken(authentication);

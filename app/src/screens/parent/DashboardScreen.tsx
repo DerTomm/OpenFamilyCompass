@@ -1,17 +1,19 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Avatar, Divider, List, Text, useTheme } from 'react-native-paper';
+import { ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Avatar, Badge, Divider, List, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card, EmptyState, QuickActionCard } from '../../components/ui';
-import { useChildren } from '../../hooks/useApi';
+import { Card, EmptyState } from '../../components/ui';
+import { useChildren, usePointTransactions, usePendingTasks, usePendingRedemptions } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
+import { PointTransactionResponse } from '../../types/api';
 import { useAuthStore } from '../../store/authStore';
 import { spacing } from '../../theme/theme';
 import { useNavigation } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainTabParamList } from '../../navigation/types';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ActivitiesStackParamList } from '../../navigation/types';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-type NavigationProp = BottomTabNavigationProp<MainTabParamList>;
+type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
 
 export const ParentDashboardScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
@@ -19,6 +21,27 @@ export const ParentDashboardScreen: React.FC = () => {
   const { t } = useI18n();
   const navigation = useNavigation<NavigationProp>();
   const { data: children, isLoading: isChildrenLoading, error: childrenError } = useChildren();
+  const { data: transactionsData } = usePointTransactions({ limit: 5 });
+  const transactions = transactionsData?.transactions || [];
+  
+  const { data: pendingTasks } = usePendingTasks();
+  const { data: pendingRedemptions } = usePendingRedemptions();
+
+  // Count pending items per child
+  const getChildPendingCounts = (childId: number) => {
+    const taskCount = pendingTasks?.filter(task => task.assignedUser.id === childId).length || 0;
+    const redemptionCount = pendingRedemptions?.filter(redemption => redemption.user.id === childId).length || 0;
+    return { tasks: taskCount, redemptions: redemptionCount };
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const formatPoints = (points: number) => {
+    return points > 0 ? `+${points}` : String(points);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -45,39 +68,6 @@ export const ParentDashboardScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
-            {t('dashboard.quick.actions')}
-          </Text>
-
-          <QuickActionCard
-            title={t('dashboard.approve.tasks')}
-            icon="clipboard-check"
-            count={3}
-            color={theme.colors.tertiary}
-            onPress={() => navigation.navigate('Tasks', { screen: 'PendingApproval' })}
-          />
-
-          <QuickActionCard
-            title={t('dashboard.approve.rewards')}
-            icon="gift"
-            count={1}
-            color={theme.colors.secondary}
-            onPress={() => navigation.navigate('Shop', { screen: 'PendingRedemptions' })}
-          />
-
-          <QuickActionCard
-            title={t('dashboard.evaluate.behavior')}
-            icon="star-circle"
-            count={2}
-            color={theme.colors.primary}
-            onPress={() => navigation.navigate('Behavior', { screen: 'BehaviorManage' })}
-          />
-        </View>
-
-        <Divider style={styles.divider} />
-
         {/* Children Overview */}
         <View style={styles.section}>
           <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
@@ -97,23 +87,70 @@ export const ParentDashboardScreen: React.FC = () => {
               </View>
             ) : children && children.length > 0 ? (
               <View>
-                {children.map((child, idx) => (
-                  <React.Fragment key={child.id}>
-                    <List.Item
-                      title={child.firstName}
-                      description={`${child.totalPoints} ${t('points.label')}`}
-                      left={() => (
-                        <Avatar.Text
-                          size={40}
-                          label={(child.firstName?.charAt(0) || '?').toUpperCase()}
-                          style={{ backgroundColor: theme.colors.primaryContainer }}
-                          color={theme.colors.onPrimaryContainer}
+                {children.map((child, idx) => {
+                  const pendingCounts = getChildPendingCounts(child.id);
+                  const totalPending = pendingCounts.tasks + pendingCounts.redemptions;
+                  
+                  return (
+                    <React.Fragment key={child.id}>
+                      <TouchableOpacity onPress={() => navigation.navigate('ChildDetail', { childId: child.id })}>
+                        <List.Item
+                          title={child.firstName}
+                          description={`${child.totalPoints} ${t('points.label')}`}
+                          left={() => (
+                            <Avatar.Text
+                              size={40}
+                              label={(child.firstName?.charAt(0) || '?').toUpperCase()}
+                              style={{ backgroundColor: theme.colors.primaryContainer }}
+                              color={theme.colors.onPrimaryContainer}
+                            />
+                          )}
+                          right={() => (
+                            <View style={styles.badgeContainer}>
+                              {pendingCounts.tasks > 0 && (
+                                <View style={styles.badgeWrapper}>
+                                  <MaterialCommunityIcons
+                                    name="clipboard-check"
+                                    size={20}
+                                    color={theme.colors.tertiary}
+                                  />
+                                  <Badge
+                                    size={18}
+                                    style={[styles.badge, { backgroundColor: theme.colors.tertiary }]}
+                                  >
+                                    {pendingCounts.tasks}
+                                  </Badge>
+                                </View>
+                              )}
+                              {pendingCounts.redemptions > 0 && (
+                                <View style={styles.badgeWrapper}>
+                                  <MaterialCommunityIcons
+                                    name="gift"
+                                    size={20}
+                                    color={theme.colors.secondary}
+                                  />
+                                  <Badge
+                                    size={18}
+                                    style={[styles.badge, { backgroundColor: theme.colors.secondary }]}
+                                  >
+                                    {pendingCounts.redemptions}
+                                  </Badge>
+                                </View>
+                              )}
+                              <MaterialCommunityIcons
+                                name="star-circle"
+                                size={24}
+                                color={theme.colors.primary}
+                                style={{ marginLeft: spacing.sm }}
+                              />
+                            </View>
+                          )}
                         />
-                      )}
-                    />
-                    {idx < children.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
+                      </TouchableOpacity>
+                      {idx < children.length - 1 && <Divider />}
+                    </React.Fragment>
+                  );
+                })}
               </View>
             ) : (
               <EmptyState
@@ -132,11 +169,40 @@ export const ParentDashboardScreen: React.FC = () => {
           </Text>
 
           <Card elevation={1}>
-            <EmptyState
-              icon="history"
-              title="Keine Aktivitäten"
-              message="Hier erscheinen die neuesten Aktivitäten deiner Familie"
-            />
+            {transactions.length > 0 ? (
+              <View style={{ padding: 12 }}>
+                {transactions.map((transaction, index) => (
+                  <View key={transaction.id}>
+                    <View style={styles.transactionRow}>
+                      <View style={styles.transactionInfo}>
+                        <Text variant="bodyMedium" style={{ fontWeight: '500' }}>
+                          {transaction.description || t(`point.transaction.type.${transaction.type}`)}
+                        </Text>
+                        <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                          {formatDate(transaction.createdAt)}
+                        </Text>
+                      </View>
+                      <Text
+                        variant="bodyLarge"
+                        style={{
+                          fontWeight: '600',
+                          color: transaction.points > 0 ? '#4CAF50' : transaction.points < 0 ? '#F44336' : theme.colors.onSurface,
+                        }}
+                      >
+                        {formatPoints(transaction.points)}
+                      </Text>
+                    </View>
+                    {index < transactions.length - 1 && <Divider style={{ marginVertical: 8 }} />}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <EmptyState
+                icon="history"
+                title="Keine Aktivitäten"
+                message="Hier erscheinen die neuesten Aktivitäten deiner Familie"
+              />
+            )}
           </Card>
         </View>
       </ScrollView>
@@ -177,5 +243,28 @@ const styles = StyleSheet.create({
   },
   childrenError: {
     paddingVertical: spacing.md,
+  },
+  transactionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  transactionInfo: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  badgeWrapper: {
+    position: 'relative',
+    marginRight: spacing.sm,
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
   },
 });

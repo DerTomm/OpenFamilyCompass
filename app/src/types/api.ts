@@ -155,7 +155,8 @@ export interface BehaviorResponse {
   id: number;
   title: string;
   guideline: string;
-  points: number;
+  plusPoints: number;
+  minusPoints: number;
   user?: ChildResponse;
   rank: number;
   active: boolean;

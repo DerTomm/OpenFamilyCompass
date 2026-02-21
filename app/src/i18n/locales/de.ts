@@ -25,6 +25,10 @@ export const de = {
     'admin.users.status': 'Status',
 
     // Navigation
+    'nav.activities': 'Aktivitäten',
+    'nav.manage': 'Verwalten',
+    'nav.notifications': 'Benachrichtigungen',
+    'nav.profile': 'Profil',
     'nav.behavior': 'Verhalten',
     'nav.child.dashboard': 'Kinder Dashboard',
     'nav.logout': 'Abmelden',
@@ -33,6 +37,9 @@ export const de = {
     'nav.rewards': 'Belohnungen',
     'nav.settings': 'Einstellungen',
     'nav.tasks': 'Aufgaben',
+
+    // Manage
+    'manage.subtitle': 'Stammdaten für Aufgaben, Belohnungen und Verhaltensziele verwalten',
 
     // Login
     'login.button': 'Anmelden',
@@ -74,6 +81,7 @@ export const de = {
     'child.dashboard.title': 'Mein Dashboard',
     'child.dashboard.welcome': 'Hallo,',
     'child.dashboard.points.badge': 'Deine Punkte',
+    'child.detail': 'Kind-Details',
     'child.dashboard.tasks.available': 'Verfügbare Aufgaben',
     'child.dashboard.shop.title': 'Belohnungs-Shop',
     'child.dashboard.shop.subtitle': 'Diese Belohnungen kannst du einlösen',
@@ -330,8 +338,12 @@ export const de = {
     'behavior.title.hint': 'Kurzer, prägnanter Titel',
     'behavior.guidelines.label': 'Leitsätze',
     'behavior.guidelines.hint': 'Ein Leitmotiv oder Richtlinie',
-    'behavior.points.label': 'Punkte',
-    'behavior.points.hint': 'Wie viele Punkte pro Woche',
+    'behavior.points.label': 'Pluspunkte',
+    'behavior.points.hint': 'Max. Pluspunkte pro Woche',
+    'behavior.plusPoints.label': 'Pluspunkte',
+    'behavior.plusPoints.hint': 'Max. Pluspunkte pro Woche',
+    'behavior.minusPoints.label': 'Minuspunkte',
+    'behavior.minusPoints.hint': 'Max. Minuspunkte pro Woche',
     'behavior.points': 'Punkte',
     'behavior.child.label': 'Kind (optional)',
     'behavior.child.specific': 'Kind',
@@ -352,6 +364,12 @@ export const de = {
     'behavior.evaluate': 'Verhalten bewerten',
     'behavior.evaluate.rule': 'Bewerten',
     'behavior.save.error': 'Fehler beim Speichern',
+    'behavior.draft.saved': 'Entwurf gespeichert',
+    'behavior.draft.unsaved': 'Es gibt einen Entwurf. Vor dem Gutschreiben speichern?',
+    'behavior.draft.save_and_commit': 'Speichern & gutschreiben',
+    'behavior.draft.commit_anyway': 'Trotzdem gutschreiben',
+    'behavior.draft.discard': 'Entwurf verwerfen',
+    'behavior.draft.discard.confirm': 'Möchtest du den Entwurf wirklich verwerfen? Alle Änderungen gehen verloren.',
     'behavior.finalize': 'Punkte gutschreiben',
     'behavior.finalize.desc': 'Schreibe die Punkte dieser Woche {0} gut',
     'behavior.finalize.button': 'Punkte gutschreiben',

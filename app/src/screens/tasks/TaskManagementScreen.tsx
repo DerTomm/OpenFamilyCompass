@@ -15,9 +15,9 @@ import { useTaskDefinitions, useChildren, useDeleteTaskDefinition } from '../../
 import { useI18n } from '../../i18n/I18nContext';
 import { TaskDefinitionResponse } from '../../types/api';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { TasksStackParamList } from '../../navigation/types';
+import { ManageStackParamList } from '../../navigation/types';
 
-type NavigationProp = NativeStackNavigationProp<TasksStackParamList>;
+type NavigationProp = NativeStackNavigationProp<ManageStackParamList>;
 
 export const TaskManagementScreen: React.FC = () => {
   const { t } = useI18n();

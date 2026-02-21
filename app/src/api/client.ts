@@ -58,8 +58,10 @@ const createApiClient = (): AxiosInstance => {
     async (error: AxiosError<ApiErrorResponse>) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-      // Check if this is an authentication error
-      if (error.response?.status === 401 && !originalRequest._retry) {
+      // Check if this is an authentication/authorization error
+      // NOTE: 403 can happen when the access token is valid but missing role claims (e.g. after a refresh);
+      // in that case a refresh can fix the token and the retry will succeed.
+      if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
         if (isRefreshing) {
           return new Promise(function(resolve, reject) {
             failedQueue.push({resolve, reject});

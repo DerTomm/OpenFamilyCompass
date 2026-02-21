@@ -1,9 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Appbar, Avatar, Divider, Drawer, Menu, Modal, Portal, Text, useTheme } from 'react-native-paper';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Appbar, Avatar, Menu, Text, useTheme } from 'react-native-paper';
 import { useI18n } from '../i18n/I18nContext';
 import { selectIsAdmin, selectIsChild, useAuthStore } from '../store/authStore';
 
@@ -13,6 +14,7 @@ import { BehaviorListScreen } from '../screens/child/BehaviorListScreen';
 import { BehaviorOverviewScreen } from '../screens/parent/BehaviorOverviewScreen';
 import { BehaviorManageScreen } from '../screens/parent/BehaviorManageScreen';
 import { BehaviorEvaluateScreen } from '../screens/parent/BehaviorEvaluateScreen';
+import { ChildDetailScreen } from '../screens/parent/ChildDetailScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { ChildDashboardScreen } from '../screens/child/DashboardScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
@@ -26,235 +28,282 @@ import { PendingApprovalScreen } from '../screens/tasks/PendingApprovalScreen';
 import { TaskListScreen } from '../screens/tasks/TaskListScreen';
 import { TaskManagementScreen } from '../screens/tasks/TaskManagementScreen';
 import { TaskDefinitionEditScreen } from '../screens/tasks/TaskDefinitionEditScreen';
+import { ManageHomeScreen } from '../screens/manage/ManageHomeScreen';
 
 // Types
-import { RootStackParamList } from './types';
+import {
+  ActivitiesStackParamList,
+  MainTabParamList,
+  ManageStackParamList,
+  ProfileStackParamList,
+  RootStackParamList,
+} from './types';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
-const MainStack = createNativeStackNavigator();
-const TasksStack = createNativeStackNavigator();
-const ShopStack = createNativeStackNavigator();
-const ProfileStack = createNativeStackNavigator();
-const BehaviorStack = createNativeStackNavigator();
-const AdminStack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+const ActivitiesStack = createNativeStackNavigator<ActivitiesStackParamList>();
+const ManageStack = createNativeStackNavigator<ManageStackParamList>();
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
+const NotificationsStack = createNativeStackNavigator();
 
-// Behavior Stack Navigator
-const BehaviorStackNavigator: React.FC = () => {
-  const isChild = useAuthStore(selectIsChild);
+const HeaderUserMenu: React.FC = () => {
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const { t } = useI18n();
   const theme = useTheme();
+  const [visible, setVisible] = useState(false);
 
-  // Child sees their behavior list
-  if (isChild) {
-    return (
-      <BehaviorStack.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: theme.colors.surface },
-          headerTintColor: theme.colors.onSurface,
-        }}
-      >
-        <BehaviorStack.Screen
-          name="BehaviorList"
-          component={BehaviorListScreen}
-          options={{
-            title: 'Meine Verhaltensziele',
-            headerLeft: () => null,
-          }}
-        />
-      </BehaviorStack.Navigator>
-    );
-  }
-
-  // Parent sees overview/manage
   return (
-    <BehaviorStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.colors.surface,
-        },
-        headerTintColor: theme.colors.onSurface,
-      }}
+    <Menu
+      visible={visible}
+      onDismiss={() => setVisible(false)}
+      anchor={
+        <TouchableOpacity onPress={() => setVisible(true)} style={{ paddingRight: 12 }}>
+          <Avatar.Text
+            size={32}
+            label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
+            style={{ backgroundColor: theme.colors.primary }}
+          />
+        </TouchableOpacity>
+      }
+      anchorPosition="bottom"
     >
-      <BehaviorStack.Screen
-        name="BehaviorOverview"
-        component={BehaviorOverviewScreen}
-        options={{
-          title: 'Verhalten bewerten',
-          headerLeft: () => null,
+      <Menu.Item
+        onPress={() => {
+          setVisible(false);
+          logout();
         }}
+        leadingIcon="logout"
+        title={t('nav.logout')}
       />
-      <BehaviorStack.Screen
-        name="BehaviorEvaluate"
-        component={BehaviorEvaluateScreen}
-        options={{ title: 'Bewertung' }}
-      />
-      <BehaviorStack.Screen
-        name="BehaviorManage"
-        component={BehaviorManageScreen}
-        options={{ title: 'Regeln verwalten' }}
-      />
-    </BehaviorStack.Navigator>
+    </Menu>
   );
 };
 
-// Tasks Stack Navigator
-const TasksStackNavigator: React.FC = () => {
-  const isChild = useAuthStore(selectIsChild);
+const HeaderNavButtons: React.FC = () => {
   const theme = useTheme();
-
-  // Children see TaskList, Parents see TaskManagement
-  if (isChild) {
-    return (
-      <TasksStack.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: theme.colors.surface },
-          headerTintColor: theme.colors.onSurface,
-        }}
-      >
-        <TasksStack.Screen
-          name="TaskList"
-          component={TaskListScreen}
-          options={{
-            title: 'Meine Aufgaben',
-            headerLeft: () => null,
-          }}
-        />
-      </TasksStack.Navigator>
-    );
-  }
-
-  // Parent view: Management, Edit, and Approval
-  return (
-    <TasksStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.colors.surface,
-        },
-        headerTintColor: theme.colors.onSurface,
-      }}
-    >
-      <TasksStack.Screen
-        name="TaskManagement"
-        component={TaskManagementScreen}
-        options={{
-          title: 'Aufgabenverwaltung',
-          headerLeft: () => null,
-        }}
-      />
-      <TasksStack.Screen
-        name="TaskEdit"
-        component={TaskDefinitionEditScreen}
-        options={{ title: 'Aufgabe bearbeiten' }}
-      />
-      <TasksStack.Screen
-        name="PendingApproval"
-        component={PendingApprovalScreen}
-        options={{ title: 'Freigabe ausstehend' }}
-      />
-      <TasksStack.Screen
-        name="TaskList"
-        component={TaskListScreen}
-        options={{ title: 'Aufgabeninstanzen' }}
-      />
-    </TasksStack.Navigator>
-  );
-};
-
-// Shop Stack Navigator
-const ShopStackNavigator: React.FC = () => {
+  const { t } = useI18n();
   const isChild = useAuthStore(selectIsChild);
-  const theme = useTheme();
+  const navigation = useNavigation();
+  const tabNavigation = (navigation as any).getParent?.();
+  const tabState = tabNavigation?.getState();
+  const activeTab = tabState?.routeNames?.[tabState.index];
+
+  const colorFor = (tabName: string) =>
+    activeTab === tabName ? theme.colors.primary : theme.colors.onSurfaceVariant;
+
+  const navigateTab = (tabName: string) => {
+    tabNavigation?.navigate(tabName);
+  };
 
   return (
-    <ShopStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.colors.surface,
-        },
-        headerTintColor: theme.colors.onSurface,
-      }}
-    >
-      <ShopStack.Screen
-        name="RewardList"
-        component={RewardListScreen}
-        options={{
-          title: 'Belohnungs-Shop',
-          headerLeft: () => null,
-        }}
+    <View style={styles.headerActions}>
+      <Appbar.Action
+        icon="home"
+        onPress={() => navigateTab('Activities')}
+        color={colorFor('Activities')}
+        accessibilityLabel={t('nav.activities')}
       />
+
       {!isChild && (
+        <Appbar.Action
+          icon="cog"
+          onPress={() => navigateTab('Manage')}
+          color={colorFor('Manage')}
+          accessibilityLabel={t('nav.manage')}
+        />
+      )}
+
+      <Appbar.Action
+        icon="bell"
+        onPress={() => navigateTab('Notifications')}
+        color={colorFor('Notifications')}
+        accessibilityLabel={t('nav.notifications')}
+      />
+
+      <Appbar.Action
+        icon="account"
+        onPress={() => navigateTab('Profile')}
+        color={colorFor('Profile')}
+        accessibilityLabel={t('nav.profile')}
+      />
+
+      <HeaderUserMenu />
+    </View>
+  );
+};
+
+const createStackScreenOptions = (theme: any) => ({
+  headerStyle: { backgroundColor: theme.colors.surface },
+  headerTintColor: theme.colors.onSurface,
+  headerTitleStyle: { color: theme.colors.onSurface },
+  headerRight: () => <HeaderNavButtons />,
+});
+
+// Activities Stack (dynamic content)
+const ActivitiesStackNavigator: React.FC = () => {
+  const theme = useTheme();
+  const { t } = useI18n();
+  const isChild = useAuthStore(selectIsChild);
+
+  const HomeComponent = isChild ? ChildDashboardScreen : ParentDashboardScreen;
+
+  return (
+    <ActivitiesStack.Navigator screenOptions={createStackScreenOptions(theme)}>
+      <ActivitiesStack.Screen
+        name="ActivitiesHome"
+        component={HomeComponent}
+        options={{ title: t('nav.activities') }}
+      />
+
+      {/* Child dynamic content */}
+      {isChild && (
         <>
-          <ShopStack.Screen
-            name="PendingRedemptions"
-            component={PendingRedemptionsScreen}
-            options={{ title: 'Einlösungen ausstehend' }}
+          <ActivitiesStack.Screen
+            name="TaskList"
+            component={TaskListScreen}
+            options={{ title: t('tasks.my.title') }}
           />
-          <ShopStack.Screen
-            name="RewardCreate"
-            component={RewardEditScreen}
-            options={{ title: 'Belohnung erstellen' }}
+          <ActivitiesStack.Screen
+            name="RewardList"
+            component={RewardListScreen}
+            options={{ title: t('shop.title.page') }}
           />
-          <ShopStack.Screen
-            name="RewardEdit"
-            component={RewardEditScreen}
-            options={{ title: 'Belohnung bearbeiten' }}
+          <ActivitiesStack.Screen
+            name="ChildBehaviorList"
+            component={BehaviorListScreen}
+            options={{ title: t('child.behaviors.title') }}
           />
         </>
       )}
-    </ShopStack.Navigator>
+
+      {/* Parent dynamic content */}
+      {!isChild && (
+        <>
+          <ActivitiesStack.Screen
+            name="PendingApproval"
+            component={PendingApprovalScreen}
+            options={{ title: t('tasks.pending.title') }}
+          />
+          <ActivitiesStack.Screen
+            name="PendingRedemptions"
+            component={PendingRedemptionsScreen}
+            options={{ title: t('rewards.pending.title') }}
+          />
+          <ActivitiesStack.Screen
+            name="BehaviorOverview"
+            component={BehaviorOverviewScreen}
+            options={{ title: t('behavior.evaluate') }}
+          />
+          <ActivitiesStack.Screen
+            name="BehaviorEvaluate"
+            component={BehaviorEvaluateScreen}
+            options={{ title: t('behavior.evaluate') }}
+          />
+          <ActivitiesStack.Screen
+            name="ChildDetail"
+            component={ChildDetailScreen}
+            options={{ title: t('child.detail') }}
+          />
+        </>
+      )}
+    </ActivitiesStack.Navigator>
   );
 };
 
-// Profile Stack Navigator
-const ProfileStackNavigator: React.FC = () => {
+// Manage Stack (master data / configuration)
+const ManageStackNavigator: React.FC = () => {
   const theme = useTheme();
+  const { t } = useI18n();
+  const isAdmin = useAuthStore(selectIsAdmin);
 
   return (
-    <ProfileStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.colors.surface,
-        },
-        headerTintColor: theme.colors.onSurface,
-      }}
-    >
+    <ManageStack.Navigator screenOptions={createStackScreenOptions(theme)}>
+      <ManageStack.Screen
+        name="ManageHome"
+        component={ManageHomeScreen}
+        options={{ title: t('nav.manage') }}
+      />
+      <ManageStack.Screen
+        name="TaskManagement"
+        component={TaskManagementScreen}
+        options={{ title: t('tasks.title') }}
+      />
+      <ManageStack.Screen
+        name="TaskEdit"
+        component={TaskDefinitionEditScreen}
+        options={{ title: t('task.create.title') }}
+      />
+      <ManageStack.Screen
+        name="RewardList"
+        component={RewardListScreen}
+        options={{ title: t('rewards.title') }}
+      />
+      <ManageStack.Screen
+        name="RewardCreate"
+        component={RewardEditScreen}
+        options={{ title: t('reward.create.title') }}
+      />
+      <ManageStack.Screen
+        name="RewardEdit"
+        component={RewardEditScreen}
+        options={{ title: t('reward.create.title') }}
+      />
+      <ManageStack.Screen
+        name="BehaviorManage"
+        component={BehaviorManageScreen}
+        options={{ title: t('behavior.manage.title') }}
+      />
+      {isAdmin && (
+        <ManageStack.Screen
+          name="AdminUserList"
+          component={UserListScreen}
+          options={{ title: t('admin.user.management') }}
+        />
+      )}
+    </ManageStack.Navigator>
+  );
+};
+
+// Profile Stack
+const ProfileStackNavigator: React.FC = () => {
+  const theme = useTheme();
+  const { t } = useI18n();
+  return (
+    <ProfileStack.Navigator screenOptions={createStackScreenOptions(theme)}>
       <ProfileStack.Screen
         name="ProfileMain"
         component={ProfileScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <ProfileStack.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ title: 'Benachrichtigungen' }}
+        options={{ title: t('nav.profile') }}
       />
     </ProfileStack.Navigator>
   );
 };
 
-// Admin Stack Navigator
-const AdminStackNavigator: React.FC = () => {
+const NotificationsStackNavigator: React.FC = () => {
+  const theme = useTheme();
+  const { t } = useI18n();
+
+  return (
+    <NotificationsStack.Navigator screenOptions={createStackScreenOptions(theme)}>
+      <NotificationsStack.Screen
+        name="NotificationsHome"
+        component={NotificationsScreen}
+        options={{ title: t('nav.notifications') }}
+      />
+    </NotificationsStack.Navigator>
+  );
+};
+
+const VersionFooter: React.FC = () => {
   const theme = useTheme();
 
   return (
-    <AdminStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.colors.surface,
-        },
-        headerTintColor: theme.colors.onSurface,
-      }}
-    >
-      <AdminStack.Screen
-        name="UserList"
-        component={UserListScreen}
-        options={{
-          title: 'Benutzer',
-          headerLeft: () => null,
-        }}
-      />
-    </AdminStack.Navigator>
+    <View style={[styles.footer, { backgroundColor: theme.colors.surfaceVariant, borderTopColor: theme.colors.outlineVariant }]}>
+      <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+        Version 1.0.0
+      </Text>
+    </View>
   );
 };
 
@@ -267,321 +316,60 @@ const AuthNavigator: React.FC = () => {
   );
 };
 
-// Custom Header with Navigation
-interface CustomHeaderProps {
-  currentRoute: string;
-  onNavigate: (route: string) => void;
-}
-
-// Check if we're on a small screen (mobile)
-const useIsSmallScreen = () => {
-  const [isSmall, setIsSmall] = useState(Dimensions.get('window').width < 768);
-
-  useEffect(() => {
-    const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      setIsSmall(window.width < 768);
-    });
-    return () => subscription?.remove();
-  }, []);
-
-  return isSmall;
-};
-
-const CustomHeader: React.FC<CustomHeaderProps> = ({ currentRoute, onNavigate }) => {
+const MainTabsNavigator: React.FC = () => {
   const theme = useTheme();
   const { t } = useI18n();
   const isChild = useAuthStore(selectIsChild);
-  const isAdmin = useAuthStore(selectIsAdmin);
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const [userMenuVisible, setUserMenuVisible] = useState(false);
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const isSmallScreen = useIsSmallScreen();
-
-  const menuItems = [
-    { route: 'Dashboard', icon: 'home', label: t('nav.parent.dashboard'), show: true },
-    { route: 'Tasks', icon: 'clipboard-list', label: t('nav.tasks'), show: true },
-    { route: 'Shop', icon: 'gift', label: t('nav.rewards'), show: true },
-    { route: 'Notifications', icon: 'bell', label: 'Benachrichtigungen', show: true },
-    { route: 'Admin', icon: 'shield-account', label: 'Admin', show: isAdmin },
-  ];
-
-  const handleLogout = () => {
-    setUserMenuVisible(false);
-    setDrawerVisible(false);
-    logout();
-  };
-
-  const handleProfileClick = () => {
-    setUserMenuVisible(false);
-    setDrawerVisible(false);
-    onNavigate('Profile');
-  };
-
-  const handleNavigation = (route: string) => {
-    setDrawerVisible(false);
-    onNavigate(route);
-  };
-
-  // Mobile Drawer Navigation
-  const renderMobileDrawer = () => (
-    <Portal>
-      <Modal
-        visible={drawerVisible}
-        onDismiss={() => setDrawerVisible(false)}
-        contentContainerStyle={[
-          styles.drawerModal,
-          { backgroundColor: theme.colors.surface }
-        ]}
-      >
-        <View style={styles.drawerHeader}>
-          <Avatar.Text
-            size={48}
-            label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
-            style={{ backgroundColor: theme.colors.primary }}
-          />
-          <View style={styles.drawerUserInfo}>
-            <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-              {user?.firstName}
-            </Text>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              {user?.username}
-            </Text>
-          </View>
-        </View>
-        <Divider />
-        <View style={styles.drawerContent}>
-          {menuItems.filter(item => item.show).map((item) => (
-            <Drawer.Item
-              key={item.route}
-              icon={item.icon}
-              label={item.label}
-              active={currentRoute === item.route}
-              onPress={() => handleNavigation(item.route)}
-            />
-          ))}
-          <Divider style={{ marginVertical: 8 }} />
-          <Drawer.Item
-            icon="account-circle"
-            label="Profil & Einstellungen"
-            onPress={handleProfileClick}
-          />
-          <Drawer.Item
-            icon="logout"
-            label={t('nav.logout')}
-            onPress={handleLogout}
-          />
-        </View>
-      </Modal>
-    </Portal>
-  );
 
   return (
-    <>
-      {isSmallScreen && renderMobileDrawer()}
-      <Appbar.Header style={{ backgroundColor: theme.colors.surface }} elevated>
-        <View style={styles.headerContent}>
-          {/* Mobile: Hamburger Menu */}
-          {isSmallScreen && (
-            <Appbar.Action
-              icon="menu"
-              onPress={() => setDrawerVisible(true)}
-              color={theme.colors.onSurface}
-            />
-          )}
-
-          {/* Logo - always visible */}
-          <View style={styles.headerLeft}>
-            <MaterialCommunityIcons
-              name="compass"
-              size={isSmallScreen ? 24 : 28}
-              color={theme.colors.primary}
-              style={{ marginRight: isSmallScreen ? 4 : 8 }}
-            />
-            {!isSmallScreen && (
-              <Text variant="titleLarge" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
-                OpenFamilyCompass
-              </Text>
-            )}
-          </View>
-
-          {/* Desktop: Navigation Buttons */}
-          {!isSmallScreen && (
-            <View style={styles.headerNav}>
-              {menuItems.filter(item => item.show).map((item) => (
-                <Appbar.Action
-                  key={item.route}
-                  icon={item.icon}
-                  onPress={() => onNavigate(item.route)}
-                  color={currentRoute === item.route ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                  style={[
-                    styles.navButton,
-                    currentRoute === item.route && { backgroundColor: theme.colors.primaryContainer }
-                  ]}
-                />
-              ))}
-            </View>
-          )}
-
-          {/* Desktop: User Menu / Mobile: Just Avatar */}
-          <View style={styles.headerRight}>
-            {isSmallScreen ? (
-              <Avatar.Text
-                size={32}
-                label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
-                style={{ backgroundColor: theme.colors.primary }}
-              />
-            ) : (
-              <Menu
-                visible={userMenuVisible}
-                onDismiss={() => setUserMenuVisible(false)}
-                anchor={
-                  <TouchableOpacity
-                    style={styles.userMenuButton}
-                    onPress={() => setUserMenuVisible(true)}
-                  >
-                    <Avatar.Text
-                      size={36}
-                      label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
-                      style={{ backgroundColor: theme.colors.primary }}
-                    />
-                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, marginLeft: 12 }}>
-                      {user?.firstName}
-                    </Text>
-                    <MaterialCommunityIcons
-                      name={userMenuVisible ? 'chevron-up' : 'chevron-down'}
-                      size={20}
-                      color={theme.colors.onSurfaceVariant}
-                      style={{ marginLeft: 4 }}
-                    />
-                  </TouchableOpacity>
-                }
-                anchorPosition="bottom"
-              >
-                <Menu.Item
-                  onPress={handleProfileClick}
-                  leadingIcon="account-circle"
-                  title="Profil & Einstellungen"
-                />
-                <Divider />
-                <Menu.Item
-                  onPress={handleLogout}
-                  leadingIcon="logout"
-                  title={t('nav.logout')}
-                />
-              </Menu>
-            )}
-          </View>
-        </View>
-      </Appbar.Header>
-    </>
-  );
-};
-
-// Custom Footer
-const CustomFooter: React.FC = () => {
-  const theme = useTheme();
-  const { t } = useI18n();
-
-  return (
-    <View style={[styles.footer, { backgroundColor: theme.colors.surfaceVariant }]}>
-      <View style={styles.footerContent}>
-        <View style={styles.footerSection}>
-          <MaterialCommunityIcons
-            name="information"
-            size={16}
-            color={theme.colors.onSurfaceVariant}
-            style={{ marginRight: 4 }}
-          />
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            Version 1.0.0
-          </Text>
-        </View>
-
-        <View style={styles.footerSection}>
-          <MaterialCommunityIcons
-            name="open-source-initiative"
-            size={16}
-            color={theme.colors.onSurfaceVariant}
-            style={{ marginRight: 4 }}
-          />
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            {t('login.footer')}
-          </Text>
-        </View>
-
-        <View style={styles.footerSection}>
-          <Text
-            variant="bodySmall"
-            style={{ color: theme.colors.primary, textDecorationLine: 'underline', cursor: 'pointer' }}
-            onPress={() => {/* TODO: Navigate to help page */ }}
-          >
-            Hilfe
-          </Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginHorizontal: 8 }}>
-            •
-          </Text>
-          <Text
-            variant="bodySmall"
-            style={{ color: theme.colors.primary, textDecorationLine: 'underline', cursor: 'pointer' }}
-            onPress={() => {/* TODO: Navigate to docs */ }}
-          >
-            Dokumentation
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-};
-
-// Main Stack Navigator with Custom Header
-const MainStackNavigator: React.FC = () => {
-  const theme = useTheme();
-  const isChild = useAuthStore(selectIsChild);
-  const isAdmin = useAuthStore(selectIsAdmin);
-  const [currentRoute, setCurrentRoute] = React.useState('Dashboard');
-
-  const DashboardComponent = isChild ? ChildDashboardScreen : ParentDashboardScreen;
-
-  const navigation = useNavigation();
-
-  const handleNavigate = (route: string) => {
-    setCurrentRoute(route);
-    navigation.navigate(route as never);
-  };
-
-  return (
-    <View style={{ flex: 1 }}>
-      <CustomHeader currentRoute={currentRoute} onNavigate={handleNavigate} />
-
+    <View style={styles.mainTabsContainer}>
       <View style={{ flex: 1 }}>
-        <MainStack.Navigator
-          screenOptions={{
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
             headerShown: false,
-          }}
-          screenListeners={{
-            state: (e) => {
-              const state = e.data.state;
-              if (state) {
-                const route = state.routes[state.index];
-                setCurrentRoute(route.name);
-              }
+            tabBarStyle: { display: 'none' },
+            tabBarActiveTintColor: theme.colors.primary,
+            tabBarIcon: ({ color, size }) => {
+              const iconName =
+                route.name === 'Activities'
+                  ? 'home'
+                  : route.name === 'Manage'
+                    ? 'cog'
+                    : route.name === 'Notifications'
+                      ? 'bell'
+                      : 'account';
+              return <MaterialCommunityIcons name={iconName as any} size={size} color={color} />;
             },
-          }}
+          })}
         >
-          <MainStack.Screen name="Dashboard" component={DashboardComponent} />
-          <MainStack.Screen name="Tasks" component={TasksStackNavigator} />
-          <MainStack.Screen name="Shop" component={ShopStackNavigator} />
-          <MainStack.Screen name="Behavior" component={BehaviorStackNavigator} />
-          <MainStack.Screen name="Notifications" component={NotificationsScreen} />
-          <MainStack.Screen name="Profile" component={ProfileStackNavigator} />
-          {isAdmin && (
-            <MainStack.Screen name="Admin" component={AdminStackNavigator} />
-          )}
-        </MainStack.Navigator>
-      </View>
+          <Tab.Screen
+            name="Activities"
+            component={ActivitiesStackNavigator}
+            options={{ title: t('nav.activities') }}
+          />
 
-      <CustomFooter />
+          {!isChild && (
+            <Tab.Screen
+              name="Manage"
+              component={ManageStackNavigator}
+              options={{ title: t('nav.manage') }}
+            />
+          )}
+
+          <Tab.Screen
+            name="Notifications"
+            component={NotificationsStackNavigator}
+            options={{ title: t('nav.notifications') }}
+          />
+
+          <Tab.Screen
+            name="Profile"
+            component={ProfileStackNavigator}
+            options={{ title: t('nav.profile') }}
+          />
+        </Tab.Navigator>
+      </View>
+      <VersionFooter />
     </View>
   );
 };
@@ -618,7 +406,7 @@ export const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainStackNavigator /> : <AuthNavigator />}
+      {isAuthenticated ? <MainTabsNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
 };
@@ -629,76 +417,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  mainTabsContainer: {
     flex: 1,
   },
-  headerNav: {
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  userMenuButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  navButton: {
-    marginHorizontal: 2,
+    gap: 2,
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
-  },
-  footerContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  footerSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  // Mobile Drawer Styles
-  drawerModal: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    width: 280,
-    borderTopRightRadius: 16,
-    borderBottomRightRadius: 16,
-  },
-  drawerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    paddingTop: 48,
-  },
-  drawerUserInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  drawerContent: {
-    flex: 1,
-    paddingTop: 8,
   },
 });

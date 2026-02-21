@@ -15,9 +15,9 @@ import { useChildren } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { ChildResponse } from '../../types/api';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BehaviorStackParamList } from '../../navigation/types';
+import { ActivitiesStackParamList } from '../../navigation/types';
 
-type NavigationProp = NativeStackNavigationProp<BehaviorStackParamList>;
+type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
 
 interface ChildCardProps {
   child: ChildResponse;
@@ -46,11 +46,13 @@ export const BehaviorOverviewScreen: React.FC = () => {
   const { data: children, isLoading, refetch, isRefetching } = useChildren();
 
   const handleChildSelect = (child: ChildResponse) => {
-    navigation.navigate('BehaviorEvaluate', { userId: child.id });
+    navigation.navigate('BehaviorEvaluate', { childId: child.id });
   };
 
   const handleManage = () => {
-    navigation.navigate('BehaviorManage');
+    // Stammdaten-Verwaltung ist im "Verwalten"-Bereich
+    const parent = navigation.getParent<any>();
+    parent?.navigate('Manage', { screen: 'BehaviorManage' });
   };
 
   return (

@@ -86,4 +86,21 @@ public class PointDto {
         @NotBlank
         private String description;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AddPointsRequest {
+        @NotNull
+        private Long userId;
+
+        @NotNull
+        private Integer points;
+
+        @NotNull
+        private PointTransactionType type;
+
+        @NotBlank
+        private String description;
+    }
 }

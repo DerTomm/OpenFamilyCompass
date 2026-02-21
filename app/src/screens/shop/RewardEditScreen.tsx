@@ -19,13 +19,10 @@ import {
   useDeactivateReward 
 } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
-import { ShopStackParamList } from '../../navigation/types';
-
-type RewardEditRouteProp = RouteProp<ShopStackParamList, 'RewardEdit'>;
 
 export const RewardEditScreen: React.FC = () => {
   const navigation = useNavigation();
-  const route = useRoute<RewardEditRouteProp>();
+  const route = useRoute<any>();
   const { t } = useI18n();
   // route.params can be undefined if navigated via RewardCreate alias
   const rewardId = route.params?.rewardId; 

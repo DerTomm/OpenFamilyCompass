@@ -97,11 +97,15 @@ interface BehaviorCardProps {
 
 const BehaviorCard: React.FC<BehaviorCardProps> = ({ evaluation, isDesktop, onShowGuideline, onShowRemarks }) => {
   const { t } = useI18n();
-  const progressPercentage = (evaluation.currentPoints / evaluation.behavior.points) * 100;
+  const totalRange = evaluation.behavior.plusPoints + evaluation.behavior.minusPoints;
+  const progressPercentage =
+    totalRange === 0 ? 50 : ((evaluation.currentPoints + evaluation.behavior.minusPoints) / totalRange) * 100;
+
+  const formatSigned = (value: number) => (value > 0 ? `+${value}` : String(value));
   
   const getProgressColor = () => {
-    if (progressPercentage < 20) return '#dc3545';
-    if (progressPercentage < 80) return '#ffc107';
+    if (evaluation.currentPoints < 0) return '#dc3545';
+    if (evaluation.currentPoints === 0) return '#6c757d';
     return '#198754';
   };
 
@@ -123,7 +127,7 @@ const BehaviorCard: React.FC<BehaviorCardProps> = ({ evaluation, isDesktop, onSh
                 ]} 
               />
               <Text style={styles.progressText}>
-                {evaluation.currentPoints} / {evaluation.behavior.points}
+                {formatSigned(evaluation.currentPoints)} ({`-${evaluation.behavior.minusPoints}..+${evaluation.behavior.plusPoints}`})
               </Text>
             </View>
           </View>
@@ -156,7 +160,7 @@ const BehaviorCard: React.FC<BehaviorCardProps> = ({ evaluation, isDesktop, onSh
               ]} 
             />
             <Text style={styles.progressText}>
-              {evaluation.currentPoints} / {evaluation.behavior.points}
+              {formatSigned(evaluation.currentPoints)} ({`-${evaluation.behavior.minusPoints}..+${evaluation.behavior.plusPoints}`})
             </Text>
           </View>
         </View>

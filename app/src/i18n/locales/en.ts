@@ -25,6 +25,10 @@ export const en = {
     'admin.users.status': 'Status',
 
     // Navigation
+    'nav.activities': 'Activities',
+    'nav.manage': 'Manage',
+    'nav.notifications': 'Notifications',
+    'nav.profile': 'Profile',
     'nav.behavior': 'Behavior',
     'nav.child.dashboard': 'Child Dashboard',
     'nav.logout': 'Logout',
@@ -33,6 +37,9 @@ export const en = {
     'nav.rewards': 'Rewards',
     'nav.settings': 'Settings',
     'nav.tasks': 'Tasks',
+
+    // Manage
+    'manage.subtitle': 'Manage master data for tasks, rewards and behavior goals',
 
     // Login
     'login.button': 'Sign In',
@@ -68,6 +75,7 @@ export const en = {
     'child.dashboard.title': 'My Dashboard',
     'child.dashboard.welcome': 'Hello,',
     'child.dashboard.points.badge': 'Your Points',
+    'child.detail': 'Child Details',
     'child.dashboard.tasks.available': 'Available Tasks',
     'child.dashboard.shop.title': 'Reward Shop',
     'child.dashboard.shop.subtitle': 'You can redeem these rewards',
@@ -331,8 +339,12 @@ export const en = {
     'behavior.title.hint': 'Short, concise title',
     'behavior.guidelines.label': 'Guidelines',
     'behavior.guidelines.hint': 'A guiding principle or guideline',
-    'behavior.points.label': 'Points',
-    'behavior.points.hint': 'How many points per week',
+    'behavior.points.label': 'Plus points',
+    'behavior.points.hint': 'Max. plus points per week',
+    'behavior.plusPoints.label': 'Plus points',
+    'behavior.plusPoints.hint': 'Max. plus points per week',
+    'behavior.minusPoints.label': 'Minus points',
+    'behavior.minusPoints.hint': 'Max. minus points per week',
     'behavior.points': 'Points',
     'behavior.child.label': 'Child (optional)',
     'behavior.child.specific': 'Child',
@@ -353,6 +365,12 @@ export const en = {
     'behavior.evaluate': 'Evaluate Behavior',
     'behavior.evaluate.rule': 'Evaluate',
     'behavior.save.error': 'Error saving',
+    'behavior.draft.saved': 'Draft saved',
+    'behavior.draft.unsaved': 'There is a draft. Save before committing points?',
+    'behavior.draft.save_and_commit': 'Save & commit',
+    'behavior.draft.commit_anyway': 'Commit anyway',
+    'behavior.draft.discard': 'Discard draft',
+    'behavior.draft.discard.confirm': 'Do you really want to discard the draft? All changes will be lost.',
     'behavior.finalize': 'Credit Points',
     'behavior.finalize.desc': 'Credit this week\'s points to {0}',
     'behavior.finalize.button': 'Credit Points',
