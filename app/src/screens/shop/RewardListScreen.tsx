@@ -16,10 +16,6 @@ import { useRequestRedemption, useRewards } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { RewardResponse } from '../../types/api';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ShopStackParamList } from '../../navigation/types';
-
-type NavigationProp = NativeStackNavigationProp<ShopStackParamList>;
 
 interface RewardCardProps {
   reward: RewardResponse;
@@ -105,7 +101,7 @@ export const RewardListScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const isChild = useAuthStore(selectIsChild);
   const { t } = useI18n();
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<any>();
 
   // If parent, fetch all (active and inactive), if child fetch only active
   const { data: rewards, isLoading, refetch, isRefetching } = useRewards(isChild ? true : undefined);

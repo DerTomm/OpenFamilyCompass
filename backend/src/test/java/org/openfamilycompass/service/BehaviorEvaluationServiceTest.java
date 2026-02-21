@@ -65,6 +65,7 @@ class BehaviorEvaluationServiceTest {
                 testBehavior.setTitle("Respect");
                 testBehavior.setGuideline("Be respectful to others");
                 testBehavior.setPoints(10);
+                testBehavior.setMinusPoints(5);
                 testBehavior.setActive(true);
 
                 testEvaluation = new BehaviorEvaluation();
@@ -123,15 +124,31 @@ class BehaviorEvaluationServiceTest {
         }
 
         @Test
-        void updateEvaluation_ShouldThrowException_WhenPointsNegative() {
+        void updateEvaluation_ShouldAllowNegativePoints_WithinRange() {
+                // Given
+                when(behaviorRepository.findById(1L)).thenReturn(Optional.of(testBehavior));
+                when(evaluationRepository.findByUserAndBehaviorAndCommittedFalse(
+                                any(), any())).thenReturn(Optional.of(testEvaluation));
+                when(evaluationRepository.save(any(BehaviorEvaluation.class))).thenReturn(testEvaluation);
+
+                // When
+                BehaviorEvaluation result = evaluationService.updateEvaluation(
+                                1L, testUserChild, -3, "Notes", testUser);
+
+                // Then
+                assertThat(result.getCurrentPoints()).isEqualTo(-3);
+        }
+
+        @Test
+        void updateEvaluation_ShouldThrowException_WhenPointsBelowMinimum() {
                 // Given
                 when(behaviorRepository.findById(1L)).thenReturn(Optional.of(testBehavior));
 
                 // When/Then
                 assertThatThrownBy(() -> evaluationService.updateEvaluation(
-                                1L, testUserChild, -1, "Notes", testUser))
+                                1L, testUserChild, -6, "Notes", testUser))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessageContaining("between 0 and");
+                                .hasMessageContaining("between");
         }
 
         @Test
@@ -143,7 +160,7 @@ class BehaviorEvaluationServiceTest {
                 assertThatThrownBy(() -> evaluationService.updateEvaluation(
                                 1L, testUserChild, 15, "Notes", testUser))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessageContaining("between 0 and");
+                                .hasMessageContaining("between");
         }
 
         @Test
@@ -162,7 +179,7 @@ class BehaviorEvaluationServiceTest {
         }
 
         @Test
-        void commitWeeklyEvaluations_ShouldAddPointsAndMarkCommitted() {
+        void commitWeeklyEvaluations_ShouldBookPointsAndMarkCommitted() {
                 // Given
                 List<BehaviorEvaluation> evaluations = Arrays.asList(testEvaluation);
                 when(evaluationRepository.findByUserAndCommittedFalse(testUserChild))
@@ -185,9 +202,9 @@ class BehaviorEvaluationServiceTest {
                 // Verify that current evaluation was marked as committed
                 verify(evaluationRepository).save(argThat(eval -> eval.isCommitted()));
 
-                // Verify that a new uncommitted evaluation was created with maximum points
+                // Verify that a new uncommitted evaluation was created starting at 0
                 verify(evaluationRepository).save(argThat(eval -> !eval.isCommitted() &&
-                                eval.getCurrentPoints() == testBehavior.getPoints() &&
+                                eval.getCurrentPoints() == 0 &&
                                 eval.getUser().equals(testUserChild) &&
                                 eval.getBehavior().equals(testBehavior)));
         }

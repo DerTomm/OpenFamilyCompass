@@ -9,7 +9,7 @@ import {
   notificationsApi,
   profileApi,
 } from '../api/services';
-import { useAuthStore } from '../store/authStore';
+import { selectIsParent, useAuthStore } from '../store/authStore';
 
 // Query Keys
 export const queryKeys = {
@@ -207,9 +207,12 @@ export const useRequestRedemption = () => {
 
 // Children Hook (for parents)
 export const useChildren = () => {
+  const isParent = useAuthStore(selectIsParent);
+
   return useQuery({
     queryKey: queryKeys.children,
     queryFn: () => usersApi.listChildren(),
+    enabled: isParent,
   });
 };
 

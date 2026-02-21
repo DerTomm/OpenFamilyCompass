@@ -176,6 +176,29 @@ public class PointApiController {
                 .body(PointDto.TransactionResponse.fromEntityWithBalance(transaction, targetUser.getTotalPoints()));
     }
 
+    @PostMapping("/add")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PARENT')")
+    @Operation(summary = "Add points to a user (bonus or penalty)")
+    public ResponseEntity<PointDto.TransactionResponse> addPoints(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody PointDto.AddPointsRequest request) {
+        User currentUser = getCurrentUser(jwt);
+        User targetUser = userService.findById(request.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        PointTransaction transaction = pointService.addPointsWithRemarks(
+                targetUser,
+                request.getPoints(),
+                request.getType(),
+                request.getDescription(),
+                null,
+                null,
+                currentUser);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(PointDto.TransactionResponse.fromEntityWithBalance(transaction, targetUser.getTotalPoints()));
+    }
+
     private User getCurrentUser(Jwt jwt) {
         String username = jwt.getSubject();
         return userService.findByUsername(username)

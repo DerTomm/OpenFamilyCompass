@@ -4,20 +4,41 @@ import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Divider, ProgressBar, Surface, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card, EmptyState } from '../../components/ui';
+import { Card, EmptyState, QuickActionCard } from '../../components/ui';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useI18n } from '../../i18n/I18nContext';
 import { useAuthStore } from '../../store/authStore';
+import { ActivitiesStackParamList } from '../../navigation/types';
 import { spacing } from '../../theme/theme';
+import { usePointTransactions } from '../../hooks/useApi';
+import { PointTransactionResponse } from '../../types/api';
+
+type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
 
 export const ChildDashboardScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const theme = useTheme();
   const { t } = useI18n();
+  const navigation = useNavigation<NavigationProp>();
+
+  // Load recent transactions
+  const { data: transactionsData } = usePointTransactions({ userId: user?.id, limit: 5 });
+  const transactions = transactionsData?.transactions || [];
 
   // Mock data - wird später durch echte Daten ersetzt
   const totalPoints = user?.totalPoints || 0;
   const nextRewardPoints = 100;
   const progress = totalPoints / nextRewardPoints;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const formatPoints = (points: number) => {
+    return points > 0 ? `+${points}` : String(points);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -76,6 +97,34 @@ export const ChildDashboardScreen: React.FC = () => {
 
         <Divider style={styles.divider} />
 
+        {/* Quick Access */}
+        <View style={styles.section}>
+          <Text
+            variant="titleLarge"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground, marginLeft: 0 }]}
+          >
+            {t('dashboard.quick.actions')}
+          </Text>
+
+          <QuickActionCard
+            title={t('tasks.my.title')}
+            icon="clipboard-list"
+            onPress={() => navigation.navigate('TaskList')}
+          />
+          <QuickActionCard
+            title={t('shop.title.page')}
+            icon="gift"
+            onPress={() => navigation.navigate('RewardList')}
+            color={theme.colors.secondary}
+          />
+          <QuickActionCard
+            title={t('child.behaviors.title')}
+            icon="star-circle"
+            onPress={() => navigation.navigate('ChildBehaviorList')}
+            color={theme.colors.tertiary}
+          />
+        </View>
+
         {/* Today's Tasks */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -118,11 +167,40 @@ export const ChildDashboardScreen: React.FC = () => {
           </View>
 
           <Card elevation={1}>
-            <EmptyState
-              icon="timeline-clock"
-              title="Noch keine Aktivitäten"
-              message="Hier erscheinen deine abgeschlossenen Aufgaben und Belohnungen"
-            />
+            {transactions.length > 0 ? (
+              <View style={{ padding: 12 }}>
+                {transactions.map((transaction, index) => (
+                  <View key={transaction.id}>
+                    <View style={styles.transactionRow}>
+                      <View style={styles.transactionInfo}>
+                        <Text variant="bodyMedium" style={{ fontWeight: '500' }}>
+                          {transaction.description || t(`point.transaction.type.${transaction.type}`)}
+                        </Text>
+                        <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                          {formatDate(transaction.createdAt)}
+                        </Text>
+                      </View>
+                      <Text
+                        variant="bodyLarge"
+                        style={{
+                          fontWeight: '600',
+                          color: transaction.points > 0 ? '#4CAF50' : transaction.points < 0 ? '#F44336' : theme.colors.onSurface,
+                        }}
+                      >
+                        {formatPoints(transaction.points)}
+                      </Text>
+                    </View>
+                    {index < transactions.length - 1 && <Divider style={{ marginVertical: 8 }} />}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <EmptyState
+                icon="timeline-clock"
+                title="Noch keine Aktivitäten"
+                message="Hier erscheinen deine abgeschlossenen Aufgaben und Belohnungen"
+              />
+            )}
           </Card>
         </View>
       </ScrollView>
@@ -199,5 +277,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: '600',
     marginLeft: spacing.sm,
+  },
+  transactionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  transactionInfo: {
+    flex: 1,
+    marginRight: spacing.sm,
   },
 });

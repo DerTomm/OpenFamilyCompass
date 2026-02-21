@@ -25,7 +25,7 @@ interface BehaviorModalProps {
   behavior: BehaviorResponse | null;
   children: ChildResponse[];
   onClose: () => void;
-  onSubmit: (data: { title: string; guideline: string; points: number; userId?: number }) => void;
+  onSubmit: (data: { title: string; guideline: string; plusPoints: number; minusPoints: number; userId?: number }) => void;
   isLoading: boolean;
   t: (key: string) => string;
 }
@@ -33,32 +33,50 @@ interface BehaviorModalProps {
 const BehaviorModal: React.FC<BehaviorModalProps> = ({ visible, behavior, children, onClose, onSubmit, isLoading, t }) => {
   const [title, setTitle] = useState('');
   const [guideline, setGuideline] = useState('');
-  const [points, setPoints] = useState('');
+  const [plusPoints, setPlusPoints] = useState('');
+  const [minusPoints, setMinusPoints] = useState('');
   const [userId, setUserId] = useState<number | undefined>(undefined);
 
   React.useEffect(() => {
     if (behavior) {
       setTitle(behavior.title);
       setGuideline(behavior.guideline);
-      setPoints(behavior.points.toString());
+      setPlusPoints(behavior.plusPoints.toString());
+      setMinusPoints(behavior.minusPoints.toString());
       setUserId(behavior.user?.id);
     } else {
       setTitle('');
       setGuideline('');
-      setPoints('');
+      setPlusPoints('');
+      setMinusPoints('');
       setUserId(undefined);
     }
   }, [behavior, visible]);
 
   const handleSubmit = () => {
-    if (!title || !guideline || !points) {
+    if (!title || !guideline) {
       Alert.alert(t('common.error'), t('behavior.error.fields'));
       return;
     }
+
+    const parsedPlus = plusPoints.trim().length ? parseInt(plusPoints, 10) : 0;
+    const parsedMinus = minusPoints.trim().length ? parseInt(minusPoints, 10) : 0;
+
+    if (Number.isNaN(parsedPlus) || Number.isNaN(parsedMinus) || parsedPlus < 0 || parsedMinus < 0) {
+      Alert.alert(t('common.error'), t('behavior.error.fields'));
+      return;
+    }
+
+    if (parsedPlus === 0 && parsedMinus === 0) {
+      Alert.alert(t('common.error'), t('behavior.error.fields'));
+      return;
+    }
+
     onSubmit({
       title,
       guideline,
-      points: parseInt(points, 10),
+      plusPoints: parsedPlus,
+      minusPoints: parsedMinus,
       userId,
     });
   };
@@ -100,12 +118,23 @@ const BehaviorModal: React.FC<BehaviorModalProps> = ({ visible, behavior, childr
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{t('behavior.points.label')} *</Text>
+              <Text style={styles.inputLabel}>{t('behavior.plusPoints.label')} *</Text>
               <TextInput
                 style={styles.input}
-                value={points}
-                onChangeText={setPoints}
-                placeholder={t('behavior.points.hint')}
+                value={plusPoints}
+                onChangeText={setPlusPoints}
+                placeholder={t('behavior.plusPoints.hint')}
+                keyboardType="number-pad"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t('behavior.minusPoints.label')} *</Text>
+              <TextInput
+                style={styles.input}
+                value={minusPoints}
+                onChangeText={setMinusPoints}
+                placeholder={t('behavior.minusPoints.hint')}
                 keyboardType="number-pad"
               />
             </View>
@@ -166,6 +195,8 @@ interface BehaviorRowProps {
 }
 
 const BehaviorRow: React.FC<BehaviorRowProps> = ({ behavior, isDesktop, onEdit, onDelete, onShowGuideline, t }) => {
+  const pointsRange = `+${behavior.plusPoints} / -${behavior.minusPoints}`;
+
   if (isDesktop) {
     return (
       <View style={styles.tableRow}>
@@ -178,7 +209,7 @@ const BehaviorRow: React.FC<BehaviorRowProps> = ({ behavior, isDesktop, onEdit, 
           </TouchableOpacity>
         </View>
         <View style={[styles.tableCell, { flex: 1 }]}>
-          <Text style={styles.tableCellText}>{behavior.points}</Text>
+          <Text style={styles.tableCellText}>{pointsRange}</Text>
         </View>
         <View style={[styles.tableCell, { flex: 1 }]}>
           <Text style={styles.tableCellText}>
@@ -211,8 +242,8 @@ const BehaviorRow: React.FC<BehaviorRowProps> = ({ behavior, isDesktop, onEdit, 
       </View>
 
       <View style={styles.cardRow}>
-        <Text style={styles.cardLabel}>{t('behavior.points.label')}:</Text>
-        <Text style={styles.cardValue}>{behavior.points}</Text>
+        <Text style={styles.cardLabel}>{t('behavior.points')}:</Text>
+        <Text style={styles.cardValue}>{pointsRange}</Text>
       </View>
 
       <View style={styles.cardRow}>
@@ -331,7 +362,7 @@ export const BehaviorManageScreen: React.FC = () => {
     }
   };
 
-  const handleSubmit = (data: { title: string; guideline: string; points: number; userId?: number }) => {
+  const handleSubmit = (data: { title: string; guideline: string; plusPoints: number; minusPoints: number; userId?: number }) => {
     if (editingBehavior) {
       updateMutation.mutate({ id: editingBehavior.id, data });
     } else {
@@ -372,7 +403,7 @@ export const BehaviorManageScreen: React.FC = () => {
                   <Text style={styles.tableHeaderText}>{t('behavior.guidelines.label')}</Text>
                 </View>
                 <View style={[styles.tableHeaderCell, { flex: 1 }]}>
-                  <Text style={styles.tableHeaderText}>{t('behavior.points.label')}</Text>
+                  <Text style={styles.tableHeaderText}>{t('behavior.points')}</Text>
                 </View>
                 <View style={[styles.tableHeaderCell, { flex: 1 }]}>
                   <Text style={styles.tableHeaderText}>{t('behavior.child.label')}</Text>

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -28,6 +29,7 @@ interface EvaluationModalProps {
   childId: number;
   onClose: () => void;
   onSave: (data: { behaviorId: number; userId: number; currentPoints: number; remarks?: string }) => void;
+  onDraftChange?: (data: { behaviorId: number; currentPoints: number; remarks?: string }) => void;
   isLoading: boolean;
   t: (key: string) => string;
 }
@@ -39,6 +41,7 @@ const EvaluationModal: React.FC<EvaluationModalProps> = ({
   childId,
   onClose,
   onSave,
+  onDraftChange,
   isLoading,
   t,
 }) => {
@@ -51,11 +54,20 @@ const EvaluationModal: React.FC<EvaluationModalProps> = ({
         setPoints(existingEvaluation.currentPoints);
         setRemarks(existingEvaluation.remarks || '');
       } else {
-        setPoints(behavior.points);
+        setPoints(0);
         setRemarks('');
       }
     }
   }, [behavior, existingEvaluation, visible]);
+
+  React.useEffect(() => {
+    if (!visible || !behavior) return;
+    onDraftChange?.({
+      behaviorId: behavior.id,
+      currentPoints: points,
+      remarks: remarks || undefined,
+    });
+  }, [behavior, onDraftChange, points, remarks, visible]);
 
   const handleSave = () => {
     if (!behavior) return;
@@ -69,12 +81,15 @@ const EvaluationModal: React.FC<EvaluationModalProps> = ({
 
   if (!behavior) return null;
 
-  const progressPercentage = (points / behavior.points) * 100;
+  const totalRange = behavior.plusPoints + behavior.minusPoints;
+  const progressPercentage = totalRange === 0 ? 50 : ((points + behavior.minusPoints) / totalRange) * 100;
   const getProgressColor = () => {
-    if (progressPercentage < 20) return '#dc3545';
-    if (progressPercentage < 80) return '#ffc107';
+    if (points < 0) return '#dc3545';
+    if (points === 0) return '#6c757d';
     return '#198754';
   };
+
+  const formatSigned = (value: number) => (value > 0 ? `+${value}` : String(value));
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -92,12 +107,12 @@ const EvaluationModal: React.FC<EvaluationModalProps> = ({
 
             <View style={styles.sliderContainer}>
               <Text style={styles.sliderLabel}>
-                {t('tasks.points')}: <Text style={styles.sliderValue}>{points}</Text> / {behavior.points}
+                {t('behavior.points')}: <Text style={styles.sliderValue}>{formatSigned(points)}</Text> ({`-${behavior.minusPoints}..+${behavior.plusPoints}`})
               </Text>
               <Slider
                 style={styles.slider}
-                minimumValue={0}
-                maximumValue={behavior.points}
+                minimumValue={-behavior.minusPoints}
+                maximumValue={behavior.plusPoints}
                 step={1}
                 value={points}
                 onValueChange={setPoints}
@@ -163,14 +178,17 @@ const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
   onShowGuideline,
   t,
 }) => {
-  const currentPoints = evaluation?.currentPoints ?? behavior.points;
-  const progressPercentage = (currentPoints / behavior.points) * 100;
+  const currentPoints = evaluation?.currentPoints ?? 0;
+  const totalRange = behavior.plusPoints + behavior.minusPoints;
+  const progressPercentage = totalRange === 0 ? 50 : ((currentPoints + behavior.minusPoints) / totalRange) * 100;
 
   const getProgressColor = () => {
-    if (progressPercentage < 20) return '#dc3545';
-    if (progressPercentage < 80) return '#ffc107';
+    if (currentPoints < 0) return '#dc3545';
+    if (currentPoints === 0) return '#6c757d';
     return '#198754';
   };
+
+  const formatSigned = (value: number) => (value > 0 ? `+${value}` : String(value));
 
   if (isDesktop) {
     return (
@@ -185,7 +203,7 @@ const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
                 style={[styles.progressFill, { width: `${progressPercentage}%`, backgroundColor: getProgressColor() }]}
               />
               <Text style={styles.progressText}>
-                {currentPoints} / {behavior.points}
+                {formatSigned(currentPoints)} ({`-${behavior.minusPoints}..+${behavior.plusPoints}`})
               </Text>
             </View>
           </View>
@@ -217,7 +235,7 @@ const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
               style={[styles.progressFill, { width: `${progressPercentage}%`, backgroundColor: getProgressColor() }]}
             />
             <Text style={styles.progressText}>
-              {currentPoints} / {behavior.points}
+              {formatSigned(currentPoints)} ({`-${behavior.minusPoints}..+${behavior.plusPoints}`})
             </Text>
           </View>
         </View>
@@ -243,8 +261,55 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
   const isDesktop = width >= 768;
   const queryClient = useQueryClient();
 
+  const weekStartKey = React.useMemo(() => {
+    const now = new Date();
+    const day = now.getDay(); // 0=Sun .. 6=Sat
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const yyyy = monday.getFullYear();
+    const mm = String(monday.getMonth() + 1).padStart(2, '0');
+    const dd = String(monday.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
+
+  const draftStorageKey = React.useMemo(
+    () => `@ofc:behaviorDraft:${childId}:${weekStartKey}`,
+    [childId, weekStartKey]
+  );
+
+  const [draft, setDraft] = useState<{
+    childId: number;
+    weekStart: string;
+    updatedAt: number;
+    items: Record<string, { currentPoints: number; remarks?: string }>;
+  } | null>(null);
+
+  const draftSaveTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const loadDraft = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(draftStorageKey);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (isMounted) setDraft(parsed);
+      } catch {
+        // ignore corrupt drafts
+      }
+    };
+    loadDraft();
+    return () => {
+      isMounted = false;
+    };
+  }, [draftStorageKey]);
+
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [selectedBehavior, setSelectedBehavior] = useState<BehaviorResponse | null>(null);
+  const [lastSavedBehaviorId, setLastSavedBehaviorId] = useState<number | null>(null);
   const [guidelineModal, setGuidelineModal] = useState<{ visible: boolean; title: string; guideline: string }>({
     visible: false,
     title: '',
@@ -270,8 +335,23 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
     mutationFn: evaluationsApi.save,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluations', childId] });
+
+      if (lastSavedBehaviorId && draft?.items?.[String(lastSavedBehaviorId)]) {
+        const { [String(lastSavedBehaviorId)]: _, ...rest } = draft.items;
+        const nextDraft = Object.keys(rest).length
+          ? { ...draft, items: rest, updatedAt: Date.now() }
+          : null;
+        if (nextDraft) {
+          AsyncStorage.setItem(draftStorageKey, JSON.stringify(nextDraft)).catch(() => {});
+        } else {
+          AsyncStorage.removeItem(draftStorageKey).catch(() => {});
+        }
+        setDraft(nextDraft);
+      }
+
       setShowEvalModal(false);
       setSelectedBehavior(null);
+      setLastSavedBehaviorId(null);
     },
     onError: () => {
       Alert.alert(t('common.error'), t('behavior.save.error'));
@@ -283,6 +363,9 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['evaluations', childId] });
       queryClient.invalidateQueries({ queryKey: ['child', childId] });
+      queryClient.invalidateQueries({ queryKey: ['children'] });
+      queryClient.invalidateQueries({ queryKey: ['points', childId] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       const message = `${data.evaluationsCommitted} ${t('behavior.finalize.success.evaluations')}, ${data.totalPointsAwarded} ${t('behavior.finalize.success.points')}`;
       if (Platform.OS === 'web') {
         window.alert(message);
@@ -300,27 +383,169 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
     setShowEvalModal(true);
   };
 
+  const persistDraft = React.useCallback(
+    (next: {
+      childId: number;
+      weekStart: string;
+      updatedAt: number;
+      items: Record<string, { currentPoints: number; remarks?: string }>;
+    }) => {
+      setDraft(next);
+
+      if (draftSaveTimeout.current) {
+        clearTimeout(draftSaveTimeout.current);
+      }
+
+      draftSaveTimeout.current = setTimeout(() => {
+        AsyncStorage.setItem(draftStorageKey, JSON.stringify(next)).catch(() => {
+          // ignore
+        });
+      }, 250);
+    },
+    [draftStorageKey]
+  );
+
+  const updateDraftItem = React.useCallback(
+    (data: { behaviorId: number; currentPoints: number; remarks?: string }) => {
+      setDraft((prevDraft) => {
+        const next = {
+          childId,
+          weekStart: weekStartKey,
+          updatedAt: Date.now(),
+          items: {
+            ...(prevDraft?.items ?? {}),
+            [String(data.behaviorId)]: {
+              currentPoints: data.currentPoints,
+              remarks: data.remarks,
+            },
+          },
+        };
+        
+        // Persist to AsyncStorage (debounced)
+        if (draftSaveTimeout.current) {
+          clearTimeout(draftSaveTimeout.current);
+        }
+        draftSaveTimeout.current = setTimeout(() => {
+          AsyncStorage.setItem(draftStorageKey, JSON.stringify(next)).catch(() => {});
+        }, 250);
+        
+        return next;
+      });
+    },
+    [childId, weekStartKey, draftStorageKey]
+  );
+
+  const discardDraft = React.useCallback(async () => {
+    setDraft(null);
+    try {
+      await AsyncStorage.removeItem(draftStorageKey);
+    } catch {
+      // ignore
+    }
+  }, [draftStorageKey]);
+
   const handleCommit = () => {
+    const hasDraft = !!draft && Object.keys(draft.items).length > 0;
+
     const message = t('behavior.finalize.confirm');
     if (Platform.OS === 'web') {
-      if (window.confirm(message)) {
-        commitMutation.mutate();
+      if (!hasDraft) {
+        if (window.confirm(message)) {
+          commitMutation.mutate();
+        }
+        return;
       }
+
+      const proceed = window.confirm(`${t('behavior.draft.unsaved')}\n\n${message}`);
+      if (!proceed) return;
+
+      (async () => {
+        try {
+          await Promise.all(
+            Object.entries(draft.items).map(([behaviorId, value]) =>
+              evaluationsApi.save({
+                behaviorId: Number(behaviorId),
+                userId: childId,
+                currentPoints: value.currentPoints,
+                remarks: value.remarks,
+              })
+            )
+          );
+          await discardDraft();
+          commitMutation.mutate();
+        } catch {
+          Alert.alert(t('common.error'), t('behavior.save.error'));
+        }
+      })();
     } else {
-      Alert.alert(t('behavior.finalize'), message, [
+      if (!hasDraft) {
+        Alert.alert(t('behavior.finalize'), message, [
+          { text: t('button.cancel'), style: 'cancel' },
+          {
+            text: t('behavior.finalize.button'),
+            onPress: () => commitMutation.mutate(),
+          },
+        ]);
+        return;
+      }
+
+      Alert.alert(t('behavior.finalize'), `${t('behavior.draft.unsaved')}\n\n${message}`, [
         { text: t('button.cancel'), style: 'cancel' },
         {
-          text: t('behavior.finalize.button'),
+          text: t('behavior.draft.save_and_commit'),
+          onPress: async () => {
+            try {
+              await Promise.all(
+                Object.entries(draft.items).map(([behaviorId, value]) =>
+                  evaluationsApi.save({
+                    behaviorId: Number(behaviorId),
+                    userId: childId,
+                    currentPoints: value.currentPoints,
+                    remarks: value.remarks,
+                  })
+                )
+              );
+              await discardDraft();
+              commitMutation.mutate();
+            } catch {
+              Alert.alert(t('common.error'), t('behavior.save.error'));
+            }
+          },
+        },
+        {
+          text: t('behavior.draft.commit_anyway'),
+          style: 'destructive',
           onPress: () => commitMutation.mutate(),
         },
       ]);
     }
   };
 
-  const weeklyTotal = evaluations?.reduce((sum, item) => sum + item.currentPoints, 0) || 0;
-  const existingEvaluation = selectedBehavior
-    ? evaluations?.find((e) => e.behavior.id === selectedBehavior.id)
-    : null;
+  const effectiveEvaluationFor = (behavior: BehaviorResponse): BehaviorEvaluationResponse | undefined => {
+    const serverEval = evaluations?.find((e) => e.behavior.id === behavior.id);
+    const draftItem = draft?.items?.[String(behavior.id)];
+    if (!draftItem) return serverEval;
+
+    if (serverEval) {
+      return {
+        ...serverEval,
+        currentPoints: draftItem.currentPoints,
+        remarks: draftItem.remarks,
+      };
+    }
+
+    return {
+      behavior,
+      user: child as any,
+      currentPoints: draftItem.currentPoints,
+      remarks: draftItem.remarks,
+    } as any;
+  };
+
+  const weeklyTotal =
+    behaviors?.reduce((sum, behavior) => sum + (effectiveEvaluationFor(behavior)?.currentPoints ?? 0), 0) ?? 0;
+
+  const existingEvaluation = selectedBehavior ? effectiveEvaluationFor(selectedBehavior) : null;
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -331,6 +556,11 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
             {child ? t('behavior.evaluate.title', { 0: child.firstName }) : t('behavior.evaluate')}
           </Text>
           <Text style={styles.subtitle}>{t('behavior.evaluate.subtitle')}</Text>
+          {draft?.updatedAt && (
+            <Text style={styles.draftHint}>
+              {t('behavior.draft.saved')} ({new Date(draft.updatedAt).toLocaleTimeString()})
+            </Text>
+          )}
         </View>
       </View>
 
@@ -357,7 +587,7 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
                 <BehaviorEvalRow
                   key={behavior.id}
                   behavior={behavior}
-                  evaluation={evaluations?.find((e) => e.behavior.id === behavior.id)}
+                  evaluation={effectiveEvaluationFor(behavior)}
                   isDesktop={isDesktop}
                   onEvaluate={() => handleEvaluate(behavior)}
                   onShowGuideline={() =>
@@ -377,7 +607,7 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
                 <BehaviorEvalRow
                   key={behavior.id}
                   behavior={behavior}
-                  evaluation={evaluations?.find((e) => e.behavior.id === behavior.id)}
+                  evaluation={effectiveEvaluationFor(behavior)}
                   isDesktop={isDesktop}
                   onEvaluate={() => handleEvaluate(behavior)}
                   onShowGuideline={() =>
@@ -404,6 +634,21 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
                 </Text>
               </View>
             </View>
+
+            {!!draft && Object.keys(draft.items).length > 0 && (
+              <TouchableOpacity
+                style={styles.discardDraftButton}
+                onPress={() => {
+                  Alert.alert(t('behavior.draft.discard'), t('behavior.draft.discard.confirm'), [
+                    { text: t('button.cancel'), style: 'cancel' },
+                    { text: t('button.delete'), style: 'destructive', onPress: discardDraft },
+                  ]);
+                }}
+              >
+                <Text style={styles.discardDraftText}>{t('behavior.draft.discard')}</Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
               style={styles.finalizeButton}
               onPress={handleCommit}
@@ -431,7 +676,11 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
           setShowEvalModal(false);
           setSelectedBehavior(null);
         }}
-        onSave={(data) => saveMutation.mutate(data)}
+        onSave={(data) => {
+          setLastSavedBehaviorId(data.behaviorId);
+          saveMutation.mutate(data);
+        }}
+        onDraftChange={updateDraftItem}
         isLoading={saveMutation.isPending}
         t={t}
       />
@@ -490,6 +739,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  draftHint: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#2e7d32',
+    fontWeight: '600',
+  },
   loading: {
     flex: 1,
     justifyContent: 'center',
@@ -519,6 +774,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 2,
     borderBottomColor: '#e0e0e0',
+  },
+  discardDraftButton: {
+    marginTop: 12,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  discardDraftText: {
+    color: '#d32f2f',
+    fontSize: 14,
+    fontWeight: '600',
   },
   tableHeaderCell: {
     justifyContent: 'center',

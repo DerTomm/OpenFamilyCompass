@@ -20,10 +20,10 @@ import {
   useChildren 
 } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
-import { TasksStackParamList } from '../../navigation/types';
+import { ManageStackParamList } from '../../navigation/types';
 import { RecurrenceType } from '../../types/api';
 
-type TaskEditRouteProp = RouteProp<TasksStackParamList, 'TaskEdit'>;
+type TaskEditRouteProp = RouteProp<ManageStackParamList, 'TaskEdit'>;
 
 export const TaskDefinitionEditScreen: React.FC = () => {
   const navigation = useNavigation();

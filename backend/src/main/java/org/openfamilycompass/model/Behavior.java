@@ -33,7 +33,10 @@ public class Behavior {
     private String guideline; // Guideline for the behavior
 
     @Column(nullable = false)
-    private int points; // Points for positive behavior
+    private int points; // Max. plus points per week
+
+    @Column(name = "minus_points", nullable = false)
+    private int minusPoints = 0; // Max. minus points per week (as positive number)
 
     @ManyToOne
     @JoinColumn(name = "user_id")

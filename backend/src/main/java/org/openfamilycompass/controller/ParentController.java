@@ -389,14 +389,15 @@ public class ParentController {
     public String createBehavior(@RequestParam String title,
             @RequestParam String guideline,
             @RequestParam int points,
+            @RequestParam(required = false, defaultValue = "0") int minusPoints,
             @RequestParam(required = false) Long childId,
             Authentication authentication) {
         User child = childId != null ? userService.findById(childId).orElse(null) : null;
         User currentUser = (User) authentication.getPrincipal();
 
-        Behavior behavior = behaviorService.createBehavior(title, guideline, points, child);
+        Behavior behavior = behaviorService.createBehavior(title, guideline, points, minusPoints, child);
 
-        // Create initial evaluations with maximum points for applicable children
+        // Create initial evaluations for applicable children starting at 0
         List<User> applicableChildren;
         if (child != null) {
             applicableChildren = List.of(child);
@@ -405,7 +406,7 @@ public class ParentController {
         }
 
         for (User applicableChild : applicableChildren) {
-            behaviorEvaluationService.updateEvaluation(behavior.getId(), applicableChild, points, null, currentUser);
+            behaviorEvaluationService.updateEvaluation(behavior.getId(), applicableChild, 0, null, currentUser);
         }
 
         return "redirect:/parent/behaviors/manage";
@@ -426,10 +427,11 @@ public class ParentController {
             @RequestParam String title,
             @RequestParam String guideline,
             @RequestParam int points,
+            @RequestParam(required = false, defaultValue = "0") int minusPoints,
             @RequestParam(required = false) Long childId) {
         User child = childId != null ? userService.findById(childId).orElse(null) : null;
 
-        behaviorService.editBehavior(id, title, guideline, points, child);
+        behaviorService.editBehavior(id, title, guideline, points, minusPoints, child);
         return "redirect:/parent/behaviors/manage";
     }
 

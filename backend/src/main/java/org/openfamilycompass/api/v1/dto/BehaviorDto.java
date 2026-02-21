@@ -23,7 +23,8 @@ public class BehaviorDto {
         private Long id;
         private String title;
         private String guideline;
-        private int points;
+        private int plusPoints;
+        private int minusPoints;
         private UserDto.ChildResponse user;
         private int rank;
         private boolean active;
@@ -34,7 +35,8 @@ public class BehaviorDto {
                     .id(behavior.getId())
                     .title(behavior.getTitle())
                     .guideline(behavior.getGuideline())
-                    .points(behavior.getPoints())
+                    .plusPoints(behavior.getPoints())
+                    .minusPoints(behavior.getMinusPoints())
                     .user(behavior.getUser() != null ? UserDto.ChildResponse.fromEntity(behavior.getUser()) : null)
                     .rank(behavior.getRank())
                     .active(behavior.isActive())
@@ -53,8 +55,11 @@ public class BehaviorDto {
         @NotBlank
         private String guideline;
 
-        @Min(1)
-        private int points;
+        @Min(0)
+        private int plusPoints;
+
+        @Min(0)
+        private int minusPoints;
 
         private Long userId;
 
@@ -68,8 +73,11 @@ public class BehaviorDto {
         private String title;
         private String guideline;
 
-        @Min(1)
-        private Integer points;
+        @Min(0)
+        private Integer plusPoints;
+
+        @Min(0)
+        private Integer minusPoints;
 
         private Integer rank;
         private Boolean active;
@@ -115,8 +123,8 @@ public class BehaviorDto {
         @NotNull
         private Long userId;
 
-        @Min(0)
-        private int currentPoints;
+        @NotNull
+        private Integer currentPoints;
 
         private String remarks;
     }

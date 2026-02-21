@@ -17,40 +17,35 @@ export type AuthStackParamList = {
 
 // Main Tab Navigator
 export type MainTabParamList = {
-  Dashboard: undefined;
-  Tasks: NavigatorScreenParams<TasksStackParamList>;
-  Shop: NavigatorScreenParams<ShopStackParamList>;
-  Profile: NavigatorScreenParams<ProfileStackParamList>;
-  Behavior: NavigatorScreenParams<BehaviorStackParamList>;
+  Activities: NavigatorScreenParams<ActivitiesStackParamList>;
+  Manage: NavigatorScreenParams<ManageStackParamList>;
   Notifications: undefined;
-  // Admin only
-  Admin: NavigatorScreenParams<AdminStackParamList>;
+  Profile: NavigatorScreenParams<ProfileStackParamList>;
 };
 
-// Behavior Stack
-export type BehaviorStackParamList = {
-  BehaviorOverview: undefined;
-  BehaviorManage: undefined;
-  BehaviorEvaluate: { userId: number };
-};
-
-// Tasks Stack
-export type TasksStackParamList = {
+// Activities Stack (dynamic content)
+export type ActivitiesStackParamList = {
+  ActivitiesHome: undefined;
   TaskList: undefined;
-  TaskDetail: { taskId: number };
+  RewardList: undefined;
+  ChildBehaviorList: undefined;
+  PendingApproval: undefined;
+  PendingRedemptions: undefined;
+  BehaviorOverview: undefined;
+  BehaviorEvaluate: { childId: number };
+  ChildDetail: { childId: number };
+};
+
+// Manage Stack (master data / configuration)
+export type ManageStackParamList = {
+  ManageHome: undefined;
   TaskManagement: undefined;
   TaskEdit: { taskId?: number };
-  PendingApproval: undefined;
-};
-
-// Shop Stack
-export type ShopStackParamList = {
   RewardList: undefined;
-  RewardDetail: { rewardId: number };
-  RewardCreate: undefined;
-  RewardEdit: { rewardId: number };
-  RedemptionHistory: undefined;
-  PendingRedemptions: undefined;
+  RewardCreate: { rewardId?: number } | undefined;
+  RewardEdit: { rewardId?: number };
+  BehaviorManage: undefined;
+  AdminUserList: undefined;
 };
 
 // Profile Stack
@@ -60,17 +55,6 @@ export type ProfileStackParamList = {
   PointsHistory: undefined;
   Settings: undefined;
   Notifications: undefined;
-};
-
-// Admin Stack
-export type AdminStackParamList = {
-  UserList: undefined;
-  UserCreate: undefined;
-  UserEdit: { userId: number };
-  BehaviorList: undefined;
-  BehaviorCreate: undefined;
-  BehaviorEdit: { behaviorId: number };
-  BehaviorEvaluations: { userId: number };
 };
 
 // Screen Props Types
@@ -86,9 +70,9 @@ export type MainTabScreenProps<T extends keyof MainTabParamList> =
     RootStackScreenProps<keyof RootStackParamList>
   >;
 
-export type TasksStackScreenProps<T extends keyof TasksStackParamList> = 
+export type ActivitiesStackScreenProps<T extends keyof ActivitiesStackParamList> =
   CompositeScreenProps<
-    NativeStackScreenProps<TasksStackParamList, T>,
+    NativeStackScreenProps<ActivitiesStackParamList, T>,
     MainTabScreenProps<keyof MainTabParamList>
   >;
 

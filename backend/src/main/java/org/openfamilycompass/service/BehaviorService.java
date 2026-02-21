@@ -24,11 +24,12 @@ public class BehaviorService {
     private final PointService pointService;
 
     @Transactional
-    public Behavior createBehavior(@NonNull String title, @NonNull String guideline, int points, User user) {
+    public Behavior createBehavior(@NonNull String title, @NonNull String guideline, int plusPoints, int minusPoints, User user) {
         Behavior behavior = new Behavior();
         behavior.setTitle(title);
         behavior.setGuideline(guideline);
-        behavior.setPoints(points);
+        behavior.setPoints(plusPoints);
+        behavior.setMinusPoints(minusPoints);
         behavior.setUser(user);
         behavior.setActive(true);
 
@@ -37,21 +38,23 @@ public class BehaviorService {
 
     @Transactional
     public Behavior editBehavior(@NonNull Long behaviorId, @NonNull String title, @NonNull String guideline,
-            int newPoints, User user) {
+            int newPlusPoints, int newMinusPoints, User user) {
         Behavior behavior = behaviorRepository.findById(behaviorId)
                 .orElseThrow(() -> new IllegalArgumentException("Behavior not found"));
 
-        int oldPoints = behavior.getPoints();
+        int oldPlusPoints = behavior.getPoints();
+        int oldMinusPoints = behavior.getMinusPoints();
 
         // Update all properties
         behavior.setTitle(title);
         behavior.setGuideline(guideline);
-        behavior.setPoints(newPoints);
+        behavior.setPoints(newPlusPoints);
+        behavior.setMinusPoints(newMinusPoints);
         behavior.setUser(user);
 
-        // If points were reduced, cap existing evaluations in the current week
-        if (newPoints < oldPoints) {
-            capPointsInCurrentWeek(behavior, newPoints);
+        // If range was reduced, cap existing evaluations in the current week
+        if (newPlusPoints < oldPlusPoints || newMinusPoints < oldMinusPoints) {
+            capPointsInCurrentWeek(behavior, newPlusPoints, newMinusPoints);
         }
 
         return behaviorRepository.save(behavior);
@@ -60,13 +63,19 @@ public class BehaviorService {
     /**
      * Caps all uncommitted evaluations of a behavior to the new maximum points
      */
-    private void capPointsInCurrentWeek(@NonNull Behavior behavior, int newMaxPoints) {
+    public void capPointsInCurrentWeek(@NonNull Behavior behavior, int newPlusPoints, int newMinusPoints) {
         List<BehaviorEvaluation> evaluations = behaviorEvaluationRepository
                 .findByBehaviorAndCommittedFalse(behavior);
 
         for (BehaviorEvaluation evaluation : evaluations) {
-            if (evaluation.getCurrentPoints() > newMaxPoints) {
-                evaluation.setCurrentPoints(newMaxPoints);
+            int current = evaluation.getCurrentPoints();
+            if (current > newPlusPoints) {
+                evaluation.setCurrentPoints(newPlusPoints);
+                behaviorEvaluationRepository.save(evaluation);
+                continue;
+            }
+            if (current < -newMinusPoints) {
+                evaluation.setCurrentPoints(-newMinusPoints);
                 behaviorEvaluationRepository.save(evaluation);
             }
         }

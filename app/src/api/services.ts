@@ -8,6 +8,7 @@ import {
   CreateTaskDefinitionRequest,
   NotificationResponse,
   PointBalanceResponse,
+  PointTransactionResponse,
   PointTransactionsResponse,
   RewardRedemptionResponse,
   RewardResponse,
@@ -105,9 +106,9 @@ export const behaviorsApi = {
   list: (params?: { userId?: number; active?: boolean }) =>
     api.get<BehaviorResponse[]>('/behaviors', params),
   getById: (id: number) => api.get<BehaviorResponse>(`/behaviors/${id}`),
-  create: (data: { title: string; guideline: string; points: number; userId?: number; rank?: number }) =>
+  create: (data: { title: string; guideline: string; plusPoints: number; minusPoints: number; userId?: number; rank?: number }) =>
     api.post<BehaviorResponse>('/behaviors', data),
-  update: (id: number, data: Partial<{ title: string; guideline: string; points: number; rank: number; active: boolean }>) =>
+  update: (id: number, data: Partial<{ title: string; guideline: string; plusPoints: number; minusPoints: number; rank: number; active: boolean }>) =>
     api.put<BehaviorResponse>(`/behaviors/${id}`, data),
   deactivate: (id: number) => api.delete<void>(`/behaviors/${id}`),
 };
@@ -132,6 +133,8 @@ export const pointsApi = {
     api.post('/points/bonus', { userId, points, description }),
   deductPenalty: (userId: number, points: number, description: string) =>
     api.post('/points/penalty', { userId, points, description }),
+  addPoints: (userId: number, points: number, type: 'BONUS' | 'PENALTY', description: string) =>
+    api.post<PointTransactionResponse>('/points/add', { userId, points, type, description }),
 };
 
 // Notifications

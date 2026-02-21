@@ -79,8 +79,13 @@ public class BehaviorApiController {
         Behavior behavior = new Behavior();
         behavior.setTitle(request.getTitle());
         behavior.setGuideline(request.getGuideline());
-        behavior.setPoints(request.getPoints());
+        behavior.setPoints(request.getPlusPoints());
+        behavior.setMinusPoints(request.getMinusPoints());
         behavior.setActive(true);
+
+        if (behavior.getPoints() == 0 && behavior.getMinusPoints() == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "plusPoints and minusPoints must not both be 0");
+        }
 
         if (request.getUserId() != null) {
             User user = userService.findById(request.getUserId())
@@ -120,14 +125,30 @@ public class BehaviorApiController {
         if (request.getGuideline() != null) {
             behavior.setGuideline(request.getGuideline());
         }
-        if (request.getPoints() != null) {
-            behavior.setPoints(request.getPoints());
+        int oldPlus = behavior.getPoints();
+        int oldMinus = behavior.getMinusPoints();
+
+        if (request.getPlusPoints() != null) {
+            behavior.setPoints(request.getPlusPoints());
+        }
+
+        if (request.getMinusPoints() != null) {
+            behavior.setMinusPoints(request.getMinusPoints());
         }
         if (request.getRank() != null) {
             behavior.setRank(request.getRank());
         }
         if (request.getActive() != null) {
             behavior.setActive(request.getActive());
+        }
+
+        if (behavior.getPoints() == 0 && behavior.getMinusPoints() == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "plusPoints and minusPoints must not both be 0");
+        }
+
+        // If range shrinks, cap existing uncommitted evaluations
+        if (behavior.getPoints() < oldPlus || behavior.getMinusPoints() < oldMinus) {
+            behaviorService.capPointsInCurrentWeek(behavior, behavior.getPoints(), behavior.getMinusPoints());
         }
 
         Behavior saved = behaviorService.save(behavior);

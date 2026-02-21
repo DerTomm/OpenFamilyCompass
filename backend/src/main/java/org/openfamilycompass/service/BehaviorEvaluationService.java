@@ -42,10 +42,13 @@ public class BehaviorEvaluationService {
             throw new IllegalStateException("Behavior is not active");
         }
 
-        // Points must not be negative or exceed the maximum
-        if (currentPoints < 0 || currentPoints > behavior.getPoints()) {
+        int minPoints = -behavior.getMinusPoints();
+        int maxPoints = behavior.getPoints();
+
+        // Points must be within the configured range
+        if (currentPoints < minPoints || currentPoints > maxPoints) {
             throw new IllegalArgumentException(
-                    "Points must be between 0 and " + behavior.getPoints());
+                    "Points must be between " + minPoints + " and " + maxPoints);
         }
 
         // Find existing uncommitted evaluation or create new one
@@ -95,13 +98,13 @@ public class BehaviorEvaluationService {
 
         // Process each evaluation
         for (BehaviorEvaluation evaluation : evaluations) {
-            if (evaluation.getCurrentPoints() > 0) {
-                // Credit points
-                String description = "Behavior: " + evaluation.getBehavior().getTitle();
+            int pointsToBook = evaluation.getCurrentPoints();
 
+            if (pointsToBook != 0) {
+                String description = "Behavior: " + evaluation.getBehavior().getTitle();
                 pointService.addPointsWithRemarks(
                         user,
-                        evaluation.getCurrentPoints(),
+                        pointsToBook,
                         PointTransactionType.BEHAVIOR,
                         description,
                         evaluation.getBehavior().getId(),
@@ -117,7 +120,7 @@ public class BehaviorEvaluationService {
             BehaviorEvaluation nextEvaluation = new BehaviorEvaluation();
             nextEvaluation.setUser(user);
             nextEvaluation.setBehavior(evaluation.getBehavior());
-            nextEvaluation.setCurrentPoints(evaluation.getBehavior().getPoints()); // Initialize with maximum points
+            nextEvaluation.setCurrentPoints(0); // Start next period at 0
             nextEvaluation.setCommitted(false);
             nextEvaluation.setCreatedBy(committedBy);
             nextEvaluation.setRemarks(null);

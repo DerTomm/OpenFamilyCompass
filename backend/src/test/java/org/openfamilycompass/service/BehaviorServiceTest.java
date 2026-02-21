@@ -61,7 +61,7 @@ class BehaviorServiceTest {
         when(behaviorRepository.save(any(Behavior.class))).thenReturn(testBehavior);
 
         // When
-        Behavior result = behaviorService.createBehavior("Respect", "Be respectful to others", 10, testUser);
+        Behavior result = behaviorService.createBehavior("Respect", "Be respectful to others", 10, 0, testUser);
 
         // Then
         assertThat(result).isNotNull();
@@ -77,7 +77,7 @@ class BehaviorServiceTest {
         when(behaviorRepository.save(any(Behavior.class))).thenReturn(testBehavior);
 
         // When
-        Behavior result = behaviorService.editBehavior(1L, "Updated Respect", "Updated guideline", 15, testUser);
+        Behavior result = behaviorService.editBehavior(1L, "Updated Respect", "Updated guideline", 15, 0, testUser);
 
         // Then
         assertThat(result.getTitle()).isEqualTo("Updated Respect");
@@ -103,7 +103,7 @@ class BehaviorServiceTest {
         when(behaviorRepository.save(any(Behavior.class))).thenReturn(testBehavior);
 
         // When - reduce points from 10 to 8
-        behaviorService.editBehavior(1L, "Respect", "Be respectful", 8, testUser);
+        behaviorService.editBehavior(1L, "Respect", "Be respectful", 8, 0, testUser);
 
         // Then - verify that points were capped
         verify(behaviorEvaluationRepository).save(eval1);
@@ -118,7 +118,7 @@ class BehaviorServiceTest {
         when(behaviorRepository.findById(1L)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThatThrownBy(() -> behaviorService.editBehavior(1L, "Title", "Guideline", 10, testUser))
+        assertThatThrownBy(() -> behaviorService.editBehavior(1L, "Title", "Guideline", 10, 0, testUser))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("not found");
     }
