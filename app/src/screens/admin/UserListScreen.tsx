@@ -733,7 +733,6 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         transition: 'background-color 0.2s',
-        cursor: 'default',
       },
     }),
   },
@@ -773,7 +772,6 @@ const styles = StyleSheet.create({
     opacity: 0.4,
     ...Platform.select({
       web: {
-        cursor: 'not-allowed',
       },
     }),
   },

@@ -6,6 +6,7 @@ import { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/n
 export type RootStackParamList = {
   Auth: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
+  ServerSetup: undefined;
 };
 
 // Auth Stack
