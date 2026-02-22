@@ -19,6 +19,7 @@ app/*.mobileprovision
 .env
 .env.local
 .env.*.local
+.env.production
 keystore.properties
 local.properties
 *.keystore
@@ -26,6 +27,9 @@ local.properties
 *.p8
 *.p12
 *.pfx
+
+### Docker ###
+docker-compose.override.yml
 
 ### STS ###
 .apt_generated
