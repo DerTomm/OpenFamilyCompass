@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { evaluationsApi } from '../../api/services';
@@ -24,9 +25,10 @@ interface GuidelineModalProps {
   title: string;
   guideline: string;
   onClose: () => void;
+  styles: any;
 }
 
-const GuidelineModal: React.FC<GuidelineModalProps> = ({ visible, title, guideline, onClose }) => {
+const GuidelineModal: React.FC<GuidelineModalProps> = ({ visible, title, guideline, onClose, styles }) => {
   const { t } = useI18n();
   
   return (
@@ -58,9 +60,10 @@ interface RemarksModalProps {
   title: string;
   remarks: string;
   onClose: () => void;
+  styles: any;
 }
 
-const RemarksModal: React.FC<RemarksModalProps> = ({ visible, title, remarks, onClose }) => {
+const RemarksModal: React.FC<RemarksModalProps> = ({ visible, title, remarks, onClose, styles }) => {
   const { t } = useI18n();
   
   return (
@@ -93,9 +96,10 @@ interface BehaviorCardProps {
   isDesktop: boolean;
   onShowGuideline: () => void;
   onShowRemarks: () => void;
+  styles: any;
 }
 
-const BehaviorCard: React.FC<BehaviorCardProps> = ({ evaluation, isDesktop, onShowGuideline, onShowRemarks }) => {
+const BehaviorCard: React.FC<BehaviorCardProps> = ({ evaluation, isDesktop, onShowGuideline, onShowRemarks, styles }) => {
   const { t } = useI18n();
   const totalRange = evaluation.behavior.plusPoints + evaluation.behavior.minusPoints;
   const progressPercentage =
@@ -181,6 +185,8 @@ export const BehaviorListScreen: React.FC = () => {
   const { user } = useAuthStore();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const [guidelineModal, setGuidelineModal] = useState<{ visible: boolean; title: string; guideline: string }>({
     visible: false,
@@ -254,6 +260,7 @@ export const BehaviorListScreen: React.FC = () => {
                       remarks: evaluation.remarks || '',
                     })
                   }
+                  styles={styles}
                 />
               ))}
             </View>
@@ -280,6 +287,7 @@ export const BehaviorListScreen: React.FC = () => {
                       remarks: evaluation.remarks || '',
                     })
                   }
+                  styles={styles}
                 />
               ))}
             </View>
@@ -305,6 +313,7 @@ export const BehaviorListScreen: React.FC = () => {
         title={guidelineModal.title}
         guideline={guidelineModal.guideline}
         onClose={() => setGuidelineModal({ visible: false, title: '', guideline: '' })}
+        styles={styles}
       />
 
       <RemarksModal
@@ -312,18 +321,19 @@ export const BehaviorListScreen: React.FC = () => {
         title={remarksModal.title}
         remarks={remarksModal.remarks}
         onClose={() => setRemarksModal({ visible: false, title: '', remarks: '' })}
+        styles={styles}
       />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -335,11 +345,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   loading: {
     flex: 1,
@@ -351,7 +361,7 @@ const styles = StyleSheet.create({
   },
   // Desktop Table
   table: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     margin: 16,
     borderRadius: 12,
     overflow: 'hidden',
@@ -406,7 +416,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -436,7 +446,7 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     marginBottom: 4,
   },
   progressContainer: {
@@ -482,7 +492,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   totalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     margin: 16,
     padding: 16,
     borderRadius: 12,
@@ -503,7 +513,7 @@ const styles = StyleSheet.create({
   totalText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   totalValue: {
     fontSize: 24,
@@ -519,7 +529,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     marginTop: 16,
     marginBottom: 8,
   },
@@ -537,7 +547,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 16,
     width: '100%',
     maxWidth: 500,
@@ -554,7 +564,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     flex: 1,
   },
   closeButton: {
@@ -565,18 +575,18 @@ const styles = StyleSheet.create({
   },
   guidelineText: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.onSurface,
     lineHeight: 24,
   },
   remarksLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     marginBottom: 8,
   },
   remarksText: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.onSurface,
     lineHeight: 24,
   },
   modalFooter: {

@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { useMarkAsRead, useNotifications } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { NotificationResponse, NotificationType } from '../../types/api';
@@ -39,9 +40,10 @@ interface NotificationCardProps {
   notification: NotificationResponse;
   onPress: () => void;
   t: (key: string, params?: Record<string, string>) => string;
+  styles: any;
 }
 
-const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onPress, t }) => {
+const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onPress, t, styles }) => {
   const timeAgo = getTimeAgo(new Date(notification.createdAt), t);
 
   return (
@@ -80,6 +82,8 @@ export const NotificationsScreen: React.FC = () => {
   const { data: notifications, isLoading, refetch, isRefetching } = useNotifications({ limit: 50 });
   const markAsRead = useMarkAsRead();
   const { t } = useI18n();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const handlePress = (notification: NotificationResponse) => {
     if (!notification.read) {
@@ -113,6 +117,7 @@ export const NotificationsScreen: React.FC = () => {
               notification={item}
               onPress={() => handlePress(item)}
               t={t}
+              styles={styles}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -134,10 +139,10 @@ export const NotificationsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   header: {
     backgroundColor: '#2196F3',
@@ -158,7 +163,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -184,7 +189,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 4,
   },
   titleUnread: {
@@ -192,7 +197,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 20,
     marginBottom: 4,
   },
@@ -220,11 +225,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   emptySubtext: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 22,
   },

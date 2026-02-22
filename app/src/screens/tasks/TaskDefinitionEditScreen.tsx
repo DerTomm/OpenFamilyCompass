@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { 
   useTaskDefinition, 
@@ -22,6 +22,7 @@ import {
 import { useI18n } from '../../i18n/I18nContext';
 import { ManageStackParamList } from '../../navigation/types';
 import { RecurrenceType } from '../../types/api';
+import { useDialogs } from '../../hooks/useDialogs';
 
 type TaskEditRouteProp = RouteProp<ManageStackParamList, 'TaskEdit'>;
 
@@ -29,6 +30,9 @@ export const TaskDefinitionEditScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<TaskEditRouteProp>();
   const { t } = useI18n();
+  const { showError, showSuccess, showConfirm, Dialogs } = useDialogs();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const taskId = route.params?.taskId;
   const isEditing = !!taskId;
 
@@ -58,11 +62,11 @@ export const TaskDefinitionEditScreen: React.FC = () => {
 
   const handleSave = () => {
     if (!title) {
-      Alert.alert(t('error.title'), t('tasks.error.title_required'));
+      showError(t('tasks.error.title_required'), t('error.title'));
       return;
     }
     if (assignedUserIds.length === 0) {
-      Alert.alert(t('error.title'), t('tasks.error.user_required'));
+      showError(t('tasks.error.user_required'), t('error.title'));
       return;
     }
 
@@ -85,20 +89,14 @@ export const TaskDefinitionEditScreen: React.FC = () => {
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      t('tasks.delete.title'),
-      t('tasks.delete.confirm'),
-      [
-        { text: t('button.cancel'), style: 'cancel' },
-        {
-          text: t('button.delete'),
-          style: 'destructive',
-          onPress: () => {
-            deleteMutation.mutate(taskId!, { onSuccess: () => navigation.goBack() });
-          },
-        },
-      ]
-    );
+    showConfirm({
+      title: t('tasks.delete.title'),
+      message: t('tasks.delete.confirm'),
+      onConfirm: () => deleteMutation.mutate(taskId!, { onSuccess: () => navigation.goBack() }),
+      confirmText: t('button.delete'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+    });
   };
 
   const toggleUserSelection = (userId: number) => {
@@ -242,14 +240,16 @@ export const TaskDefinitionEditScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
+
+      <Dialogs />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -265,12 +265,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.colors.outline,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -285,19 +285,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.colors.outline,
     borderRadius: 8,
     padding: 12,
     backgroundColor: '#f9f9f9',
   },
   selectButtonText: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   optionsContainer: {
     marginTop: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.colors.outline,
     borderRadius: 8,
     backgroundColor: '#fff',
     overflow: 'hidden',
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   optionTextSelected: {
     color: '#2196F3',
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     borderColor: '#2196F3',
   },
   userChipText: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '500',
   },
   userChipTextSelected: {

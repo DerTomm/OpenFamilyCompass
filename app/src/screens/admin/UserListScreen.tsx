@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Modal,
   Platform,
@@ -16,10 +15,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { usersApi } from '../../api/services';
 import { useI18n } from '../../i18n/I18nContext';
 import { UserResponse, UserRole } from '../../types/api';
+import { useDialogs } from '../../hooks/useDialogs';
 
 const ROLE_COLORS: Record<UserRole, string> = {
   ADMIN: '#F44336',
@@ -35,9 +36,10 @@ interface UserRowProps {
   isDesktop: boolean;
   isLastActiveAdmin: boolean;
   t: (key: string) => string;
+  styles: any;
 }
 
-const UserRow: React.FC<UserRowProps> = ({ user, onEdit, onToggleActive, onDelete, isDesktop, isLastActiveAdmin, t }) => {
+const UserRow: React.FC<UserRowProps> = ({ user, onEdit, onToggleActive, onDelete, isDesktop, isLastActiveAdmin, t, styles }) => {
   if (isDesktop) {
     // Desktop table row
     return (
@@ -141,9 +143,11 @@ interface EditUserModalProps {
   onSubmit: (data: { firstName: string; role: string; password?: string }) => void;
   isLoading: boolean;
   t: (key: string) => string;
+  showError: (message: string, title?: string) => void;
+  styles: any;
 }
 
-const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, onSubmit, isLoading, t }) => {
+const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, onSubmit, isLoading, t, showError, styles }) => {
   const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('CHILD');
@@ -158,7 +162,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, o
 
   const handleSubmit = () => {
     if (!firstName) {
-      Alert.alert(t('common.error'), t('admin.users.create.error.fields'));
+      showError(t('admin.users.create.error.fields'), t('common.error'));
       return;
     }
     
@@ -255,9 +259,11 @@ interface CreateUserModalProps {
   onSubmit: (data: { username: string; password: string; firstName: string; role: string }) => void;
   isLoading: boolean;
   t: (key: string) => string;
+  showError: (message: string, title?: string) => void;
+  styles: any;
 }
 
-const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onSubmit, isLoading, t }) => {
+const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onSubmit, isLoading, t, showError, styles }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -265,7 +271,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onS
 
   const handleSubmit = () => {
     if (!username || !password || !firstName) {
-      Alert.alert(t('common.error'), t('admin.users.create.error.fields'));
+      showError(t('admin.users.create.error.fields'), t('common.error'));
       return;
     }
     onSubmit({ username, password, firstName, role });
@@ -367,6 +373,9 @@ export const UserListScreen: React.FC = () => {
   const { t } = useI18n();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+  const { showSuccess, showError, showConfirm, Dialogs } = useDialogs();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   // Check if user is the last active admin
   const isLastActiveAdmin = (user: UserResponse, allUsers: UserResponse[] | undefined): boolean => {
@@ -392,10 +401,10 @@ export const UserListScreen: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowCreateModal(false);
-      Alert.alert(t('common.success'), t('admin.users.create.success'));
+      showSuccess(t('admin.users.create.success'), t('common.success'));
     },
     onError: () => {
-      Alert.alert(t('common.error'), t('admin.users.create.error'));
+      showError(t('admin.users.create.error'), t('common.error'));
     },
   });
 
@@ -406,14 +415,10 @@ export const UserListScreen: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowEditModal(false);
       setEditingUser(null);
-      if (Platform.OS === 'web') {
-        window.alert(t('admin.users.edit.success'));
-      } else {
-        Alert.alert(t('common.success'), t('admin.users.edit.success'));
-      }
+      showSuccess(t('admin.users.edit.success'), t('common.success'));
     },
     onError: () => {
-      Alert.alert(t('common.error'), t('admin.users.edit.error'));
+      showError(t('admin.users.edit.error'), t('common.error'));
     },
   });
 
@@ -439,73 +444,39 @@ export const UserListScreen: React.FC = () => {
   const handleToggleActive = (user: UserResponse) => {
     // Prevent deactivating the last active admin
     if (user.active && isLastActiveAdmin(user, users)) {
-      const errorMessage = t('admin.users.error.last_admin');
-      if (Platform.OS === 'web') {
-        window.alert(errorMessage);
-      } else {
-        Alert.alert(t('common.error'), errorMessage);
-      }
+      showError(t('admin.users.error.last_admin'), t('common.error'));
       return;
     }
 
-    const message = `${user.active ? t('admin.users.deactivate').toLowerCase() : t('admin.users.activate').toLowerCase()} ${user.firstName}?`;
+    const message = t('admin.users.toggle.message', { 0: user.active ? t('admin.users.deactivate').toLowerCase() : t('admin.users.activate').toLowerCase(), 1: user.firstName });
 
-    if (Platform.OS === 'web') {
-      // Use browser confirm dialog for web
-      if (window.confirm(message)) {
-        deactivateUser.mutate(user.id);
-      }
-    } else {
-      // Use React Native Alert for mobile
-      Alert.alert(
-        user.active ? t('admin.users.deactivate.title') : t('admin.users.activate.title'),
-        t('admin.users.toggle.message', { 0: user.active ? t('admin.users.deactivate').toLowerCase() : t('admin.users.activate').toLowerCase(), 1: user.firstName }),
-        [
-          { text: t('button.cancel'), style: 'cancel' },
-          {
-            text: user.active ? t('admin.users.deactivate') : t('admin.users.activate'),
-            style: user.active ? 'destructive' : 'default',
-            onPress: () => deactivateUser.mutate(user.id),
-          },
-        ]
-      );
-    }
+    showConfirm({
+      title: user.active ? t('admin.users.deactivate.title') : t('admin.users.activate.title'),
+      message,
+      onConfirm: () => deactivateUser.mutate(user.id),
+      confirmText: user.active ? t('admin.users.deactivate') : t('admin.users.activate'),
+      cancelText: t('button.cancel'),
+      destructive: user.active,
+    });
   };
 
   const handleDelete = (user: UserResponse) => {
     // Prevent deleting the last active admin
     if (isLastActiveAdmin(user, users)) {
-      const errorMessage = t('admin.users.error.last_admin_delete');
-      if (Platform.OS === 'web') {
-        window.alert(errorMessage);
-      } else {
-        Alert.alert(t('common.error'), errorMessage);
-      }
+      showError(t('admin.users.error.last_admin_delete'), t('common.error'));
       return;
     }
 
     const message = t('admin.users.delete.message', { 0: user.firstName });
 
-    if (Platform.OS === 'web') {
-      // Use browser confirm dialog for web
-      if (window.confirm(message)) {
-        deleteUserPermanent.mutate(user.id);
-      }
-    } else {
-      // Use React Native Alert for mobile
-      Alert.alert(
-        t('admin.users.delete.title'),
-        message,
-        [
-          { text: t('button.cancel'), style: 'cancel' },
-          {
-            text: t('admin.users.delete'),
-            style: 'destructive',
-            onPress: () => deleteUserPermanent.mutate(user.id),
-          },
-        ]
-      );
-    }
+    showConfirm({
+      title: t('admin.users.delete.title'),
+      message,
+      onConfirm: () => deleteUserPermanent.mutate(user.id),
+      confirmText: t('admin.users.delete'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+    });
   };
 
   return (
@@ -573,6 +544,7 @@ export const UserListScreen: React.FC = () => {
                   isDesktop={isDesktop}
                   isLastActiveAdmin={isLastActiveAdmin(user, users)}
                   t={t}
+                  styles={styles}
                 />
               ))
             ) : (
@@ -596,6 +568,7 @@ export const UserListScreen: React.FC = () => {
               isDesktop={isDesktop}
               isLastActiveAdmin={isLastActiveAdmin(item, users)}
               t={t}
+              styles={styles}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -627,6 +600,8 @@ export const UserListScreen: React.FC = () => {
         onSubmit={(data) => editingUser && updateUser.mutate({ id: editingUser.id, data })}
         isLoading={updateUser.isPending}
         t={t}
+        showError={showError}
+        styles={styles}
       />
 
       <CreateUserModal
@@ -635,15 +610,19 @@ export const UserListScreen: React.FC = () => {
         onSubmit={(data) => createUser.mutate(data)}
         isLoading={createUser.isPending}
         t={t}
+        showError={showError}
+        styles={styles}
       />
+
+      <Dialogs />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -664,7 +643,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2196F3',
   },
   filterText: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -691,7 +670,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   table: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     margin: 16,
     borderRadius: 12,
     overflow: 'hidden',
@@ -746,7 +725,7 @@ const styles = StyleSheet.create({
   },
   tableCellText: {
     fontSize: 15,
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   tableCellActions: {
     flex: 1,
@@ -781,7 +760,7 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -818,7 +797,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   userInfo: {
     flex: 1,
@@ -826,7 +805,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   userUsername: {
     fontSize: 14,
@@ -898,7 +877,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -906,7 +885,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 20,
   },
   inputGroup: {
@@ -915,12 +894,12 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.colors.outline,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -942,7 +921,7 @@ const styles = StyleSheet.create({
   },
   roleOptionText: {
     fontWeight: '500',
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   roleOptionTextActive: {
     color: '#fff',
@@ -965,7 +944,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   cancelButtonText: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontSize: 16,
   },
 });

@@ -21,6 +21,7 @@ export const ChildDashboardScreen: React.FC = () => {
   const theme = useTheme();
   const { t } = useI18n();
   const navigation = useNavigation<NavigationProp>();
+  const styles = createStyles(theme);
 
   // Load recent transactions
   const { data: transactionsData } = usePointTransactions({ userId: user?.id, limit: 5 });
@@ -208,7 +209,7 @@ export const ChildDashboardScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   pointsValue: {
-    color: '#FFF',
+    color: theme.colors.onPrimary,
     fontWeight: '900',
     marginBottom: spacing.lg,
   },

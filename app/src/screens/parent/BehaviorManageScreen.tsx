@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { behaviorsApi, usersApi } from '../../api/services';
@@ -28,9 +29,10 @@ interface BehaviorModalProps {
   onSubmit: (data: { title: string; guideline: string; plusPoints: number; minusPoints: number; userId?: number }) => void;
   isLoading: boolean;
   t: (key: string) => string;
+  styles: any;
 }
 
-const BehaviorModal: React.FC<BehaviorModalProps> = ({ visible, behavior, children, onClose, onSubmit, isLoading, t }) => {
+const BehaviorModal: React.FC<BehaviorModalProps> = ({ visible, behavior, children, onClose, onSubmit, isLoading, t, styles }) => {
   const [title, setTitle] = useState('');
   const [guideline, setGuideline] = useState('');
   const [plusPoints, setPlusPoints] = useState('');
@@ -192,9 +194,10 @@ interface BehaviorRowProps {
   onDelete: () => void;
   onShowGuideline: () => void;
   t: (key: string) => string;
+  styles: any;
 }
 
-const BehaviorRow: React.FC<BehaviorRowProps> = ({ behavior, isDesktop, onEdit, onDelete, onShowGuideline, t }) => {
+const BehaviorRow: React.FC<BehaviorRowProps> = ({ behavior, isDesktop, onEdit, onDelete, onShowGuideline, t, styles }) => {
   const pointsRange = `+${behavior.plusPoints} / -${behavior.minusPoints}`;
 
   if (isDesktop) {
@@ -276,6 +279,8 @@ export const BehaviorManageScreen: React.FC = () => {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const queryClient = useQueryClient();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const [showModal, setShowModal] = useState(false);
   const [editingBehavior, setEditingBehavior] = useState<BehaviorResponse | null>(null);
@@ -421,6 +426,7 @@ export const BehaviorManageScreen: React.FC = () => {
                   onDelete={() => handleDelete(behavior)}
                   onShowGuideline={() => setGuidelineModal({ visible: true, guideline: behavior.guideline })}
                   t={t}
+                  styles={styles}
                 />
               ))}
             </View>
@@ -435,6 +441,7 @@ export const BehaviorManageScreen: React.FC = () => {
                   onDelete={() => handleDelete(behavior)}
                   onShowGuideline={() => setGuidelineModal({ visible: true, guideline: behavior.guideline })}
                   t={t}
+                  styles={styles}
                 />
               ))}
             </View>
@@ -462,6 +469,7 @@ export const BehaviorManageScreen: React.FC = () => {
         onSubmit={handleSubmit}
         isLoading={createMutation.isPending || updateMutation.isPending}
         t={t}
+        styles={styles}
       />
 
       <Modal visible={guidelineModal.visible} transparent animationType="fade">
@@ -494,13 +502,13 @@ export const BehaviorManageScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -513,7 +521,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   createButton: {
     flexDirection: 'row',
@@ -538,7 +546,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   table: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     margin: 16,
     borderRadius: 12,
     overflow: 'hidden',
@@ -585,12 +593,12 @@ const styles = StyleSheet.create({
   },
   tableCellText: {
     fontSize: 15,
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   behaviorTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   iconButton: {
     padding: 8,
@@ -601,7 +609,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -624,7 +632,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   cardRow: {
     flexDirection: 'row',
@@ -634,12 +642,12 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   cardValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   cardActions: {
     flexDirection: 'row',
@@ -669,7 +677,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     marginTop: 16,
     marginBottom: 16,
   },
@@ -693,13 +701,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
   },
   guidelineModalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 16,
     margin: 16,
     maxHeight: '80%',
@@ -715,7 +723,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     flex: 1,
   },
   closeButton: {
@@ -730,7 +738,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   input: {
@@ -761,7 +769,7 @@ const styles = StyleSheet.create({
   },
   childOptionText: {
     fontWeight: '500',
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   childOptionTextActive: {
     color: '#fff',
@@ -783,7 +791,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   submitButton: {
     flex: 1,
@@ -799,7 +807,7 @@ const styles = StyleSheet.create({
   },
   guidelineText: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.onSurface,
     lineHeight: 24,
   },
   modalButton: {

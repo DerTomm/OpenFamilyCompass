@@ -49,25 +49,6 @@ export const ParentDashboardScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Welcome Header */}
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={{ color: theme.colors.onBackground }}>
-            {t('dashboard.welcome')}
-          </Text>
-          <Text
-            variant="headlineMedium"
-            style={[styles.userName, { color: theme.colors.primary }]}
-          >
-            {user?.firstName || t('role.parent')}! 👋
-          </Text>
-          <Text
-            variant="bodyMedium"
-            style={[styles.subGreeting, { color: theme.colors.onSurfaceVariant }]}
-          >
-            {t('dashboard.subtitle')}
-          </Text>
-        </View>
-
         {/* Children Overview */}
         <View style={styles.section}>
           <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
@@ -217,16 +198,6 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.md,
     paddingBottom: spacing.xl,
-  },
-  header: {
-    marginBottom: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  userName: {
-    fontWeight: '700',
-  },
-  subGreeting: {
-    marginTop: spacing.xs,
   },
   section: {
     marginBottom: spacing.lg,

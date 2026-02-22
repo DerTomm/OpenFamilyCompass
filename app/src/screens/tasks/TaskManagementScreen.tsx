@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   ScrollView,
@@ -10,12 +9,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Button, Chip, DataTable, IconButton, Searchbar, Text } from 'react-native-paper';
+import { Button, Chip, DataTable, IconButton, Searchbar, Text, useTheme } from 'react-native-paper';
 import { useTaskDefinitions, useChildren, useDeleteTaskDefinition } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { TaskDefinitionResponse } from '../../types/api';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ManageStackParamList } from '../../navigation/types';
+import { useDialogs } from '../../hooks/useDialogs';
 
 type NavigationProp = NativeStackNavigationProp<ManageStackParamList>;
 
@@ -24,6 +24,9 @@ export const TaskManagementScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+  const { showConfirm, Dialogs } = useDialogs();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const { data: tasks, isLoading, refetch, isRefetching } = useTaskDefinitions();
   const { data: children } = useChildren();
@@ -58,18 +61,14 @@ export const TaskManagementScreen: React.FC = () => {
   };
 
   const handleDelete = (task: TaskDefinitionResponse) => {
-    Alert.alert(
-      t('tasks.delete.title'),
-      t('tasks.delete.confirm'),
-      [
-        { text: t('button.cancel'), style: 'cancel' },
-        {
-          text: t('button.delete'),
-          style: 'destructive',
-          onPress: () => deleteMutation.mutate(task.id),
-        },
-      ]
-    );
+    showConfirm({
+      title: t('tasks.delete.title'),
+      message: t('tasks.delete.confirm'),
+      onConfirm: () => deleteMutation.mutate(task.id),
+      confirmText: t('button.delete'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+    });
   };
 
   const columnFlex = {
@@ -225,14 +224,16 @@ export const TaskManagementScreen: React.FC = () => {
           <View style={styles.tableContainer}>{table}</View>
         </ScrollView>
       )}
+
+      <Dialogs />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   loading: {
     flex: 1,
@@ -240,11 +241,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterSection: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     padding: 16,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.surfaceVariant,
   },
   toolbar: {
     flexDirection: 'row',
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     elevation: 0,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.surfaceVariant,
     height: 40,
     flex: 1,
     minWidth: 220,
@@ -291,18 +292,18 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#fff',
+    color: theme.colors.onPrimary,
   },
   tableContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     margin: 16,
     borderRadius: 8,
     elevation: 2,
     overflow: 'hidden',
   },
   table: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
   },
   tableMobile: {
     minWidth: 900,

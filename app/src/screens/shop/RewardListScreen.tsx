@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -11,11 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRequestRedemption, useRewards } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { RewardResponse } from '../../types/api';
+import { useDialogs } from '../../hooks/useDialogs';
 
 interface RewardCardProps {
   reward: RewardResponse;
@@ -25,6 +26,7 @@ interface RewardCardProps {
   isRedeeming: boolean;
   isChild: boolean;
   t: (key: string) => string;
+  styles: any;
 }
 
 const RewardCard: React.FC<RewardCardProps> = ({
@@ -35,6 +37,7 @@ const RewardCard: React.FC<RewardCardProps> = ({
   isRedeeming,
   isChild,
   t,
+  styles,
 }) => {
   const canAfford = userPoints >= reward.pointsCost;
 
@@ -102,23 +105,22 @@ export const RewardListScreen: React.FC = () => {
   const isChild = useAuthStore(selectIsChild);
   const { t } = useI18n();
   const navigation = useNavigation<any>();
+  const { showConfirm, Dialogs } = useDialogs();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   // If parent, fetch all (active and inactive), if child fetch only active
   const { data: rewards, isLoading, refetch, isRefetching } = useRewards(isChild ? true : undefined);
   const requestRedemption = useRequestRedemption();
 
   const handleRedeem = (reward: RewardResponse) => {
-    Alert.alert(
-      t('rewards.redeem.confirm.title'),
-      t('rewards.redeem.confirm.message', { 0: reward.title, 1: reward.pointsCost }),
-      [
-        { text: t('button.cancel'), style: 'cancel' },
-        {
-          text: t('rewards.redeem'),
-          onPress: () => requestRedemption.mutate(reward.id),
-        },
-      ]
-    );
+    showConfirm({
+      title: t('rewards.redeem.confirm.title'),
+      message: t('rewards.redeem.confirm.message', { 0: reward.title, 1: reward.pointsCost }),
+      onConfirm: () => requestRedemption.mutate(reward.id),
+      confirmText: t('rewards.redeem'),
+      cancelText: t('button.cancel'),
+    });
   };
 
   const handleEdit = (reward: RewardResponse) => {
@@ -155,6 +157,7 @@ export const RewardListScreen: React.FC = () => {
               isRedeeming={requestRedemption.isPending && requestRedemption.variables === item.id}
               isChild={isChild}
               t={t}
+              styles={styles}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -180,10 +183,10 @@ export const RewardListScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   balanceHeader: {
     backgroundColor: '#9C27B0',
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
     paddingBottom: 80, // Space for FAB
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -246,7 +249,7 @@ const styles = StyleSheet.create({
   rewardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     flex: 1,
     marginRight: 8,
   },
@@ -259,11 +262,11 @@ const styles = StyleSheet.create({
   },
   inactiveText: {
     fontSize: 10,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontWeight: 'bold',
   },
   rewardDescription: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontSize: 14,
     marginBottom: 8,
   },
@@ -280,7 +283,7 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   costLabel: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontSize: 14,
   },
   redeemButton: {
@@ -309,11 +312,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 4,
   },
   emptySubtext: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   fab: {
     position: 'absolute',

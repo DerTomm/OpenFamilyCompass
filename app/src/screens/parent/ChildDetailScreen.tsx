@@ -7,8 +7,6 @@ import {
   Modal,
   TextInput,
   TouchableOpacity,
-  Alert,
-  Platform,
 } from 'react-native';
 import { ActivityIndicator, Button, Card, Text, useTheme, Divider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +20,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { pointsApi } from '../../api/services';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SuccessDialog, ErrorDialog } from '../../components/ui';
 
 type RouteParams = RouteProp<ActivitiesStackParamList, 'ChildDetail'>;
 type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
@@ -42,6 +41,9 @@ export const ChildDetailScreen: React.FC = () => {
   const [showPointsModal, setShowPointsModal] = useState(false);
   const [pointsAmount, setPointsAmount] = useState('');
   const [pointsDescription, setPointsDescription] = useState('');
+  const [successDialogVisible, setSuccessDialogVisible] = useState(false);
+  const [errorDialogVisible, setErrorDialogVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const addPointsMutation = useMutation({
     mutationFn: (data: { userId: number; points: number; description: string; type: 'BONUS' | 'PENALTY' }) =>
@@ -53,25 +55,24 @@ export const ChildDetailScreen: React.FC = () => {
       setShowPointsModal(false);
       setPointsAmount('');
       setPointsDescription('');
-      if (Platform.OS === 'web') {
-        window.alert(t('common.success'));
-      } else {
-        Alert.alert(t('common.success'));
-      }
+      setSuccessDialogVisible(true);
     },
     onError: () => {
-      Alert.alert(t('common.error'));
+      setErrorMessage(t('common.error'));
+      setErrorDialogVisible(true);
     },
   });
 
   const handleAddPoints = (isBonus: boolean) => {
     const amount = parseInt(pointsAmount, 10);
     if (isNaN(amount) || amount === 0) {
-      Alert.alert(t('common.error'), 'Bitte gültigen Betrag eingeben');
+      setErrorMessage(t('points.validation.amount'));
+      setErrorDialogVisible(true);
       return;
     }
     if (!pointsDescription.trim()) {
-      Alert.alert(t('common.error'), 'Bitte Begründung eingeben');
+      setErrorMessage(t('points.validation.description'));
+      setErrorDialogVisible(true);
       return;
     }
 
@@ -384,6 +385,22 @@ export const ChildDetailScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Success Dialog */}
+      <SuccessDialog
+        visible={successDialogVisible}
+        title={t('common.success')}
+        message={t('points.added.success')}
+        onDismiss={() => setSuccessDialogVisible(false)}
+      />
+
+      {/* Error Dialog */}
+      <ErrorDialog
+        visible={errorDialogVisible}
+        title={t('common.error')}
+        message={errorMessage}
+        onDismiss={() => setErrorDialogVisible(false)}
+      />
     </SafeAreaView>
   );
 };

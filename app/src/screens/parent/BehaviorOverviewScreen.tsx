@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useChildren } from '../../hooks/useApi';
@@ -23,9 +24,10 @@ interface ChildCardProps {
   child: ChildResponse;
   onPress: () => void;
   t: (key: string) => string;
+  styles: any;
 }
 
-const ChildCard: React.FC<ChildCardProps> = ({ child, onPress, t }) => (
+const ChildCard: React.FC<ChildCardProps> = ({ child, onPress, t, styles }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
     <View style={styles.avatarContainer}>
       <Text style={styles.avatarText}>{child.firstName.charAt(0)}</Text>
@@ -44,6 +46,8 @@ export const BehaviorOverviewScreen: React.FC = () => {
   const { t } = useI18n();
   const navigation = useNavigation<NavigationProp>();
   const { data: children, isLoading, refetch, isRefetching } = useChildren();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const handleChildSelect = (child: ChildResponse) => {
     navigation.navigate('BehaviorEvaluate', { childId: child.id });
@@ -84,6 +88,7 @@ export const BehaviorOverviewScreen: React.FC = () => {
               child={item}
               onPress={() => handleChildSelect(item)}
               t={t}
+              styles={styles}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -102,13 +107,13 @@ export const BehaviorOverviewScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -120,18 +125,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   manageButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     margin: 16,
     padding: 12,
     borderRadius: 8,
@@ -155,7 +160,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     padding: 16,
     borderRadius: 12,
     shadowColor: '#000',
@@ -184,11 +189,11 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   points: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   emptyContainer: {
     flex: 1,

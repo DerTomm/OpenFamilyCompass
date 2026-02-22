@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Switch,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { 
   useReward, 
   useCreateReward, 
@@ -19,11 +19,15 @@ import {
   useDeactivateReward 
 } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
+import { useDialogs } from '../../hooks/useDialogs';
 
 export const RewardEditScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<any>();
   const { t } = useI18n();
+  const { showError, showConfirm, Dialogs } = useDialogs();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   // route.params can be undefined if navigated via RewardCreate alias
   const rewardId = route.params?.rewardId; 
   const isEditing = !!rewardId;
@@ -50,12 +54,12 @@ export const RewardEditScreen: React.FC = () => {
 
   const handleSave = () => {
     if (!title) {
-      Alert.alert(t('error.title'), t('rewards.error.title_required'));
+      showError(t('rewards.error.title_required'), t('error.title'));
       return;
     }
     const cost = parseInt(pointsCost, 10);
     if (isNaN(cost) || cost < 0) {
-      Alert.alert(t('error.title'), t('rewards.error.points_invalid'));
+      showError(t('rewards.error.points_invalid'), t('error.title'));
       return;
     }
 
@@ -76,20 +80,14 @@ export const RewardEditScreen: React.FC = () => {
   };
 
   const handleDeactivate = () => {
-    Alert.alert(
-      t('rewards.deactivate.title'),
-      t('rewards.deactivate.confirm'),
-      [
-        { text: t('button.cancel'), style: 'cancel' },
-        {
-          text: t('button.deactivate'),
-          style: 'destructive',
-          onPress: () => {
-            deactivateMutation.mutate(rewardId!, { onSuccess: () => navigation.goBack() });
-          },
-        },
-      ]
-    );
+    showConfirm({
+      title: t('rewards.deactivate.title'),
+      message: t('rewards.deactivate.confirm'),
+      onConfirm: () => deactivateMutation.mutate(rewardId!, { onSuccess: () => navigation.goBack() }),
+      confirmText: t('button.deactivate'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+    });
   };
 
   const isLoading = isLoadingReward || createMutation.isPending || updateMutation.isPending || deactivateMutation.isPending;
@@ -176,14 +174,16 @@ export const RewardEditScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
+
+      <Dialogs />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -199,12 +199,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.colors.outline,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
