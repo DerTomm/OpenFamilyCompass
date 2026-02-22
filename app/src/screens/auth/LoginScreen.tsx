@@ -1,7 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Image,
   Modal,
   TextInput as RNTextInput,
@@ -14,11 +13,13 @@ import { API_CONFIG, secureStorage, STORAGE_KEYS } from '../../api/config';
 import { Button } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
 import { useI18n } from '../../i18n/I18nContext';
+import { useDialogs } from '../../hooks/useDialogs';
 
 export const LoginScreen: React.FC = () => {
   const { login } = useAuth();
   const theme = useTheme();
   const { t } = useI18n();
+  const { showError, showSuccess, Dialogs } = useDialogs();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showServerDialog, setShowServerDialog] = useState(false);
@@ -49,7 +50,7 @@ export const LoginScreen: React.FC = () => {
     try {
       // Validiere die URL
       if (!serverUrl || !serverUrl.startsWith('http')) {
-        Alert.alert(t('common.error'), t('login.server.url.invalid'));
+        showError(t('login.server.url.invalid'), t('common.error'));
         return;
       }
 
@@ -60,10 +61,10 @@ export const LoginScreen: React.FC = () => {
       API_CONFIG.baseUrl = cleanUrl;
 
       setShowServerDialog(false);
-      Alert.alert(t('common.success'), t('login.server.save.success'));
+      showSuccess(t('login.server.save.success'), t('common.success'));
     } catch (err) {
       console.error('Error saving server URL:', err);
-      Alert.alert(t('common.error'), t('login.server.save.error'));
+      showError(t('login.server.save.error'), t('common.error'));
     }
   };
 
@@ -269,6 +270,8 @@ export const LoginScreen: React.FC = () => {
           </Surface>
         </View>
       </Modal>
+
+      <Dialogs />
     </SafeAreaView>
   );
 };

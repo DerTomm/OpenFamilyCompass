@@ -328,6 +328,9 @@ export const en = {
     // Common
     'common.success': 'Success',
     'common.error': 'Error',
+    'points.added.success': 'Points successfully awarded!',
+    'points.validation.amount': 'Please enter a valid amount',
+    'points.validation.description': 'Please enter a description',
     'common.actions': 'Actions',
     'button.confirm': 'Confirm',
 

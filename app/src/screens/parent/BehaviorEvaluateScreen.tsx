@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Platform,
   RefreshControl,
@@ -15,12 +14,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Slider from '@react-native-community/slider';
 import { behaviorsApi, evaluationsApi, usersApi } from '../../api/services';
 import { useI18n } from '../../i18n/I18nContext';
 import { BehaviorResponse, BehaviorEvaluationResponse, ChildResponse } from '../../types/api';
+import { useDialogs } from '../../hooks/useDialogs';
 
 interface EvaluationModalProps {
   visible: boolean;
@@ -32,6 +33,7 @@ interface EvaluationModalProps {
   onDraftChange?: (data: { behaviorId: number; currentPoints: number; remarks?: string }) => void;
   isLoading: boolean;
   t: (key: string) => string;
+  styles: any;
 }
 
 const EvaluationModal: React.FC<EvaluationModalProps> = ({
@@ -44,7 +46,9 @@ const EvaluationModal: React.FC<EvaluationModalProps> = ({
   onDraftChange,
   isLoading,
   t,
+  styles: modalStyles,
 }) => {
+  const styles = modalStyles;
   const [points, setPoints] = useState(0);
   const [remarks, setRemarks] = useState('');
 
@@ -168,6 +172,7 @@ interface BehaviorEvalRowProps {
   onEvaluate: () => void;
   onShowGuideline: () => void;
   t: (key: string) => string;
+  styles: any;
 }
 
 const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
@@ -177,6 +182,7 @@ const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
   onEvaluate,
   onShowGuideline,
   t,
+  styles,
 }) => {
   const currentPoints = evaluation?.currentPoints ?? 0;
   const totalRange = behavior.plusPoints + behavior.minusPoints;
@@ -260,6 +266,9 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const queryClient = useQueryClient();
+  const { showSuccess, showError, showConfirm, Dialogs } = useDialogs();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const weekStartKey = React.useMemo(() => {
     const now = new Date();
@@ -354,7 +363,7 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
       setLastSavedBehaviorId(null);
     },
     onError: () => {
-      Alert.alert(t('common.error'), t('behavior.save.error'));
+      showError(t('behavior.save.error'), t('common.error'));
     },
   });
 
@@ -367,14 +376,10 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
       queryClient.invalidateQueries({ queryKey: ['points', childId] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       const message = `${data.evaluationsCommitted} ${t('behavior.finalize.success.evaluations')}, ${data.totalPointsAwarded} ${t('behavior.finalize.success.points')}`;
-      if (Platform.OS === 'web') {
-        window.alert(message);
-      } else {
-        Alert.alert(t('common.success'), message);
-      }
+      showSuccess(message, t('common.success'));
     },
     onError: () => {
-      Alert.alert(t('common.error'), t('behavior.finalize.error'));
+      showError(t('behavior.finalize.error'), t('common.error'));
     },
   });
 
@@ -444,80 +449,48 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
     }
   }, [draftStorageKey]);
 
+  const saveDraftAndCommit = async () => {
+    try {
+      if (draft) {
+        await Promise.all(
+          Object.entries(draft.items).map(([behaviorId, value]) =>
+            evaluationsApi.save({
+              behaviorId: Number(behaviorId),
+              userId: childId,
+              currentPoints: value.currentPoints,
+              remarks: value.remarks,
+            })
+          )
+        );
+        await discardDraft();
+      }
+      commitMutation.mutate();
+    } catch {
+      showError(t('behavior.save.error'), t('common.error'));
+    }
+  };
+
   const handleCommit = () => {
     const hasDraft = !!draft && Object.keys(draft.items).length > 0;
-
     const message = t('behavior.finalize.confirm');
-    if (Platform.OS === 'web') {
-      if (!hasDraft) {
-        if (window.confirm(message)) {
-          commitMutation.mutate();
-        }
-        return;
-      }
 
-      const proceed = window.confirm(`${t('behavior.draft.unsaved')}\n\n${message}`);
-      if (!proceed) return;
-
-      (async () => {
-        try {
-          await Promise.all(
-            Object.entries(draft.items).map(([behaviorId, value]) =>
-              evaluationsApi.save({
-                behaviorId: Number(behaviorId),
-                userId: childId,
-                currentPoints: value.currentPoints,
-                remarks: value.remarks,
-              })
-            )
-          );
-          await discardDraft();
-          commitMutation.mutate();
-        } catch {
-          Alert.alert(t('common.error'), t('behavior.save.error'));
-        }
-      })();
+    if (!hasDraft) {
+      showConfirm({
+        title: t('behavior.finalize'),
+        message,
+        onConfirm: () => commitMutation.mutate(),
+        confirmText: t('behavior.finalize.button'),
+        cancelText: t('button.cancel'),
+      });
     } else {
-      if (!hasDraft) {
-        Alert.alert(t('behavior.finalize'), message, [
-          { text: t('button.cancel'), style: 'cancel' },
-          {
-            text: t('behavior.finalize.button'),
-            onPress: () => commitMutation.mutate(),
-          },
-        ]);
-        return;
-      }
-
-      Alert.alert(t('behavior.finalize'), `${t('behavior.draft.unsaved')}\n\n${message}`, [
-        { text: t('button.cancel'), style: 'cancel' },
-        {
-          text: t('behavior.draft.save_and_commit'),
-          onPress: async () => {
-            try {
-              await Promise.all(
-                Object.entries(draft.items).map(([behaviorId, value]) =>
-                  evaluationsApi.save({
-                    behaviorId: Number(behaviorId),
-                    userId: childId,
-                    currentPoints: value.currentPoints,
-                    remarks: value.remarks,
-                  })
-                )
-              );
-              await discardDraft();
-              commitMutation.mutate();
-            } catch {
-              Alert.alert(t('common.error'), t('behavior.save.error'));
-            }
-          },
-        },
-        {
-          text: t('behavior.draft.commit_anyway'),
-          style: 'destructive',
-          onPress: () => commitMutation.mutate(),
-        },
-      ]);
+      // For drafts, we'll use a simple confirm to save & commit
+      showConfirm({
+        title: t('behavior.finalize'),
+        message: `${t('behavior.draft.unsaved')}\n\n${message}`,
+        onConfirm: saveDraftAndCommit,
+        confirmText: t('behavior.draft.save_and_commit'),
+        cancelText: t('button.cancel'),
+      });
     }
   };
 
@@ -594,6 +567,7 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
                     setGuidelineModal({ visible: true, title: behavior.title, guideline: behavior.guideline })
                   }
                   t={t}
+                  styles={styles}
                 />
               ))}
               <View style={styles.tableSummary}>
@@ -614,6 +588,7 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
                     setGuidelineModal({ visible: true, title: behavior.title, guideline: behavior.guideline })
                   }
                   t={t}
+                  styles={styles}
                 />
               ))}
               <View style={styles.totalContainer}>
@@ -639,10 +614,14 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
               <TouchableOpacity
                 style={styles.discardDraftButton}
                 onPress={() => {
-                  Alert.alert(t('behavior.draft.discard'), t('behavior.draft.discard.confirm'), [
-                    { text: t('button.cancel'), style: 'cancel' },
-                    { text: t('button.delete'), style: 'destructive', onPress: discardDraft },
-                  ]);
+                  showConfirm({
+                    title: t('behavior.draft.discard'),
+                    message: t('behavior.draft.discard.confirm'),
+                    onConfirm: discardDraft,
+                    confirmText: t('button.delete'),
+                    cancelText: t('button.cancel'),
+                    destructive: true,
+                  });
                 }}
               >
                 <Text style={styles.discardDraftText}>{t('behavior.draft.discard')}</Text>
@@ -683,6 +662,7 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
         onDraftChange={updateDraftItem}
         isLoading={saveMutation.isPending}
         t={t}
+        styles={styles}
       />
 
       <Modal visible={guidelineModal.visible} transparent animationType="fade">
@@ -711,21 +691,23 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
           </View>
         </View>
       </Modal>
+
+      <Dialogs />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.surfaceVariant,
   },
   headerContent: {
     gap: 4,
@@ -733,11 +715,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   draftHint: {
     marginTop: 4,
@@ -754,7 +736,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   table: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     margin: 16,
     borderRadius: 12,
     overflow: 'hidden',
@@ -867,18 +849,18 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   summaryValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#ffc107',
+    color: theme.colors.primary,
   },
   cardList: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -897,7 +879,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   cardContent: {
     gap: 8,
@@ -905,7 +887,7 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   cardActions: {
     flexDirection: 'row',
@@ -918,18 +900,18 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.surfaceVariant,
   },
   primaryAction: {
-    backgroundColor: '#2196F3',
+    backgroundColor: theme.colors.primary,
   },
   primaryActionText: {
-    color: '#fff',
+    color: theme.colors.onPrimary,
     fontWeight: '600',
     fontSize: 14,
   },
   totalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -938,15 +920,15 @@ const styles = StyleSheet.create({
   totalText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   totalValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#ffc107',
+    color: theme.colors.primary,
   },
   finalizeCard: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     margin: 16,
     padding: 16,
     borderRadius: 12,
@@ -971,12 +953,12 @@ const styles = StyleSheet.create({
   finalizeTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 4,
   },
   finalizeDesc: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   finalizeButton: {
     flexDirection: 'row',
@@ -988,7 +970,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   finalizeButtonText: {
-    color: '#fff',
+    color: theme.colors.onPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -998,13 +980,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
   },
   guidelineModalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 16,
     margin: 16,
     maxHeight: '80%',
@@ -1015,12 +997,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.surfaceVariant,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     flex: 1,
   },
   closeButton: {
@@ -1032,7 +1014,7 @@ const styles = StyleSheet.create({
   behaviorName: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 20,
   },
   sliderContainer: {
@@ -1040,13 +1022,13 @@ const styles = StyleSheet.create({
   },
   sliderLabel: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 12,
   },
   sliderValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#2196F3',
+    color: theme.colors.primary,
   },
   slider: {
     width: '100%',
@@ -1054,7 +1036,7 @@ const styles = StyleSheet.create({
   },
   progressBarPreview: {
     height: 8,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: theme.colors.surfaceVariant,
     borderRadius: 4,
     overflow: 'hidden',
     marginTop: 8,
@@ -1069,12 +1051,12 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.colors.outline,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,

@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { useCompleteTask, useTaskInstances } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
@@ -33,9 +34,10 @@ interface TaskCardProps {
   isCompleting: boolean;
   isChild: boolean;
   t: (key: string) => string;
+  styles: any;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isChild, t }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isChild, t, styles }) => {
   const canComplete = isChild && (task.status === 'PENDING' || task.status === 'IN_PROGRESS');
 
   return (
@@ -90,6 +92,8 @@ export const TaskListScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const isChild = useAuthStore(selectIsChild);
   const { t } = useI18n();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const { data: tasks, isLoading, refetch, isRefetching } = useTaskInstances(
     isChild ? { assignedUserId: user?.id } : undefined
@@ -142,6 +146,7 @@ export const TaskListScreen: React.FC = () => {
               isCompleting={completeTask.isPending && completeTask.variables === item.id}
               isChild={isChild}
               t={t}
+              styles={styles}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -159,16 +164,16 @@ export const TaskListScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   filterContainer: {
     flexDirection: 'row',
     padding: 12,
     gap: 8,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -182,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2196F3',
   },
   filterText: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '500',
   },
   filterTextActive: {
@@ -198,7 +203,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -217,7 +222,7 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     flex: 1,
     marginRight: 8,
   },
@@ -232,7 +237,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   description: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     marginBottom: 12,
     lineHeight: 20,
   },
@@ -246,7 +251,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pointsLabel: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     marginRight: 4,
   },
   pointsValue: {

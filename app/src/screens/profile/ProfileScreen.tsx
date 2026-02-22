@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   View,
@@ -28,6 +27,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { useTheme as useAppTheme } from '../../theme/ThemeContext';
 import { spacing } from '../../theme/theme';
+import { useDialogs } from '../../hooks/useDialogs';
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout, fetchUser } = useAuthStore();
@@ -35,6 +35,7 @@ export const ProfileScreen: React.FC = () => {
   const theme = useTheme();
   const { isDark, toggleTheme } = useAppTheme();
   const { t, language, setLanguage, availableLanguages } = useI18n();
+  const { showConfirm, Dialogs } = useDialogs();
 
   const [languageDialogVisible, setLanguageDialogVisible] = useState(false);
   const [usernameDialogVisible, setUsernameDialogVisible] = useState(false);
@@ -181,14 +182,14 @@ export const ProfileScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      t('nav.logout'),
-      'Are you sure you want to log out?',
-      [
-        { text: t('button.cancel'), style: 'cancel' },
-        { text: t('nav.logout'), style: 'destructive', onPress: logout },
-      ]
-    );
+    showConfirm({
+      title: t('nav.logout'),
+      message: 'Are you sure you want to log out?',
+      onConfirm: logout,
+      confirmText: t('nav.logout'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+    });
   };
 
   const getRoleLabel = (role?: string) => {

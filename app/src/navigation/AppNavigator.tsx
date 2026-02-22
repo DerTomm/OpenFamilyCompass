@@ -1,10 +1,11 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Appbar, Avatar, Menu, Text, useTheme } from 'react-native-paper';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '../i18n/I18nContext';
 import { selectIsAdmin, selectIsChild, useAuthStore } from '../store/authStore';
 
@@ -46,98 +47,10 @@ const ManageStack = createNativeStackNavigator<ManageStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 const NotificationsStack = createNativeStackNavigator();
 
-const HeaderUserMenu: React.FC = () => {
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const { t } = useI18n();
-  const theme = useTheme();
-  const [visible, setVisible] = useState(false);
-
-  return (
-    <Menu
-      visible={visible}
-      onDismiss={() => setVisible(false)}
-      anchor={
-        <TouchableOpacity onPress={() => setVisible(true)} style={{ paddingRight: 12 }}>
-          <Avatar.Text
-            size={32}
-            label={user?.firstName?.charAt(0).toUpperCase() || 'U'}
-            style={{ backgroundColor: theme.colors.primary }}
-          />
-        </TouchableOpacity>
-      }
-      anchorPosition="bottom"
-    >
-      <Menu.Item
-        onPress={() => {
-          setVisible(false);
-          logout();
-        }}
-        leadingIcon="logout"
-        title={t('nav.logout')}
-      />
-    </Menu>
-  );
-};
-
-const HeaderNavButtons: React.FC = () => {
-  const theme = useTheme();
-  const { t } = useI18n();
-  const isChild = useAuthStore(selectIsChild);
-  const navigation = useNavigation();
-  const tabNavigation = (navigation as any).getParent?.();
-  const tabState = tabNavigation?.getState();
-  const activeTab = tabState?.routeNames?.[tabState.index];
-
-  const colorFor = (tabName: string) =>
-    activeTab === tabName ? theme.colors.primary : theme.colors.onSurfaceVariant;
-
-  const navigateTab = (tabName: string) => {
-    tabNavigation?.navigate(tabName);
-  };
-
-  return (
-    <View style={styles.headerActions}>
-      <Appbar.Action
-        icon="home"
-        onPress={() => navigateTab('Activities')}
-        color={colorFor('Activities')}
-        accessibilityLabel={t('nav.activities')}
-      />
-
-      {!isChild && (
-        <Appbar.Action
-          icon="cog"
-          onPress={() => navigateTab('Manage')}
-          color={colorFor('Manage')}
-          accessibilityLabel={t('nav.manage')}
-        />
-      )}
-
-      <Appbar.Action
-        icon="bell"
-        onPress={() => navigateTab('Notifications')}
-        color={colorFor('Notifications')}
-        accessibilityLabel={t('nav.notifications')}
-      />
-
-      <Appbar.Action
-        icon="account"
-        onPress={() => navigateTab('Profile')}
-        color={colorFor('Profile')}
-        accessibilityLabel={t('nav.profile')}
-      />
-
-      <HeaderUserMenu />
-    </View>
-  );
-};
-
 const createStackScreenOptions = (theme: any) => ({
   headerStyle: { backgroundColor: theme.colors.surface },
   headerTintColor: theme.colors.onSurface,
   headerTitleStyle: { color: theme.colors.onSurface },
-  headerRight: () => <HeaderNavButtons />,
 });
 
 // Activities Stack (dynamic content)
@@ -320,28 +233,38 @@ const MainTabsNavigator: React.FC = () => {
   const theme = useTheme();
   const { t } = useI18n();
   const isChild = useAuthStore(selectIsChild);
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.mainTabsContainer}>
-      <View style={{ flex: 1 }}>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarStyle: { display: 'none' },
-            tabBarActiveTintColor: theme.colors.primary,
-            tabBarIcon: ({ color, size }) => {
-              const iconName =
-                route.name === 'Activities'
-                  ? 'home'
-                  : route.name === 'Manage'
-                    ? 'cog'
-                    : route.name === 'Notifications'
-                      ? 'bell'
-                      : 'account';
-              return <MaterialCommunityIcons name={iconName as any} size={size} color={color} />;
-            },
-          })}
-        >
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+          tabBarStyle: {
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.surfaceVariant,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+            height: (insets.bottom > 0 ? insets.bottom : 8) + 56,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '600',
+          },
+          tabBarIcon: ({ color, size }) => {
+            const iconName =
+              route.name === 'Activities'
+                ? 'home'
+                : route.name === 'Manage'
+                  ? 'cog'
+                  : route.name === 'Notifications'
+                    ? 'bell'
+                    : 'account';
+            return <MaterialCommunityIcons name={iconName as any} size={size} color={color} />;
+          },
+        })}
+      >
           <Tab.Screen
             name="Activities"
             component={ActivitiesStackNavigator}
@@ -368,8 +291,6 @@ const MainTabsNavigator: React.FC = () => {
             options={{ title: t('nav.profile') }}
           />
         </Tab.Navigator>
-      </View>
-      <VersionFooter />
     </View>
   );
 };

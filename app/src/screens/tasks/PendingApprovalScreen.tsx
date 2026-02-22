@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { useApproveTask, usePendingTasks, useRejectTask } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { TaskInstanceResponse } from '../../types/api';
@@ -23,6 +24,7 @@ interface ApprovalModalProps {
   onReject: (notes: string) => void;
   isLoading: boolean;
   t: (key: string) => string;
+  styles: any;
 }
 
 const ApprovalModal: React.FC<ApprovalModalProps> = ({
@@ -33,6 +35,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
   onReject,
   isLoading,
   t,
+  styles,
 }) => {
   const [points, setPoints] = useState(task?.taskDefinition.basePoints.toString() || '0');
   const [notes, setNotes] = useState('');
@@ -110,6 +113,8 @@ export const PendingApprovalScreen: React.FC = () => {
   const approveTask = useApproveTask();
   const rejectTask = useRejectTask();
   const { t } = useI18n();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const [selectedTask, setSelectedTask] = useState<TaskInstanceResponse | null>(null);
 
@@ -182,15 +187,16 @@ export const PendingApprovalScreen: React.FC = () => {
         onReject={handleReject}
         isLoading={approveTask.isPending || rejectTask.isPending}
         t={t}
+        styles={styles}
       />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   loading: {
     flex: 1,
@@ -202,7 +208,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -226,7 +232,7 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   cardFooter: {
@@ -235,7 +241,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   basePoints: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   tapToReview: {
     color: '#2196F3',
@@ -254,11 +260,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 4,
   },
   emptySubtext: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   modalOverlay: {
     flex: 1,
@@ -266,7 +272,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -274,12 +280,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 4,
   },
   modalTaskTitle: {
     fontSize: 16,
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     marginBottom: 20,
   },
   inputGroup: {
@@ -288,7 +294,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   input: {
@@ -322,7 +328,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   rejectButton: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderWidth: 2,
     borderColor: '#F44336',
   },
@@ -336,7 +342,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontSize: 16,
   },
 });

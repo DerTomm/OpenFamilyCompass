@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -11,10 +10,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { redemptionsApi } from '../../api/services';
 import { usePendingRedemptions } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { RewardRedemptionResponse } from '../../types/api';
+import { useDialogs } from '../../hooks/useDialogs';
 
 interface RedemptionCardProps {
   redemption: RewardRedemptionResponse;
@@ -23,6 +24,7 @@ interface RedemptionCardProps {
   onDeliver: () => void;
   isLoading: boolean;
   t: (key: string) => string;
+  styles: any;
 }
 
 const RedemptionCard: React.FC<RedemptionCardProps> = ({
@@ -32,6 +34,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
   onDeliver,
   isLoading,
   t,
+  styles,
 }) => {
   const isRequested = redemption.status === 'REQUESTED';
   const isApproved = redemption.status === 'APPROVED';
@@ -106,6 +109,9 @@ export const PendingRedemptionsScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const { data: redemptions, isLoading, refetch, isRefetching } = usePendingRedemptions();
   const { t } = useI18n();
+  const { showConfirm, Dialogs } = useDialogs();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const approveRedemption = useMutation({
     mutationFn: (id: number) => redemptionsApi.approve(id),
@@ -133,40 +139,34 @@ export const PendingRedemptionsScreen: React.FC = () => {
   });
 
   const handleApprove = (redemption: RewardRedemptionResponse) => {
-    Alert.alert(
-      t('rewards.approve.title'),
-      t('rewards.approve.message', { 0: redemption.user.firstName, 1: redemption.reward.title }),
-      [
-        { text: t('button.cancel'), style: 'cancel' },
-        { text: t('tasks.pending.approve'), onPress: () => approveRedemption.mutate(redemption.id) },
-      ]
-    );
+    showConfirm({
+      title: t('rewards.approve.title'),
+      message: t('rewards.approve.message', { 0: redemption.user.firstName, 1: redemption.reward.title }),
+      onConfirm: () => approveRedemption.mutate(redemption.id),
+      confirmText: t('tasks.pending.approve'),
+      cancelText: t('button.cancel'),
+    });
   };
 
   const handleReject = (redemption: RewardRedemptionResponse) => {
-    Alert.alert(
-      t('rewards.reject.title'),
-      t('rewards.reject.message', { 0: redemption.user.firstName }),
-      [
-        { text: t('button.cancel'), style: 'cancel' },
-        {
-          text: t('tasks.pending.reject'),
-          style: 'destructive',
-          onPress: () => rejectRedemption.mutate({ id: redemption.id }),
-        },
-      ]
-    );
+    showConfirm({
+      title: t('rewards.reject.title'),
+      message: t('rewards.reject.message', { 0: redemption.user.firstName }),
+      onConfirm: () => rejectRedemption.mutate({ id: redemption.id }),
+      confirmText: t('tasks.pending.reject'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+    });
   };
 
   const handleDeliver = (redemption: RewardRedemptionResponse) => {
-    Alert.alert(
-      t('rewards.deliver.title'),
-      t('rewards.deliver.message', { 0: redemption.reward.title, 1: redemption.user.firstName }),
-      [
-        { text: t('button.cancel'), style: 'cancel' },
-        { text: t('button.confirm'), onPress: () => deliverRedemption.mutate(redemption.id) },
-      ]
-    );
+    showConfirm({
+      title: t('rewards.deliver.title'),
+      message: t('rewards.deliver.message', { 0: redemption.reward.title, 1: redemption.user.firstName }),
+      onConfirm: () => deliverRedemption.mutate(redemption.id),
+      confirmText: t('button.confirm'),
+      cancelText: t('button.cancel'),
+    });
   };
 
   const requestedRedemptions = redemptions?.filter(r => r.status === 'REQUESTED') || [];
@@ -194,6 +194,7 @@ export const PendingRedemptionsScreen: React.FC = () => {
                 deliverRedemption.isPending
               }
               t={t}
+              styles={styles}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -224,10 +225,10 @@ export const PendingRedemptionsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   loading: {
     flex: 1,
@@ -244,11 +245,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     textTransform: 'uppercase',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
   childName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   date: {
     fontSize: 13,
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
   rewardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     flex: 1,
   },
   pointsSpent: {
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
     color: '#9C27B0',
   },
   description: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     marginBottom: 12,
   },
   actions: {
@@ -354,11 +355,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.onSurface,
     marginBottom: 8,
   },
   emptySubtext: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   },
 });

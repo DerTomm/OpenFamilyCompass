@@ -327,6 +327,9 @@ export const de = {
     // Common
     'common.success': 'Erfolg',
     'common.error': 'Fehler',
+    'points.added.success': 'Punkte erfolgreich vergeben!',
+    'points.validation.amount': 'Bitte gültigen Betrag eingeben',
+    'points.validation.description': 'Bitte Begründung eingeben',
     'common.actions': 'Aktionen',
     'button.confirm': 'Bestätigen',
 
