@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { ActivityIndicator, Avatar, Badge, Divider, List, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card, EmptyState } from '../../components/ui';
+import { Card, EmptyState, UserAvatar } from '../../components/ui';
 import { useChildren, usePointTransactions, usePendingTasks, usePendingRedemptions } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { PointTransactionResponse } from '../../types/api';
@@ -79,11 +79,12 @@ export const ParentDashboardScreen: React.FC = () => {
                           title={child.firstName}
                           description={`${child.totalPoints} ${t('points.label')}`}
                           left={() => (
-                            <Avatar.Text
+                            <UserAvatar
+                              avatarType={child.avatarType}
+                              avatarIconName={child.avatarIconName}
+                              avatarPath={child.avatarPath}
+                              firstName={child.firstName}
                               size={40}
-                              label={(child.firstName?.charAt(0) || '?').toUpperCase()}
-                              style={{ backgroundColor: theme.colors.primaryContainer }}
-                              color={theme.colors.onPrimaryContainer}
                             />
                           )}
                           right={() => (

@@ -16,6 +16,7 @@ import { TaskDefinitionResponse } from '../../types/api';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ManageStackParamList } from '../../navigation/types';
 import { useDialogs } from '../../hooks/useDialogs';
+import { UserAvatar } from '../../components/ui';
 
 type NavigationProp = NativeStackNavigationProp<ManageStackParamList>;
 
@@ -201,11 +202,7 @@ export const TaskManagementScreen: React.FC = () => {
               onPress={() => setSelectedChildId(child.id)}
               style={styles.filterChip}
               showSelectedOverlay
-              avatar={
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{child.firstName.charAt(0)}</Text>
-                </View>
-              }
+
             >
               {child.firstName}
             </Chip>
@@ -280,19 +277,6 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   filterChip: {
     marginRight: 8,
-  },
-  avatar: {
-    backgroundColor: '#FFC107',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.colors.onPrimary,
   },
   tableContainer: {
     flex: 1,

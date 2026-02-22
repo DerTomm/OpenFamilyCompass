@@ -191,6 +191,7 @@ export const en = {
     'profile.language': 'Language',
     'profile.language.en': 'English',
     'profile.language.de': 'German',
+    'profile.logout.confirm': 'Are you sure you want to log out?',
     'profile.edit.username': 'Change Username',
     'profile.edit.firstName': 'Change First Name',
     'profile.edit.password': 'Change Password',

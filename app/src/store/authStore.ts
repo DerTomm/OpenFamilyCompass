@@ -186,15 +186,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const checkToken = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
       console.log('[LOGOUT] Token verification:', checkToken === null ? 'NULL (OK)' : `STILL EXISTS: ${checkToken}`);
 
-      // 3. Set state to logged out
+      // 3. Set state to logged out - this will trigger navigation to login screen
       set({ isAuthenticated: false, user: null, isLoading: false });
-      console.log('[LOGOUT] State updated to logged out');
-
-      // 4. Reload page to ensure clean state
-      if (typeof window !== 'undefined') {
-        console.log('[LOGOUT] Reloading page to ensure clean state...');
-        window.location.href = window.location.origin;
-      }
+      console.log('[LOGOUT] State updated to logged out - navigation will follow');
     } catch (error) {
       console.error('[LOGOUT] Logout error:', error);
       set({ isAuthenticated: false, user: null, isLoading: false });

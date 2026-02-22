@@ -16,6 +16,8 @@ export interface UserResponse {
   active: boolean;
   theme?: string;
   language?: string;
+  avatarType?: string;
+  avatarIconName?: string;
   avatarPath?: string;
   totalPoints: number;
   createdAt: string;
@@ -25,6 +27,8 @@ export interface ChildResponse {
   id: number;
   username: string;
   firstName: string;
+  avatarType?: string;
+  avatarIconName?: string;
   avatarPath?: string;
   totalPoints: number;
 }

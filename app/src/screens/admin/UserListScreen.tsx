@@ -21,6 +21,7 @@ import { usersApi } from '../../api/services';
 import { useI18n } from '../../i18n/I18nContext';
 import { UserResponse, UserRole } from '../../types/api';
 import { useDialogs } from '../../hooks/useDialogs';
+import { UserAvatar } from '../../components/ui';
 
 const ROLE_COLORS: Record<UserRole, string> = {
   ADMIN: '#F44336',
@@ -86,11 +87,13 @@ const UserRow: React.FC<UserRowProps> = ({ user, onEdit, onToggleActive, onDelet
   return (
     <View style={[styles.card, !user.active && styles.cardInactive]}>
       <View style={styles.cardHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user.firstName.charAt(0).toUpperCase()}
-          </Text>
-        </View>
+        <UserAvatar
+          avatarType={user.avatarType}
+          avatarIconName={user.avatarIconName}
+          avatarPath={user.avatarPath}
+          firstName={user.firstName}
+          size={48}
+        />
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{user.firstName}</Text>
           <Text style={styles.userUsername}>@{user.username}</Text>
@@ -784,20 +787,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  avatarText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.onSurfaceVariant,
+    gap: 12,
   },
   userInfo: {
     flex: 1,

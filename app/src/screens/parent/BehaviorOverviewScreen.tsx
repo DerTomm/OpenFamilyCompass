@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
+import { UserAvatar } from '../../components/ui';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useChildren } from '../../hooks/useApi';
@@ -27,20 +28,28 @@ interface ChildCardProps {
   styles: any;
 }
 
-const ChildCard: React.FC<ChildCardProps> = ({ child, onPress, t, styles }) => (
-  <TouchableOpacity style={styles.card} onPress={onPress}>
-    <View style={styles.avatarContainer}>
-      <Text style={styles.avatarText}>{child.firstName.charAt(0)}</Text>
-    </View>
-    <View style={styles.infoContainer}>
-      <Text style={styles.name}>{child.firstName}</Text>
-      <Text style={styles.points}>
-        {child.totalPoints} {t('points.label')}
-      </Text>
-    </View>
-    <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
-  </TouchableOpacity>
-);
+const ChildCard: React.FC<ChildCardProps> = ({ child, onPress, t, styles }) => {
+  const theme = useTheme();
+  
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress}>
+      <UserAvatar
+        avatarType={child.avatarType}
+        avatarIconName={child.avatarIconName}
+        avatarPath={child.avatarPath}
+        firstName={child.firstName}
+        size={48}
+      />
+      <View style={styles.infoContainer}>
+        <Text style={styles.name}>{child.firstName}</Text>
+        <Text style={styles.points}>
+          {child.totalPoints} {t('points.label')}
+        </Text>
+      </View>
+      <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+    </TouchableOpacity>
+  );
+};
 
 export const BehaviorOverviewScreen: React.FC = () => {
   const { t } = useI18n();
@@ -168,20 +177,6 @@ const createStyles = (theme: any) => StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-  },
-  avatarContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#ffc107',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  avatarText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
   },
   infoContainer: {
     flex: 1,

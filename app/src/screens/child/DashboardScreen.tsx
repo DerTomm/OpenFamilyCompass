@@ -2,9 +2,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Divider, ProgressBar, Surface, Text, useTheme } from 'react-native-paper';
+import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card, EmptyState, QuickActionCard } from '../../components/ui';
+import { Card, EmptyState, QuickActionCard, UserAvatar } from '../../components/ui';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useI18n } from '../../i18n/I18nContext';
@@ -27,10 +27,8 @@ export const ChildDashboardScreen: React.FC = () => {
   const { data: transactionsData } = usePointTransactions({ userId: user?.id, limit: 5 });
   const transactions = transactionsData?.transactions || [];
 
-  // Mock data - wird später durch echte Daten ersetzt
+  // Total points
   const totalPoints = user?.totalPoints || 0;
-  const nextRewardPoints = 100;
-  const progress = totalPoints / nextRewardPoints;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -47,19 +45,6 @@ export const ChildDashboardScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Welcome Header */}
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={{ color: theme.colors.onBackground }}>
-            {t('child.dashboard.welcome')}
-          </Text>
-          <Text
-            variant="headlineMedium"
-            style={[styles.userName, { color: theme.colors.primary }]}
-          >
-            {user?.firstName || t('role.child')}! 👋
-          </Text>
-        </View>
-
         {/* Points Card */}
         <Surface style={styles.pointsCard} elevation={3}>
           <LinearGradient
@@ -69,29 +54,21 @@ export const ChildDashboardScreen: React.FC = () => {
             style={styles.gradientCard}
           >
             <View style={styles.pointsHeader}>
-              <MaterialCommunityIcons name="star-circle" size={32} color="#FFF" />
-              <Text variant="titleMedium" style={styles.pointsLabel}>
-                {t('child.dashboard.points.badge')}
-              </Text>
-            </View>
-
-            <Text variant="displayMedium" style={styles.pointsValue}>
-              {totalPoints}
-            </Text>
-
-            {/* Progress to next reward */}
-            <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <MaterialCommunityIcons name="gift" size={16} color="rgba(255,255,255,0.9)" />
-                <Text variant="bodySmall" style={styles.progressText}>
-                  {t('points.progress.next_reward', { 0: nextRewardPoints - totalPoints })}
+              <UserAvatar
+                avatarType={user?.avatarType}
+                avatarIconName={user?.avatarIconName}
+                avatarPath={user?.avatarPath}
+                firstName={user?.firstName}
+                size={48}
+              />
+              <View style={styles.pointsInfo}>
+                <Text variant="titleMedium" style={styles.pointsLabel}>
+                  {user?.firstName}
+                </Text>
+                <Text variant="displayMedium" style={styles.pointsValue}>
+                  {totalPoints} {t('child.dashboard.points.badge')}
                 </Text>
               </View>
-              <ProgressBar
-                progress={progress}
-                color="rgba(255,255,255,0.9)"
-                style={styles.progressBar}
-              />
             </View>
           </LinearGradient>
         </Surface>
@@ -221,9 +198,6 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: spacing.lg,
     paddingTop: spacing.sm,
   },
-  userName: {
-    fontWeight: '700',
-  },
   pointsCard: {
     borderRadius: 20,
     overflow: 'hidden',
@@ -235,34 +209,19 @@ const createStyles = (theme: any) => StyleSheet.create({
   pointsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  pointsInfo: {
+    flex: 1,
   },
   pointsLabel: {
     color: 'rgba(255, 255, 255, 0.9)',
-    marginLeft: spacing.sm,
     fontWeight: '600',
+    marginBottom: spacing.xs,
   },
   pointsValue: {
     color: theme.colors.onPrimary,
     fontWeight: '900',
-    marginBottom: spacing.lg,
-  },
-  progressSection: {
-    marginTop: spacing.md,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  progressText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginLeft: spacing.xs,
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   divider: {
     marginVertical: spacing.md,

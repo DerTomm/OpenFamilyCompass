@@ -197,6 +197,7 @@ export const de = {
     'profile.language': 'Sprache',
     'profile.language.en': 'Englisch',
     'profile.language.de': 'Deutsch',
+    'profile.logout.confirm': 'Möchtest du dich wirklich abmelden?',
     'profile.edit.username': 'Benutzername ändern',
     'profile.edit.firstName': 'Vorname ändern',
     'profile.edit.password': 'Passwort ändern',
