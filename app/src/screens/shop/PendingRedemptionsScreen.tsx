@@ -16,6 +16,7 @@ import { usePendingRedemptions } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { RewardRedemptionResponse } from '../../types/api';
 import { useDialogs } from '../../hooks/useDialogs';
+import { UserAvatar } from '../../components/ui';
 
 interface RedemptionCardProps {
   redemption: RewardRedemptionResponse;
@@ -43,11 +44,13 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.childInfo}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {redemption.user.firstName.charAt(0)}
-            </Text>
-          </View>
+          <UserAvatar
+            avatarType={redemption.user.avatarType}
+            avatarIconName={redemption.user.avatarIconName}
+            avatarPath={redemption.user.avatarPath}
+            firstName={redemption.user.firstName}
+            size={36}
+          />
           <Text style={styles.childName}>{redemption.user.firstName}</Text>
         </View>
         <Text style={styles.date}>
@@ -263,20 +266,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   childInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#9C27B0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  avatarText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    gap: 10,
   },
   childName: {
     fontSize: 16,

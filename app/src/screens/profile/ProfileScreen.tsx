@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   Avatar,
   Button,
@@ -28,6 +30,8 @@ import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { useTheme as useAppTheme } from '../../theme/ThemeContext';
 import { spacing } from '../../theme/theme';
 import { useDialogs } from '../../hooks/useDialogs';
+import { AvatarPicker, UserAvatar } from '../../components/ui';
+import { Avatar as AvatarType } from '../../constants/avatars';
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout, fetchUser } = useAuthStore();
@@ -41,6 +45,7 @@ export const ProfileScreen: React.FC = () => {
   const [usernameDialogVisible, setUsernameDialogVisible] = useState(false);
   const [firstNameDialogVisible, setFirstNameDialogVisible] = useState(false);
   const [passwordDialogVisible, setPasswordDialogVisible] = useState(false);
+  const [avatarPickerVisible, setAvatarPickerVisible] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
@@ -182,14 +187,33 @@ export const ProfileScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
+    console.log('[PROFILE] Logout button clicked');
     showConfirm({
       title: t('nav.logout'),
-      message: 'Are you sure you want to log out?',
-      onConfirm: logout,
+      message: t('profile.logout.confirm'),
+      onConfirm: () => {
+        console.log('[PROFILE] Logout confirmed by user');
+        logout();
+      },
       confirmText: t('nav.logout'),
       cancelText: t('button.cancel'),
       destructive: true,
     });
+  };
+
+  const handleAvatarEmojiSelect = (avatar: AvatarType) => {
+    updateProfileMutation.mutate({
+      avatarType: 'ICON',
+      avatarIconName: avatar.id,
+    });
+  };
+
+  const handleAvatarImageSelect = async (imageUri: string) => {
+    // TODO: Implement image upload to backend
+    console.log('Image selected:', imageUri);
+    setSnackbarMessage('Bild-Upload wird noch implementiert');
+    setSnackbarType('error');
+    setSnackbarVisible(true);
   };
 
   const getRoleLabel = (role?: string) => {
@@ -206,11 +230,21 @@ export const ProfileScreen: React.FC = () => {
       <ScrollView>
         {/* Profile Header */}
         <Surface style={[styles.header, { backgroundColor: theme.colors.primary }]} elevation={2}>
-          <Avatar.Text
-            size={80}
-            label={user?.firstName?.charAt(0).toUpperCase() || '?'}
-            style={styles.avatar}
-          />
+          <View style={styles.avatarContainer}>
+            <UserAvatar
+              avatarType={user?.avatarType}
+              avatarIconName={user?.avatarIconName}
+              avatarPath={user?.avatarPath}
+              firstName={user?.firstName}
+              size={80}
+            />
+            <TouchableOpacity
+              style={[styles.avatarEditButton, { backgroundColor: theme.colors.primary }]}
+              onPress={() => setAvatarPickerVisible(true)}
+            >
+              <MaterialCommunityIcons name="pencil" size={16} color="#FFF" />
+            </TouchableOpacity>
+          </View>
           <Text variant="headlineSmall" style={styles.name}>
             {user?.firstName}
           </Text>
@@ -442,6 +476,19 @@ export const ProfileScreen: React.FC = () => {
       >
         {snackbarMessage}
       </Snackbar>
+
+      {/* Dialogs */}
+      <Dialogs />
+
+      {/* Avatar Picker */}
+      <AvatarPicker
+        visible={avatarPickerVisible}
+        onClose={() => setAvatarPickerVisible(false)}
+        onSelectEmoji={handleAvatarEmojiSelect}
+        onSelectImage={handleAvatarImageSelect}
+        currentAvatarType={user?.avatarType}
+        currentAvatarIconName={user?.avatarIconName}
+      />
     </SafeAreaView>
   );
 };
@@ -453,6 +500,22 @@ const styles = StyleSheet.create({
   header: {
     padding: spacing.lg,
     alignItems: 'center',
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: spacing.md,
+  },
+  avatarEditButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
   },
   avatar: {
     marginBottom: spacing.md,
