@@ -20,12 +20,22 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
+# Installiere wget für Healthcheck
+RUN apk add --no-cache wget
+
+# Erstelle Verzeichnis für Konfiguration und Media
+RUN mkdir -p /app/config /app/media
+
 # Erstelle einen non-root User für bessere Sicherheit
 RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
 
 # Kopiere das JAR aus der Build Stage
 COPY --from=build /app/target/*.jar app.jar
+
+# Gebe dem spring User Zugriff auf die Verzeichnisse
+RUN chown -R spring:spring /app
+
+USER spring:spring
 
 # Exponiere den Port
 EXPOSE 8080
