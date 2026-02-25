@@ -50,9 +50,15 @@ echo.
 echo 🎉 Deployment gestartet!
 echo.
 echo 📱 Zugriff:
-echo    Frontend:  http://localhost:3000
+echo    Expo Go:   exp://localhost:8081
+echo    Metro:     http://localhost:8081
 echo    Backend:   http://localhost:8080
 echo    API Docs:  http://localhost:8080/swagger-ui.html
+echo.
+echo 📲 Expo Go Setup:
+echo    1. Installiere Expo Go auf Android/iOS
+echo    2. QR-Code: docker-compose logs frontend
+echo    3. Oder verbinde manuell: exp://localhost:8081
 echo.
 echo 👤 Standard-Login:
 echo    Username: admin
