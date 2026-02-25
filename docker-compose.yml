@@ -1,8 +1,6 @@
 # OpenFamilyCompass - Docker Compose Configuration
 # Deployment für Backend + Frontend + Postgres
 
-version: '3.9'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -20,7 +18,11 @@ services:
       - ofc-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-openfamilycompass_user} -d ${POSTGRES_DB:-openfamilycompass_db}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-openfamilycompass_user} -d ${POSTGRES_DB:-openfamilycompass_db}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,25 +42,25 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-openfamilycompass_db}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-openfamilycompass_user}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-openfamilycompass_password}
-      
+
       # JPA & Flyway
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_FLYWAY_ENABLED: true
-      
+
       # Security
       APP_ADMIN_DEFAULT_USERNAME: ${APP_ADMIN_DEFAULT_USERNAME:-admin}
       APP_ADMIN_DEFAULT_PASSWORD: ${APP_ADMIN_DEFAULT_PASSWORD:-changeme}
-      
+
       # Server
       SERVER_PORT: 8080
-      
+
       # CORS - Allow frontend
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:19006}
-      
+
       # JWT Keys - wird durch Volume gemountet
       JWT_KEYSTORE_PATH: /app/config/jwt-keys.pfx
       JWT_KEYSTORE_PASSWORD: ${JWT_KEYSTORE_PASSWORD:-}
-      
+
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     volumes:
@@ -70,13 +72,21 @@ services:
       - ofc-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8081/actuator/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 90s
 
-  # Frontend (React Native Web via Expo)
+  # Frontend (Expo Development Server für Expo Go)
   frontend:
     build:
       context: ./app
@@ -85,19 +95,32 @@ services:
     depends_on:
       - backend
     environment:
-      # Backend API URL (wird zur Build-Zeit in den Web-Build eingebaut)
+      # Backend API URL (für die App zur Laufzeit)
       EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:8080}
+      # Expo Development Server Config
+      EXPO_DEVTOOLS_LISTEN_ADDRESS: 0.0.0.0
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${EXPO_HOST:-localhost}
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "${METRO_PORT:-8081}:8081" # Metro Bundler
+      - "${EXPO_PORT:-19000}:19000" # Expo Dev Server (legacy)
+      - "${EXPO_PORT2:-19001}:19001" # Expo Dev Server
     networks:
       - ofc-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8082/status",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 30s
 
 volumes:
   postgres_data:

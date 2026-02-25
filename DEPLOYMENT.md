@@ -36,7 +36,10 @@ Diese Anleitung beschreibt das Deployment von OpenFamilyCompass mit Docker Compo
    ```
 
 4. **Zugriff auf die Anwendung**
-   - **Frontend**: http://localhost:3000
+   - **Expo Go App** (Android/iOS): 
+     - Installiere [Expo Go](https://expo.dev/go) auf deinem Gerät
+     - Scanne den QR-Code in den Logs: `docker-compose logs frontend`
+     - Oder verbinde manuell mit: `exp://localhost:8081`
    - **Backend API**: http://localhost:8080
    - **API Dokumentation**: http://localhost:8080/swagger-ui.html
 
@@ -52,7 +55,8 @@ Die Docker Compose Konfiguration startet 3 Services:
 |---------|------|--------------|
 | `postgres` | 5432 | PostgreSQL 16 Datenbank |
 | `backend` | 8080 | Spring Boot REST API |
-| `frontend` | 3000 | React Native Web (Nginx) |
+| `frontend` | 8081 | Expo Metro Bundler (für Expo Go) |
+| `frontend` | 19000/19001 | Expo Dev Server |
 
 ### Konfiguration
 
@@ -66,15 +70,28 @@ BACKEND_PORT=8080
 FRONTEND_PORT=3000
 ```
 
-#### Backend API URL
+#### Backend API URL für Mobile App
 
-Wenn das Backend auf einem anderen Server läuft, passe die URL an:
+Wenn das Backend auf einem anderen Server läuft, passe die URL in der `.env` an:
 
 ```env
 EXPO_PUBLIC_API_URL=http://deine-server-ip:8080
 ```
 
-**Wichtig**: Nach Änderung muss das Frontend neu gebaut werden:
+**Wichtig**: Nach Änderung muss der Frontend-Container neu gestartet werden:
+```bash
+docker-compose restart frontend
+```
+
+#### Expo Dev Server für Remote-Zugriff
+
+Wenn du von einem anderen Gerät (z.B. Smartphone im gleichen Netzwerk) zugreifen möchtest:
+
+```env
+EXPO_HOST=192.168.1.100  # Deine Server-IP
+```
+
+Dann:
 ```bash
 docker-compose up -d --build frontend
 ```
