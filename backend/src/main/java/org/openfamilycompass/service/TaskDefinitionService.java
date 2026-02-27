@@ -2,6 +2,7 @@ package org.openfamilycompass.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +35,14 @@ public class TaskDefinitionService {
     public TaskDefinition createTaskDefinition(@NonNull String title, String description, int basePoints,
             @NonNull RecurrenceType recurrenceType, @NonNull Set<User> assignedUsers,
             @NonNull User createdBy, LocalDate startDate, LocalDate endDate, String weeklyDays) {
+        return createTaskDefinition(title, description, basePoints, recurrenceType, assignedUsers, createdBy,
+                startDate, endDate, null, weeklyDays);
+    }
+
+    @Transactional
+    public TaskDefinition createTaskDefinition(@NonNull String title, String description, int basePoints,
+            @NonNull RecurrenceType recurrenceType, @NonNull Set<User> assignedUsers,
+            @NonNull User createdBy, LocalDate startDate, LocalDate endDate, LocalDateTime endAt, String weeklyDays) {
         TaskDefinition definition = new TaskDefinition();
         definition.setTitle(title);
         definition.setDescription(description);
@@ -43,6 +52,7 @@ public class TaskDefinitionService {
         definition.setCreatedBy(createdBy);
         definition.setStartDate(startDate);
         definition.setEndDate(endDate);
+        definition.setEndAt(endAt);
         definition.setWeeklyDays(weeklyDays);
 
         TaskDefinition savedDefinition = taskDefinitionRepository.save(definition);
@@ -56,7 +66,11 @@ public class TaskDefinitionService {
                     title, assignedUsers.size(), endDate);
             for (User user : assignedUsers) {
                 log.info("Creating TaskInstance for user: {}", user.getFirstName());
-                taskInstanceService.createTaskInstance(savedDefinition, user, endDate);
+                if (endAt != null) {
+                    taskInstanceService.createTaskInstance(savedDefinition, user, endDate, endAt);
+                } else {
+                    taskInstanceService.createTaskInstance(savedDefinition, user, endDate);
+                }
             }
         } else {
             log.info("NOT creating TaskInstances: recurrenceType={}, endDate={}", recurrenceType, endDate);
@@ -120,6 +134,15 @@ public class TaskDefinitionService {
             int basePoints,
             @NonNull RecurrenceType recurrenceType, @NonNull Set<User> assignedUsers,
             LocalDate startDate, LocalDate endDate, String weeklyDays) {
+        return updateTaskDefinition(id, title, description, basePoints, recurrenceType, assignedUsers,
+                startDate, endDate, null, weeklyDays);
+    }
+
+    @Transactional
+    public TaskDefinition updateTaskDefinition(@NonNull Long id, @NonNull String title, String description,
+            int basePoints,
+            @NonNull RecurrenceType recurrenceType, @NonNull Set<User> assignedUsers,
+            LocalDate startDate, LocalDate endDate, LocalDateTime endAt, String weeklyDays) {
         TaskDefinition definition = taskDefinitionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("TaskDefinition not found"));
         definition.setTitle(title);
@@ -129,6 +152,7 @@ public class TaskDefinitionService {
         definition.setAssignedUsers(assignedUsers);
         definition.setStartDate(startDate);
         definition.setEndDate(endDate);
+        definition.setEndAt(endAt);
         definition.setWeeklyDays(weeklyDays);
         return taskDefinitionRepository.save(definition);
     }
@@ -141,6 +165,10 @@ public class TaskDefinitionService {
         List<TaskDefinition> definitions = taskDefinitionRepository.findAll();
 
         for (TaskDefinition definition : definitions) {
+            if (definition.getStartDate() != null && definition.getStartDate().isAfter(today)) {
+                continue;
+            }
+
             // Für wiederholende Aufgaben (einmalige werden sofort erstellt)
             if (definition.getRecurrenceType() != RecurrenceType.ONCE) {
                 for (User user : definition.getAssignedUsers()) {
@@ -173,25 +201,149 @@ public class TaskDefinitionService {
             notificationService.createNotification(task.getAssignedUser(), NotificationType.TASK_EXPIRED,
                     "Aufgabe abgelaufen", "Aufgabe '" + task.getTaskDefinition().getTitle() + "' ist abgelaufen.",
                     task.getTaskDefinition().getId());
+
+            if (task.getTaskDefinition().getRecurrenceType() == RecurrenceType.ONCE
+                    && task.getTaskDefinition().getCreatedBy() != null) {
+                notificationService.createNotification(
+                        task.getTaskDefinition().getCreatedBy(),
+                        NotificationType.TASK_EXPIRED,
+                        "Frist verpasst",
+                        "Die Aufgabe '" + task.getTaskDefinition().getTitle() + "' von "
+                                + task.getAssignedUser().getFirstName() + " ist abgelaufen.",
+                        task.getId());
+            }
         }
     }
 
     private LocalDate calculateNextDueDate(LocalDate today, TaskDefinition definition) {
         switch (definition.getRecurrenceType()) {
             case WEEKLY:
-                if (definition.getWeeklyDays() != null && !definition.getWeeklyDays().isEmpty()) {
-                    Set<DayOfWeek> days = Arrays.stream(definition.getWeeklyDays().split(","))
-                            .map(String::trim)
-                            .map(DayOfWeek::valueOf)
-                            .collect(java.util.stream.Collectors.toSet());
-                    DayOfWeek todayDay = today.getDayOfWeek();
-                    if (days.contains(todayDay)) {
+                if (matchesWeeklySchedule(today, definition.getWeeklyDays())) {
+                    return today;
+                }
+                return null;
+            case MONTHLY:
+                if (definition.getWeeklyDays() == null || definition.getWeeklyDays().isBlank()) {
+                    return null;
+                }
+
+                String schedule = definition.getWeeklyDays();
+                if (schedule.startsWith("MD:")) {
+                    String[] parts = schedule.split(":", 3);
+                    if (parts.length < 2) {
+                        return null;
+                    }
+
+                    int dayOfMonth;
+                    try {
+                        dayOfMonth = Integer.parseInt(parts[1]);
+                    } catch (NumberFormatException e) {
+                        return null;
+                    }
+                    if (dayOfMonth < 1 || dayOfMonth > 31) {
+                        return null;
+                    }
+
+                    boolean adjustToLast = parts.length >= 3 && "LAST".equalsIgnoreCase(parts[2]);
+                    int lastDayOfMonth = today.lengthOfMonth();
+                    int effectiveDay = dayOfMonth;
+                    if (dayOfMonth > lastDayOfMonth) {
+                        if (!adjustToLast) {
+                            return null;
+                        }
+                        effectiveDay = lastDayOfMonth;
+                    }
+
+                    if (today.getDayOfMonth() == effectiveDay) {
                         return today;
                     }
+                    return null;
                 }
+
+                if (schedule.startsWith("MW:")) {
+                    String[] parts = schedule.split(":", 3);
+                    if (parts.length < 3 || parts[2].isBlank()) {
+                        return null;
+                    }
+
+                    int monthlyWeekNumber;
+                    try {
+                        monthlyWeekNumber = Integer.parseInt(parts[1]);
+                    } catch (NumberFormatException e) {
+                        return null;
+                    }
+
+                    if (monthlyWeekNumber < 1 || monthlyWeekNumber > 5) {
+                        return null;
+                    }
+
+                    Set<DayOfWeek> monthlyDays = Arrays.stream(parts[2].split(","))
+                            .map(String::trim)
+                            .map(String::toUpperCase)
+                            .map(this::parseDayOfWeek)
+                            .filter(java.util.Objects::nonNull)
+                            .collect(java.util.stream.Collectors.toSet());
+
+                    int weekOfMonth = ((today.getDayOfMonth() - 1) / 7) + 1;
+                    if (monthlyDays.contains(today.getDayOfWeek()) && weekOfMonth == monthlyWeekNumber) {
+                        return today;
+                    }
+                    return null;
+                }
+
+                // Backward compatibility for legacy format W2:MONDAY
+                if (schedule.startsWith("W") && schedule.contains(":")) {
+                    String[] parts = schedule.split(":", 2);
+                    int monthlyWeekNumber;
+                    try {
+                        monthlyWeekNumber = Integer.parseInt(parts[0].substring(1));
+                    } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                        return null;
+                    }
+
+                    if (monthlyWeekNumber < 1 || monthlyWeekNumber > 5 || parts.length < 2 || parts[1].isBlank()) {
+                        return null;
+                    }
+
+                    Set<DayOfWeek> monthlyDays = Arrays.stream(parts[1].split(","))
+                            .map(String::trim)
+                            .map(String::toUpperCase)
+                            .map(this::parseDayOfWeek)
+                            .filter(java.util.Objects::nonNull)
+                            .collect(java.util.stream.Collectors.toSet());
+
+                    int weekOfMonth = ((today.getDayOfMonth() - 1) / 7) + 1;
+                    if (monthlyDays.contains(today.getDayOfWeek()) && weekOfMonth == monthlyWeekNumber) {
+                        return today;
+                    }
+                    return null;
+                }
+
                 return null;
             default:
                 return null;
+        }
+    }
+
+    private boolean matchesWeeklySchedule(LocalDate today, String weeklyDaysRaw) {
+        if (weeklyDaysRaw == null || weeklyDaysRaw.isBlank()) {
+            return false;
+        }
+
+        Set<DayOfWeek> days = Arrays.stream(weeklyDaysRaw.split(","))
+                .map(String::trim)
+                .map(String::toUpperCase)
+                .map(this::parseDayOfWeek)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+        return days.contains(today.getDayOfWeek());
+    }
+
+    private DayOfWeek parseDayOfWeek(String value) {
+        try {
+            return DayOfWeek.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 }

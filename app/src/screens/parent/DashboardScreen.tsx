@@ -1,12 +1,10 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { ActivityIndicator, Avatar, Badge, Divider, List, Text, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Badge, Divider, List, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, EmptyState, UserAvatar } from '../../components/ui';
 import { useChildren, usePointTransactions, usePendingTasks, usePendingRedemptions } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
-import { PointTransactionResponse } from '../../types/api';
-import { useAuthStore } from '../../store/authStore';
 import { spacing } from '../../theme/theme';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,7 +14,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
 
 export const ParentDashboardScreen: React.FC = () => {
-  const user = useAuthStore((state) => state.user);
   const theme = useTheme();
   const { t } = useI18n();
   const navigation = useNavigation<NavigationProp>();
@@ -70,7 +67,6 @@ export const ParentDashboardScreen: React.FC = () => {
               <View>
                 {children.map((child, idx) => {
                   const pendingCounts = getChildPendingCounts(child.id);
-                  const totalPending = pendingCounts.tasks + pendingCounts.redemptions;
                   
                   return (
                     <React.Fragment key={child.id}>
@@ -94,11 +90,11 @@ export const ParentDashboardScreen: React.FC = () => {
                                   <MaterialCommunityIcons
                                     name="clipboard-check"
                                     size={20}
-                                    color={theme.colors.tertiary}
+                                    color={theme.colors.error}
                                   />
                                   <Badge
                                     size={18}
-                                    style={[styles.badge, { backgroundColor: theme.colors.tertiary }]}
+                                    style={[styles.badge, { backgroundColor: theme.colors.error }]}
                                   >
                                     {pendingCounts.tasks}
                                   </Badge>
@@ -119,12 +115,6 @@ export const ParentDashboardScreen: React.FC = () => {
                                   </Badge>
                                 </View>
                               )}
-                              <MaterialCommunityIcons
-                                name="star-circle"
-                                size={24}
-                                color={theme.colors.primary}
-                                style={{ marginLeft: spacing.sm }}
-                              />
                             </View>
                           )}
                         />

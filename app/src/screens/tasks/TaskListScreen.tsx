@@ -28,6 +28,27 @@ const getStatusLabel = (status: TaskStatus, t: (key: string) => string): string 
   return t(`task.status.${status}`);
 };
 
+const getDueInfo = (dueDate: string, t: (key: string, params?: Record<string, string>) => string) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays >= 0) {
+    return {
+      text: t('tasks.deadline.remaining_days', { 0: diffDays.toString() }),
+      overdue: false,
+    };
+  }
+
+  return {
+    text: t('tasks.deadline.overdue_days', { 0: Math.abs(diffDays).toString() }),
+    overdue: true,
+  };
+};
+
 interface TaskCardProps {
   task: TaskInstanceResponse;
   onComplete: () => void;
@@ -39,6 +60,7 @@ interface TaskCardProps {
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isChild, t, styles }) => {
   const canComplete = isChild && (task.status === 'PENDING' || task.status === 'IN_PROGRESS');
+  const dueInfo = task.dueDate ? getDueInfo(task.dueDate, t) : null;
 
   return (
     <View style={styles.card}>
@@ -61,12 +83,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isC
           </Text>
         </View>
 
-        {task.dueDate && (
-          <Text style={styles.dueDate}>
-            {new Date(task.dueDate).toLocaleDateString()}
-          </Text>
+        {task.dueDate && dueInfo && (
+          <View style={[styles.deadlineBadge, dueInfo.overdue && styles.deadlineBadgeOverdue]}>
+            <Text style={styles.deadlineBadgeText}>{dueInfo.text}</Text>
+          </View>
         )}
       </View>
+
+      {task.dueDate && (
+        <Text style={styles.dueDate}>
+          {new Date(task.dueDate).toLocaleDateString()}
+        </Text>
+      )}
 
       {canComplete && (
         <TouchableOpacity
@@ -260,8 +288,23 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: '#4CAF50',
   },
   dueDate: {
-    color: '#999',
+    color: theme.colors.onSurfaceVariant,
     fontSize: 13,
+    marginTop: 6,
+  },
+  deadlineBadge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  deadlineBadgeOverdue: {
+    backgroundColor: '#FFEBEE',
+  },
+  deadlineBadgeText: {
+    color: '#0D47A1',
+    fontWeight: '700',
+    fontSize: 12,
   },
   completeButton: {
     backgroundColor: '#4CAF50',

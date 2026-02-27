@@ -32,18 +32,43 @@ public class TaskInstanceService {
     @Transactional
     public TaskInstance createTaskInstance(@NonNull TaskDefinition definition, @NonNull User assignedUser,
             LocalDate dueDate) {
+        return createTaskInstance(definition, assignedUser, dueDate, null);
+    }
+
+    @Transactional
+    public TaskInstance createTaskInstance(@NonNull TaskDefinition definition, @NonNull User assignedUser,
+            LocalDate dueDate, LocalDateTime dueAt) {
         TaskInstance instance = new TaskInstance();
         instance.setTaskDefinition(definition);
         instance.setAssignedUser(assignedUser);
         instance.setDueDate(dueDate);
+        instance.setDueAt(dueAt);
         instance.setStatus(TaskStatus.PENDING);
 
-        return taskInstanceRepository.save(instance);
+        TaskInstance savedInstance = taskInstanceRepository.save(instance);
+
+        notificationService.createNotification(
+                assignedUser,
+                NotificationType.TASK_ASSIGNED,
+                "Neue Aufgabe",
+                String.format("Dir wurde die Aufgabe '%s' zugewiesen.", definition.getTitle()),
+                savedInstance.getId());
+
+        return savedInstance;
     }
 
     @Transactional(readOnly = true)
     public List<TaskInstance> findOverduePending(@NonNull LocalDate today) {
-        return taskInstanceRepository.findByStatusAndDueDateBefore(TaskStatus.PENDING, today);
+        return findOverduePending(today, LocalDateTime.now());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskInstance> findOverduePending(@NonNull LocalDate today, @NonNull LocalDateTime now) {
+        List<TaskInstance> dateOnlyOverdue = taskInstanceRepository.findByStatusAndDueDateBefore(TaskStatus.PENDING, today);
+        List<TaskInstance> dateTimeOverdue = taskInstanceRepository.findByStatusAndDueAtBefore(TaskStatus.PENDING, now);
+        return java.util.stream.Stream.concat(dateOnlyOverdue.stream(), dateTimeOverdue.stream())
+                .distinct()
+                .toList();
     }
 
     @Transactional
@@ -64,13 +89,16 @@ public class TaskInstanceService {
 
         TaskInstance savedInstance = taskInstanceRepository.save(instance);
 
-        // Notify parents about completed task
+        User parentToNotify = instance.getTaskDefinition().getCreatedBy() != null
+                ? instance.getTaskDefinition().getCreatedBy()
+                : instance.getAssignedUser();
+
         notificationService.createNotification(
-                instance.getAssignedUser(),
+                parentToNotify,
                 NotificationType.TASK_COMPLETED,
                 "Aufgabe erledigt",
-                String.format("Deine Aufgabe '%s' wurde als erledigt markiert.",
-                        instance.getTaskDefinition().getTitle()),
+                String.format("%s hat die Aufgabe '%s' als erledigt markiert.",
+                        instance.getAssignedUser().getFirstName(), instance.getTaskDefinition().getTitle()),
                 instance.getId());
 
         return savedInstance;

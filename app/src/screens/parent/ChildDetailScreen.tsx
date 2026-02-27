@@ -15,7 +15,7 @@ import { spacing } from '../../theme/theme';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivitiesStackParamList } from '../../navigation/types';
-import { useChildren, usePointTransactions } from '../../hooks/useApi';
+import { useChildren, usePendingTasks, usePointTransactions } from '../../hooks/useApi';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { pointsApi } from '../../api/services';
@@ -36,7 +36,9 @@ export const ChildDetailScreen: React.FC = () => {
   const { data: children } = useChildren();
   const child = children?.find((c) => c.id === childId);
   const { data: transactionsData, isLoading } = usePointTransactions({ userId: childId, limit: 30 });
+  const { data: pendingTasks = [] } = usePendingTasks();
   const transactions = transactionsData?.transactions || [];
+  const pendingApprovalsCount = pendingTasks.filter((task) => task.assignedUser.id === childId).length;
 
   const [showPointsModal, setShowPointsModal] = useState(false);
   const [pointsAmount, setPointsAmount] = useState('');
@@ -270,10 +272,22 @@ export const ChildDetailScreen: React.FC = () => {
               mode="outlined"
               icon="plus-circle"
               onPress={() => setShowPointsModal(true)}
+              style={{ marginBottom: pendingApprovalsCount > 0 ? spacing.sm : 0 }}
               contentStyle={{ paddingVertical: spacing.xs }}
             >
               Plus-/Minuspunkte vergeben
             </Button>
+
+            {pendingApprovalsCount > 0 && (
+              <Button
+                mode="contained"
+                icon="clipboard-check"
+                onPress={() => navigation.navigate('PendingApproval')}
+                contentStyle={{ paddingVertical: spacing.xs }}
+              >
+                Aufgaben freigeben ({pendingApprovalsCount})
+              </Button>
+            )}
           </Card.Content>
         </Card>
 

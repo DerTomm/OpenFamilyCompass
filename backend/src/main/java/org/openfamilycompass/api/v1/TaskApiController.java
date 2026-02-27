@@ -1,6 +1,8 @@
 package org.openfamilycompass.api.v1;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
 import org.openfamilycompass.api.v1.dto.TaskDto;
 import org.openfamilycompass.model.TaskDefinition;
 import org.openfamilycompass.model.TaskInstance;
+import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.TaskStatus;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
@@ -75,28 +78,44 @@ public class TaskApiController {
 
         User currentUser = getCurrentUser(jwt);
 
-        TaskDefinition definition = new TaskDefinition();
-        definition.setTitle(request.getTitle());
-        definition.setDescription(request.getDescription());
-        definition.setBasePoints(request.getBasePoints());
-        definition.setRecurrenceType(request.getRecurrenceType());
-        definition.setCreatedBy(currentUser);
-        definition.setStartDate(request.getStartDate());
-        definition.setEndDate(request.getEndDate());
-
-        if (request.getWeeklyDays() != null && !request.getWeeklyDays().isEmpty()) {
-            definition.setWeeklyDays(String.join(",", request.getWeeklyDays()));
-        }
-
         Set<User> assignedUsers = new HashSet<>();
         for (Long userId : request.getAssignedUserIds()) {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found: " + userId));
             assignedUsers.add(user);
         }
-        definition.setAssignedUsers(assignedUsers);
 
-        TaskDefinition saved = taskDefinitionService.save(definition);
+        validateRecurrenceConfiguration(
+                request.getRecurrenceType(),
+                request.getWeeklyDays(),
+                request.getMonthlyMode(),
+                request.getMonthlyWeekNumber(),
+                request.getMonthlyDayOfMonth());
+
+        String weeklyDaysPayload = buildSchedulePayload(
+                request.getRecurrenceType(),
+                request.getWeeklyDays(),
+                request.getMonthlyMode(),
+                request.getMonthlyWeekNumber(),
+                request.getMonthlyDayOfMonth(),
+                request.getMonthlyAdjustToLastDay());
+
+        LocalDateTime endAt = request.getRecurrenceType() == RecurrenceType.ONCE ? request.getEndAt() : null;
+        LocalDate endDate = request.getRecurrenceType() == RecurrenceType.ONCE
+                ? (endAt != null ? endAt.toLocalDate() : request.getEndDate())
+                : request.getEndDate();
+
+        TaskDefinition saved = taskDefinitionService.createTaskDefinition(
+                request.getTitle(),
+                request.getDescription(),
+                request.getBasePoints(),
+                request.getRecurrenceType(),
+                assignedUsers,
+                currentUser,
+                request.getStartDate(),
+                endDate,
+                endAt,
+                weeklyDaysPayload);
         return ResponseEntity.status(HttpStatus.CREATED).body(TaskDto.DefinitionResponse.fromEntity(saved));
     }
 
@@ -135,9 +154,48 @@ public class TaskApiController {
         }
         if (request.getEndDate() != null) {
             definition.setEndDate(request.getEndDate());
+            if (definition.getRecurrenceType() == RecurrenceType.ONCE && request.getEndAt() == null) {
+                definition.setEndAt(request.getEndDate().atTime(23, 59));
+            }
         }
-        if (request.getWeeklyDays() != null) {
-            definition.setWeeklyDays(String.join(",", request.getWeeklyDays()));
+        if (request.getEndAt() != null) {
+            definition.setEndAt(request.getEndAt());
+            definition.setEndDate(request.getEndAt().toLocalDate());
+        }
+        RecurrenceType effectiveRecurrence = definition.getRecurrenceType();
+        if (request.getWeeklyDays() != null || request.getMonthlyWeekNumber() != null || request.getMonthlyMode() != null
+                || request.getMonthlyDayOfMonth() != null || request.getMonthlyAdjustToLastDay() != null
+                || request.getRecurrenceType() != null) {
+            String currentSchedule = definition.getWeeklyDays();
+            List<String> effectiveDays = request.getWeeklyDays() != null
+                    ? request.getWeeklyDays()
+                    : extractDaysFromStoredSchedule(currentSchedule, effectiveRecurrence);
+            String effectiveMonthlyMode = request.getMonthlyMode() != null
+                    ? request.getMonthlyMode()
+                    : extractMonthlyMode(currentSchedule);
+            Integer effectiveMonthlyWeekNumber = request.getMonthlyWeekNumber() != null
+                    ? request.getMonthlyWeekNumber()
+                    : extractMonthlyWeekNumber(currentSchedule);
+            Integer effectiveMonthlyDayOfMonth = request.getMonthlyDayOfMonth() != null
+                    ? request.getMonthlyDayOfMonth()
+                    : extractMonthlyDayOfMonth(currentSchedule);
+            Boolean effectiveMonthlyAdjustToLastDay = request.getMonthlyAdjustToLastDay() != null
+                    ? request.getMonthlyAdjustToLastDay()
+                    : extractMonthlyAdjustToLastDay(currentSchedule);
+
+            validateRecurrenceConfiguration(
+                    effectiveRecurrence,
+                    effectiveDays,
+                    effectiveMonthlyMode,
+                    effectiveMonthlyWeekNumber,
+                    effectiveMonthlyDayOfMonth);
+            definition.setWeeklyDays(buildSchedulePayload(
+                    effectiveRecurrence,
+                    effectiveDays,
+                    effectiveMonthlyMode,
+                    effectiveMonthlyWeekNumber,
+                    effectiveMonthlyDayOfMonth,
+                    effectiveMonthlyAdjustToLastDay));
         }
         if (request.getAssignedUserIds() != null) {
             Set<User> assignedUsers = new HashSet<>();
@@ -147,6 +205,10 @@ public class TaskApiController {
                 assignedUsers.add(user);
             }
             definition.setAssignedUsers(assignedUsers);
+        }
+
+        if (definition.getRecurrenceType() != RecurrenceType.ONCE) {
+            definition.setEndAt(null);
         }
 
         TaskDefinition saved = taskDefinitionService.save(definition);
@@ -301,5 +363,156 @@ public class TaskApiController {
         String username = jwt.getSubject();
         return userService.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+    }
+
+    private void validateRecurrenceConfiguration(RecurrenceType recurrenceType, List<String> weeklyDays,
+            String monthlyMode, Integer monthlyWeekNumber, Integer monthlyDayOfMonth) {
+        if (recurrenceType == RecurrenceType.WEEKLY) {
+            if (weeklyDays == null || weeklyDays.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "weeklyDays is required for WEEKLY tasks");
+            }
+        }
+
+        if (recurrenceType == RecurrenceType.MONTHLY) {
+            if (monthlyMode == null || monthlyMode.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "monthlyMode is required for MONTHLY tasks");
+            }
+
+            if ("WEEKDAY_PATTERN".equalsIgnoreCase(monthlyMode)) {
+                if (weeklyDays == null || weeklyDays.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "weeklyDays is required for MONTHLY WEEKDAY_PATTERN tasks");
+                }
+                if (monthlyWeekNumber == null || monthlyWeekNumber < 1 || monthlyWeekNumber > 5) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "monthlyWeekNumber must be between 1 and 5 for MONTHLY WEEKDAY_PATTERN tasks");
+                }
+                return;
+            }
+
+            if ("DAY_OF_MONTH".equalsIgnoreCase(monthlyMode)) {
+                if (monthlyDayOfMonth == null || monthlyDayOfMonth < 1 || monthlyDayOfMonth > 31) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "monthlyDayOfMonth must be between 1 and 31 for MONTHLY DAY_OF_MONTH tasks");
+                }
+                return;
+            }
+
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "monthlyMode must be DAY_OF_MONTH or WEEKDAY_PATTERN for MONTHLY tasks");
+        }
+    }
+
+    private String buildSchedulePayload(RecurrenceType recurrenceType, List<String> weeklyDays, String monthlyMode,
+            Integer monthlyWeekNumber, Integer monthlyDayOfMonth, Boolean monthlyAdjustToLastDay) {
+        if (recurrenceType == RecurrenceType.ONCE) {
+            return null;
+        }
+
+        if (recurrenceType == RecurrenceType.WEEKLY) {
+            if (weeklyDays == null || weeklyDays.isEmpty()) {
+                return null;
+            }
+            return String.join(",", weeklyDays);
+        }
+
+        if ("DAY_OF_MONTH".equalsIgnoreCase(monthlyMode)) {
+            return "MD:" + monthlyDayOfMonth + ":" + (Boolean.TRUE.equals(monthlyAdjustToLastDay) ? "LAST" : "SKIP");
+        }
+
+        if (weeklyDays == null || weeklyDays.isEmpty()) {
+            return null;
+        }
+        return "MW:" + monthlyWeekNumber + ":" + String.join(",", weeklyDays);
+    }
+
+    private List<String> extractDaysFromStoredSchedule(String storedValue, RecurrenceType recurrenceType) {
+        if (storedValue == null || storedValue.isBlank()) {
+            return List.of();
+        }
+
+        if (recurrenceType == RecurrenceType.MONTHLY && storedValue.startsWith("MW:") && storedValue.contains(":")) {
+            String[] parts = storedValue.split(":", 3);
+            if (parts.length < 3 || parts[2].isBlank()) {
+                return List.of();
+            }
+            return Arrays.asList(parts[2].split(","));
+        }
+
+        if (recurrenceType == RecurrenceType.MONTHLY && storedValue.startsWith("W") && storedValue.contains(":")) {
+            // Backward compatibility for old W2:MONDAY format
+            String[] parts = storedValue.split(":", 2);
+            if (parts.length < 2 || parts[1].isBlank()) {
+                return List.of();
+            }
+            return Arrays.asList(parts[1].split(","));
+        }
+
+        return Arrays.asList(storedValue.split(","));
+    }
+
+    private Integer extractMonthlyWeekNumber(String storedValue) {
+        if (storedValue == null || storedValue.isBlank()) {
+            return null;
+        }
+
+        String prefix;
+        if (storedValue.startsWith("MW:")) {
+            String[] parts = storedValue.split(":", 3);
+            if (parts.length < 2) {
+                return null;
+            }
+            prefix = parts[1];
+        } else if (storedValue.startsWith("W") && storedValue.contains(":")) {
+            prefix = storedValue.split(":", 2)[0].substring(1);
+        } else {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(prefix);
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            return null;
+        }
+    }
+
+    private String extractMonthlyMode(String storedValue) {
+        if (storedValue == null || storedValue.isBlank()) {
+            return null;
+        }
+        if (storedValue.startsWith("MD:")) {
+            return "DAY_OF_MONTH";
+        }
+        if (storedValue.startsWith("MW:") || (storedValue.startsWith("W") && storedValue.contains(":"))) {
+            return "WEEKDAY_PATTERN";
+        }
+        return null;
+    }
+
+    private Integer extractMonthlyDayOfMonth(String storedValue) {
+        if (storedValue == null || !storedValue.startsWith("MD:")) {
+            return null;
+        }
+        String[] parts = storedValue.split(":", 3);
+        if (parts.length < 2) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(parts[1]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Boolean extractMonthlyAdjustToLastDay(String storedValue) {
+        if (storedValue == null || !storedValue.startsWith("MD:")) {
+            return null;
+        }
+        String[] parts = storedValue.split(":", 3);
+        if (parts.length < 3) {
+            return null;
+        }
+        return "LAST".equalsIgnoreCase(parts[2]);
     }
 }

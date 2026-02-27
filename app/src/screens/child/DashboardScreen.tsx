@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, EmptyState, QuickActionCard, UserAvatar } from '../../components/ui';
@@ -11,8 +11,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useAuthStore } from '../../store/authStore';
 import { ActivitiesStackParamList } from '../../navigation/types';
 import { spacing } from '../../theme/theme';
-import { usePointTransactions } from '../../hooks/useApi';
-import { PointTransactionResponse } from '../../types/api';
+import { usePointTransactions, useTaskInstances } from '../../hooks/useApi';
 
 type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
 
@@ -26,6 +25,8 @@ export const ChildDashboardScreen: React.FC = () => {
   // Load recent transactions
   const { data: transactionsData } = usePointTransactions({ userId: user?.id, limit: 5 });
   const transactions = transactionsData?.transactions || [];
+  const { data: tasks = [] } = useTaskInstances(user?.id ? { assignedUserId: user.id } : undefined);
+  const activeTasks = tasks.filter((task) => ['PENDING', 'IN_PROGRESS'].includes(task.status)).slice(0, 5);
 
   // Total points
   const totalPoints = user?.totalPoints || 0;
@@ -120,11 +121,41 @@ export const ChildDashboardScreen: React.FC = () => {
           </View>
 
           <Card elevation={1}>
-            <EmptyState
-              icon="clipboard-check"
-              title={t('empty.no_tasks')}
-              message={t('empty.no_tasks.desc')}
-            />
+            {activeTasks.length > 0 ? (
+              <View style={{ padding: 12 }}>
+                {activeTasks.map((task, index) => (
+                  <View key={task.id}>
+                    <TouchableOpacity
+                      style={styles.transactionRow}
+                      onPress={() => navigation.navigate('TaskList')}
+                    >
+                      <View style={styles.transactionInfo}>
+                        <Text variant="bodyMedium" style={{ fontWeight: '500' }}>
+                          {task.taskDefinition.title}
+                        </Text>
+                        <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                          {task.dueAt
+                            ? new Date(task.dueAt).toLocaleString('de-DE')
+                            : task.dueDate
+                              ? new Date(task.dueDate).toLocaleDateString('de-DE')
+                              : t('tasks.deadline.optional')}
+                        </Text>
+                      </View>
+                      <Text variant="bodyLarge" style={{ fontWeight: '700', color: theme.colors.primary }}>
+                        {task.taskDefinition.basePoints}
+                      </Text>
+                    </TouchableOpacity>
+                    {index < activeTasks.length - 1 && <Divider style={{ marginVertical: 8 }} />}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <EmptyState
+                icon="clipboard-check"
+                title={t('empty.no_tasks')}
+                message={t('empty.no_tasks.desc')}
+              />
+            )}
           </Card>
         </View>
 

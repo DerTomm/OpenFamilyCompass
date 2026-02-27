@@ -29,6 +29,22 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TaskDefinition {
 
+    public TaskDefinition(Long id, String title, String description, int basePoints, RecurrenceType recurrenceType,
+            Set<User> assignedUsers, User createdBy, LocalDate startDate, LocalDate endDate,
+            String weeklyDays, LocalDateTime createdAt) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.basePoints = basePoints;
+        this.recurrenceType = recurrenceType;
+        this.assignedUsers = assignedUsers;
+        this.createdBy = createdBy;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.weeklyDays = weeklyDays;
+        this.createdAt = createdAt;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -59,6 +75,9 @@ public class TaskDefinition {
 
     @Column(name = "end_date")
     private LocalDate endDate; // Optional: Wann die Aufgabe endet
+
+    @Column(name = "end_at")
+    private LocalDateTime endAt; // Optional: Exakte Deadline für ONCE Aufgaben
 
     @Column(name = "weekly_days", columnDefinition = "TEXT")
     private String weeklyDays; // JSON oder kommasepariert: MONDAY,TUESDAY für WEEKLY

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Chip, DataTable, IconButton, Searchbar, Text, useTheme } from 'react-native-paper';
-import { useTaskDefinitions, useChildren, useDeleteTaskDefinition } from '../../hooks/useApi';
+import { useTaskDefinitions, useChildren, useDeleteTaskDefinition, useTaskInstances } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { TaskDefinitionResponse } from '../../types/api';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,6 +30,7 @@ export const TaskManagementScreen: React.FC = () => {
   const styles = createStyles(theme);
 
   const { data: tasks, isLoading, refetch, isRefetching } = useTaskDefinitions();
+  const { data: taskInstances } = useTaskInstances();
   const { data: children } = useChildren();
   const deleteMutation = useDeleteTaskDefinition();
 
@@ -38,7 +39,20 @@ export const TaskManagementScreen: React.FC = () => {
 
   const filteredTasks = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
+    const activeOnceTaskIds = new Set(
+      (taskInstances ?? [])
+        .filter(
+          (instance) =>
+            instance.taskDefinition.recurrenceType === 'ONCE' &&
+            ['PENDING', 'IN_PROGRESS', 'CHILD_COMPLETED'].includes(instance.status)
+        )
+        .map((instance) => instance.taskDefinition.id)
+    );
+
     return (tasks ?? []).filter((task) => {
+      const isVisibleByLifecycle =
+        task.recurrenceType !== 'ONCE' || activeOnceTaskIds.has(task.id);
+
       const title = task.title.toLowerCase();
       const description = task.description?.toLowerCase() ?? '';
       const matchesSearch =
@@ -49,9 +63,9 @@ export const TaskManagementScreen: React.FC = () => {
         ? (task.assignedUsers ?? []).some((user) => user.id === selectedChildId)
         : true;
 
-      return matchesSearch && matchesChild;
+      return isVisibleByLifecycle && matchesSearch && matchesChild;
     });
-  }, [tasks, searchQuery, selectedChildId]);
+  }, [tasks, taskInstances, searchQuery, selectedChildId]);
 
   const handleCreate = () => {
     navigation.navigate('TaskEdit', { taskId: undefined });
@@ -143,6 +157,63 @@ export const TaskManagementScreen: React.FC = () => {
     </DataTable.Row>
   );
 
+  const renderMobileItem = ({ item }: { item: TaskDefinitionResponse }) => (
+    <View style={styles.mobileCard}>
+      <View style={styles.mobileCardHeader}>
+        <View style={styles.mobileCardHeaderContent}>
+          <Text variant="titleMedium" style={styles.cellTitle}>
+            {item.title}
+          </Text>
+          {item.description ? (
+            <Text variant="bodySmall" style={styles.cellSubtitle}>
+              {item.description}
+            </Text>
+          ) : null}
+        </View>
+        <View style={styles.actionButtons}>
+          <IconButton
+            icon="pencil"
+            size={18}
+            onPress={() => handleEdit(item)}
+            disabled={deleteMutation.isPending}
+          />
+          <IconButton
+            icon="delete"
+            size={18}
+            iconColor="#F44336"
+            onPress={() => handleDelete(item)}
+            disabled={deleteMutation.isPending}
+          />
+        </View>
+      </View>
+
+      <View style={styles.mobileMetaRow}>
+        <Text style={styles.mobileMetaLabel}>{t('tasks.recurrence')}</Text>
+        <Text style={styles.mobileMetaValue}>{t(`recurrence.${item.recurrenceType}`)}</Text>
+      </View>
+      <View style={styles.mobileMetaRow}>
+        <Text style={styles.mobileMetaLabel}>{t('tasks.points')}</Text>
+        <Text style={styles.mobileMetaValue}>{item.basePoints}</Text>
+      </View>
+
+      <Text style={styles.mobileMetaLabel}>{t('tasks.assigned_to')}</Text>
+      <View style={styles.mobileAssignedList}>
+        {(item.assignedUsers ?? []).map((user) => (
+          <View key={user.id} style={styles.mobileAssignedChip}>
+            <UserAvatar
+              avatarType={user.avatarType}
+              avatarIconName={user.avatarIconName}
+              avatarPath={user.avatarPath}
+              firstName={user.firstName}
+              size={20}
+            />
+            <Text style={styles.mobileAssignedName}>{user.firstName}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+
   const table = (
     <DataTable style={[styles.table, !isDesktop && styles.tableMobile]}>
       <DataTable.Header>
@@ -217,9 +288,18 @@ export const TaskManagementScreen: React.FC = () => {
       ) : isDesktop ? (
         <View style={styles.tableContainer}>{table}</View>
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.tableScroll}>
-          <View style={styles.tableContainer}>{table}</View>
-        </ScrollView>
+        <FlatList
+          data={filteredTasks}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderMobileItem}
+          contentContainerStyle={styles.mobileListContent}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+          ListEmptyComponent={
+            <View style={styles.mobileEmptyCard}>
+              <Text style={styles.emptyText}>{t('tasks.definitions.empty')}</Text>
+            </View>
+          }
+        />
       )}
 
       <Dialogs />
@@ -292,21 +372,81 @@ const createStyles = (theme: any) => StyleSheet.create({
   tableMobile: {
     minWidth: 900,
   },
-  tableScroll: {
-    paddingRight: 16,
+  mobileListContent: {
+    padding: 16,
+    gap: 12,
+  },
+  mobileCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.outlineVariant,
+    padding: 12,
+    gap: 10,
+  },
+  mobileCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  mobileCardHeaderContent: {
+    flex: 1,
+  },
+  mobileMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  mobileMetaLabel: {
+    color: theme.colors.onSurfaceVariant,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  mobileMetaValue: {
+    color: theme.colors.onSurface,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  mobileAssignedList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  mobileAssignedChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: theme.colors.surfaceVariant,
+    borderRadius: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  mobileAssignedName: {
+    color: theme.colors.onSurface,
+    fontSize: 13,
   },
   cellTitle: {
     fontWeight: '600',
+    color: theme.colors.onSurface,
   },
   cellSubtitle: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
   emptyText: {
-    color: '#999',
+    color: theme.colors.onSurfaceVariant,
     paddingVertical: 8,
+  },
+  mobileEmptyCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.outlineVariant,
+    padding: 16,
+    alignItems: 'center',
   },
 });
