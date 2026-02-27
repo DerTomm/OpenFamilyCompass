@@ -25,6 +25,22 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TaskInstance {
 
+    public TaskInstance(Long id, TaskDefinition taskDefinition, User assignedUser, LocalDate dueDate, TaskStatus status,
+            LocalDateTime completedAt, LocalDateTime approvedAt, Integer awardedPoints, User approvedBy,
+            String parentNotes, LocalDateTime createdAt) {
+        this.id = id;
+        this.taskDefinition = taskDefinition;
+        this.assignedUser = assignedUser;
+        this.dueDate = dueDate;
+        this.status = status;
+        this.completedAt = completedAt;
+        this.approvedAt = approvedAt;
+        this.awardedPoints = awardedPoints;
+        this.approvedBy = approvedBy;
+        this.parentNotes = parentNotes;
+        this.createdAt = createdAt;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,6 +55,9 @@ public class TaskInstance {
 
     @Column(name = "due_date", nullable = true)
     private LocalDate dueDate;
+
+    @Column(name = "due_at")
+    private LocalDateTime dueAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

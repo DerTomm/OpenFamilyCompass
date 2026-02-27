@@ -68,6 +68,8 @@ class TaskInstanceServiceTest {
         parent.setUsername("parent");
         parent.setRole(UserRole.PARENT);
 
+        taskDefinition.setCreatedBy(parent);
+
         taskInstance = new TaskInstance();
         taskInstance.setId(1L);
         taskInstance.setTaskDefinition(taskDefinition);
@@ -139,10 +141,10 @@ class TaskInstanceServiceTest {
         assertThat(taskInstance.getCompletedAt()).isNotNull();
 
         verify(notificationService).createNotification(
-                eq(child),
+                eq(parent),
                 eq(NotificationType.TASK_COMPLETED),
                 eq("Aufgabe erledigt"),
-                argThat(message -> message.contains("Test Task") && message.contains("wurde als erledigt markiert")),
+                argThat(message -> message.contains("Test Task") && message.contains("TestChild")),
                 eq(1L));
     }
 

@@ -15,6 +15,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { NotificationResponse, NotificationType } from '../../types/api';
 
 const NOTIFICATION_ICONS: Record<NotificationType, string> = {
+  TASK_ASSIGNED: '📋',
   TASK_COMPLETED: '✅',
   TASK_APPROVED: '🎉',
   TASK_REJECTED: '❌',
@@ -26,6 +27,7 @@ const NOTIFICATION_ICONS: Record<NotificationType, string> = {
 };
 
 const NOTIFICATION_COLORS: Record<NotificationType, string> = {
+  TASK_ASSIGNED: '#2196F3',
   TASK_COMPLETED: '#9C27B0',
   TASK_APPROVED: '#4CAF50',
   TASK_REJECTED: '#F44336',

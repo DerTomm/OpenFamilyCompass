@@ -1,6 +1,7 @@
 package org.openfamilycompass.model;
 
 public enum NotificationType {
+    TASK_ASSIGNED("clipboard-list", "warning"), // Kind: Neue Aufgabe zugewiesen
     TASK_COMPLETED("check-circle", "success"), // Eltern: Aufgabe wurde von Kind abgeschlossen
     TASK_APPROVED("check-circle", "success"), // Kind: Aufgabe wurde genehmigt
     TASK_REJECTED("times-circle", "danger"), // Kind: Aufgabe wurde abgelehnt

@@ -1,6 +1,7 @@
 package org.openfamilycompass.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.openfamilycompass.model.TaskInstance;
@@ -28,6 +29,8 @@ public interface TaskInstanceRepository extends JpaRepository<TaskInstance, Long
     List<TaskInstance> findByDueDateBeforeAndStatusNotIn(LocalDate date, List<TaskStatus> statuses);
 
     List<TaskInstance> findByStatusAndDueDateBefore(TaskStatus status, LocalDate date);
+
+    List<TaskInstance> findByStatusAndDueAtBefore(TaskStatus status, LocalDateTime dateTime);
 
     void deleteByTaskDefinition_Id(Long taskDefinitionId);
 }

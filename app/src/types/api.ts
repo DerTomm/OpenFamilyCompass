@@ -2,10 +2,11 @@
 
 export type UserRole = 'ADMIN' | 'PARENT' | 'CHILD';
 export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'CHILD_COMPLETED' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
-export type RecurrenceType = 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+export type RecurrenceType = 'ONCE' | 'WEEKLY' | 'MONTHLY';
+export type MonthlyRecurrenceMode = 'DAY_OF_MONTH' | 'WEEKDAY_PATTERN';
 export type RewardStatus = 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'DELIVERED';
 export type PointTransactionType = 'TASK' | 'REWARD' | 'BEHAVIOR' | 'PENALTY' | 'BONUS';
-export type NotificationType = 'TASK_COMPLETED' | 'TASK_APPROVED' | 'TASK_REJECTED' | 'TASK_EXPIRED' | 'REWARD_REQUESTED' | 'REWARD_APPROVED' | 'REWARD_REJECTED' | 'POINTS_EARNED';
+export type NotificationType = 'TASK_ASSIGNED' | 'TASK_COMPLETED' | 'TASK_APPROVED' | 'TASK_REJECTED' | 'TASK_EXPIRED' | 'REWARD_REQUESTED' | 'REWARD_APPROVED' | 'REWARD_REJECTED' | 'POINTS_EARNED';
 
 // User
 export interface UserResponse {
@@ -89,7 +90,12 @@ export interface TaskDefinitionResponse {
   createdBy?: UserResponse;
   startDate?: string;
   endDate?: string;
+  endAt?: string;
   weeklyDays?: string[];
+  monthlyMode?: MonthlyRecurrenceMode;
+  monthlyWeekNumber?: number;
+  monthlyDayOfMonth?: number;
+  monthlyAdjustToLastDay?: boolean;
   createdAt: string;
 }
 
@@ -101,7 +107,12 @@ export interface CreateTaskDefinitionRequest {
   assignedUserIds: number[];
   startDate?: string;
   endDate?: string;
+  endAt?: string;
   weeklyDays?: string[];
+  monthlyMode?: MonthlyRecurrenceMode;
+  monthlyWeekNumber?: number;
+  monthlyDayOfMonth?: number;
+  monthlyAdjustToLastDay?: boolean;
 }
 
 // Task Instance
@@ -110,6 +121,7 @@ export interface TaskInstanceResponse {
   taskDefinition: TaskDefinitionResponse;
   assignedUser: ChildResponse;
   dueDate?: string;
+  dueAt?: string;
   status: TaskStatus;
   completedAt?: string;
   approvedAt?: string;

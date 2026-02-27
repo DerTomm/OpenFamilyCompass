@@ -95,6 +95,7 @@ export const usePendingTasks = () => {
   return useQuery({
     queryKey: queryKeys.pendingTasks,
     queryFn: () => taskInstancesApi.getPending(),
+    refetchInterval: 15000,
   });
 };
 
@@ -116,6 +117,10 @@ export const useApproveTask = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskInstances'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.pendingTasks });
+      queryClient.invalidateQueries({ queryKey: ['points'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.children });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile });
     },
   });
 };
@@ -191,6 +196,7 @@ export const usePendingRedemptions = () => {
   return useQuery({
     queryKey: queryKeys.pendingRedemptions,
     queryFn: () => redemptionsApi.getPending(),
+    refetchInterval: 15000,
   });
 };
 

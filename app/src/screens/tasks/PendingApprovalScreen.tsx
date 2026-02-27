@@ -62,6 +62,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
               onChangeText={setPoints}
               keyboardType="numeric"
               placeholder={t('tasks.points')}
+              placeholderTextColor={styles.placeholder.color}
             />
           </View>
 
@@ -72,6 +73,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
               value={notes}
               onChangeText={setNotes}
               placeholder={t('behavior.modal.notes.placeholder')}
+              placeholderTextColor={styles.placeholder.color}
               multiline
               numberOfLines={3}
             />
@@ -299,10 +301,12 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.colors.outline,
+    backgroundColor: theme.colors.surface,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+    color: theme.colors.onSurface,
   },
   textArea: {
     height: 80,
@@ -344,5 +348,8 @@ const createStyles = (theme: any) => StyleSheet.create({
   cancelButtonText: {
     color: theme.colors.onSurfaceVariant,
     fontSize: 16,
+  },
+  placeholder: {
+    color: theme.colors.onSurfaceVariant,
   },
 });
