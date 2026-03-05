@@ -1,3 +1,7 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -8,184 +12,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { behaviorsApi, usersApi } from '../../api/services';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { behaviorsApi } from '../../api/services';
 import { useI18n } from '../../i18n/I18nContext';
-import { BehaviorResponse, ChildResponse } from '../../types/api';
+import { ManageStackParamList } from '../../navigation/types';
+import { BehaviorResponse } from '../../types/api';
 
-interface BehaviorModalProps {
-  visible: boolean;
-  behavior: BehaviorResponse | null;
-  children: ChildResponse[];
-  onClose: () => void;
-  onSubmit: (data: { title: string; guideline: string; plusPoints: number; minusPoints: number; userId?: number }) => void;
-  isLoading: boolean;
-  t: (key: string) => string;
-  styles: any;
-}
-
-const BehaviorModal: React.FC<BehaviorModalProps> = ({ visible, behavior, children, onClose, onSubmit, isLoading, t, styles }) => {
-  const [title, setTitle] = useState('');
-  const [guideline, setGuideline] = useState('');
-  const [plusPoints, setPlusPoints] = useState('');
-  const [minusPoints, setMinusPoints] = useState('');
-  const [userId, setUserId] = useState<number | undefined>(undefined);
-
-  React.useEffect(() => {
-    if (behavior) {
-      setTitle(behavior.title);
-      setGuideline(behavior.guideline);
-      setPlusPoints(behavior.plusPoints.toString());
-      setMinusPoints(behavior.minusPoints.toString());
-      setUserId(behavior.user?.id);
-    } else {
-      setTitle('');
-      setGuideline('');
-      setPlusPoints('');
-      setMinusPoints('');
-      setUserId(undefined);
-    }
-  }, [behavior, visible]);
-
-  const handleSubmit = () => {
-    if (!title || !guideline) {
-      Alert.alert(t('common.error'), t('behavior.error.fields'));
-      return;
-    }
-
-    const parsedPlus = plusPoints.trim().length ? parseInt(plusPoints, 10) : 0;
-    const parsedMinus = minusPoints.trim().length ? parseInt(minusPoints, 10) : 0;
-
-    if (Number.isNaN(parsedPlus) || Number.isNaN(parsedMinus) || parsedPlus < 0 || parsedMinus < 0) {
-      Alert.alert(t('common.error'), t('behavior.error.fields'));
-      return;
-    }
-
-    if (parsedPlus === 0 && parsedMinus === 0) {
-      Alert.alert(t('common.error'), t('behavior.error.fields'));
-      return;
-    }
-
-    onSubmit({
-      title,
-      guideline,
-      plusPoints: parsedPlus,
-      minusPoints: parsedMinus,
-      userId,
-    });
-  };
-
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              {behavior ? t('behavior.edit.title') : t('behavior.create.title')}
-            </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <MaterialIcons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView style={styles.modalBody}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{t('behavior.title.label')} *</Text>
-              <TextInput
-                style={styles.input}
-                value={title}
-                onChangeText={setTitle}
-                placeholder={t('behavior.title.hint')}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{t('behavior.guidelines.label')} *</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={guideline}
-                onChangeText={setGuideline}
-                placeholder={t('behavior.guidelines.hint')}
-                multiline
-                numberOfLines={4}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{t('behavior.plusPoints.label')} *</Text>
-              <TextInput
-                style={styles.input}
-                value={plusPoints}
-                onChangeText={setPlusPoints}
-                placeholder={t('behavior.plusPoints.hint')}
-                keyboardType="number-pad"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{t('behavior.minusPoints.label')} *</Text>
-              <TextInput
-                style={styles.input}
-                value={minusPoints}
-                onChangeText={setMinusPoints}
-                placeholder={t('behavior.minusPoints.hint')}
-                keyboardType="number-pad"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{t('behavior.child.label')}</Text>
-              <View style={styles.childSelector}>
-                <TouchableOpacity
-                  style={[styles.childOption, userId === undefined && styles.childOptionActive]}
-                  onPress={() => setUserId(undefined)}
-                >
-                  <Text style={[styles.childOptionText, userId === undefined && styles.childOptionTextActive]}>
-                    {t('children.all')}
-                  </Text>
-                </TouchableOpacity>
-                {children.map((child) => (
-                  <TouchableOpacity
-                    key={child.id}
-                    style={[styles.childOption, userId === child.id && styles.childOptionActive]}
-                    onPress={() => setUserId(child.id)}
-                  >
-                    <Text style={[styles.childOptionText, userId === child.id && styles.childOptionTextActive]}>
-                      {child.firstName}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </ScrollView>
-
-          <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>{t('button.cancel')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={isLoading}>
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.submitButtonText}>
-                  {behavior ? t('button.save') : t('behavior.create.button')}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
+type NavigationProp = NativeStackNavigationProp<ManageStackParamList>;
 
 interface BehaviorRowProps {
   behavior: BehaviorResponse;
@@ -236,7 +74,7 @@ const BehaviorRow: React.FC<BehaviorRowProps> = ({ behavior, isDesktop, onEdit, 
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{behavior.title}</Text>
       </View>
-      
+
       <View style={styles.cardRow}>
         <Text style={styles.cardLabel}>{t('behavior.guidelines.label')}:</Text>
         <TouchableOpacity onPress={onShowGuideline}>
@@ -281,9 +119,8 @@ export const BehaviorManageScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const theme = useTheme();
   const styles = createStyles(theme);
+  const navigation = useNavigation<NavigationProp>();
 
-  const [showModal, setShowModal] = useState(false);
-  const [editingBehavior, setEditingBehavior] = useState<BehaviorResponse | null>(null);
   const [guidelineModal, setGuidelineModal] = useState<{ visible: boolean; guideline: string }>({
     visible: false,
     guideline: '',
@@ -294,44 +131,6 @@ export const BehaviorManageScreen: React.FC = () => {
     queryFn: () => behaviorsApi.list(),
   });
 
-  const { data: children } = useQuery({
-    queryKey: ['children'],
-    queryFn: () => usersApi.listChildren(),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: behaviorsApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['behaviors'] });
-      setShowModal(false);
-      if (Platform.OS === 'web') {
-        window.alert(t('behavior.create.success'));
-      } else {
-        Alert.alert(t('common.success'), t('behavior.create.success'));
-      }
-    },
-    onError: () => {
-      Alert.alert(t('common.error'), t('behavior.create.error'));
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => behaviorsApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['behaviors'] });
-      setShowModal(false);
-      setEditingBehavior(null);
-      if (Platform.OS === 'web') {
-        window.alert(t('behavior.edit.success'));
-      } else {
-        Alert.alert(t('common.success'), t('behavior.edit.success'));
-      }
-    },
-    onError: () => {
-      Alert.alert(t('common.error'), t('behavior.edit.error'));
-    },
-  });
-
   const deleteMutation = useMutation({
     mutationFn: behaviorsApi.deactivate,
     onSuccess: () => {
@@ -340,13 +139,11 @@ export const BehaviorManageScreen: React.FC = () => {
   });
 
   const handleEdit = (behavior: BehaviorResponse) => {
-    setEditingBehavior(behavior);
-    setShowModal(true);
+    navigation.navigate('BehaviorEdit', { behaviorId: behavior.id });
   };
 
   const handleCreate = () => {
-    setEditingBehavior(null);
-    setShowModal(true);
+    navigation.navigate('BehaviorCreate');
   };
 
   const handleDelete = (behavior: BehaviorResponse) => {
@@ -367,14 +164,6 @@ export const BehaviorManageScreen: React.FC = () => {
     }
   };
 
-  const handleSubmit = (data: { title: string; guideline: string; plusPoints: number; minusPoints: number; userId?: number }) => {
-    if (editingBehavior) {
-      updateMutation.mutate({ id: editingBehavior.id, data });
-    } else {
-      createMutation.mutate(data);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.header}>
@@ -383,10 +172,6 @@ export const BehaviorManageScreen: React.FC = () => {
             <MaterialIcons name="star" size={24} color="#ffc107" /> {t('behavior.manage.title')}
           </Text>
         </View>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
-          <MaterialIcons name="add" size={24} color="#fff" />
-          <Text style={styles.createButtonText}>{t('behavior.create')}</Text>
-        </TouchableOpacity>
       </View>
 
       {isLoading ? (
@@ -396,6 +181,7 @@ export const BehaviorManageScreen: React.FC = () => {
       ) : behaviors && behaviors.length > 0 ? (
         <ScrollView
           style={styles.content}
+          contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         >
           {isDesktop ? (
@@ -451,26 +237,12 @@ export const BehaviorManageScreen: React.FC = () => {
         <View style={styles.emptyContainer}>
           <MaterialIcons name="star-border" size={64} color="#ccc" />
           <Text style={styles.emptyTitle}>{t('behavior.none')}</Text>
-          <TouchableOpacity style={styles.emptyButton} onPress={handleCreate}>
-            <MaterialIcons name="add" size={20} color="#fff" />
-            <Text style={styles.emptyButtonText}>{t('behavior.create')}</Text>
-          </TouchableOpacity>
         </View>
       )}
 
-      <BehaviorModal
-        visible={showModal}
-        behavior={editingBehavior}
-        children={children || []}
-        onClose={() => {
-          setShowModal(false);
-          setEditingBehavior(null);
-        }}
-        onSubmit={handleSubmit}
-        isLoading={createMutation.isPending || updateMutation.isPending}
-        t={t}
-        styles={styles}
-      />
+      <TouchableOpacity style={styles.fab} onPress={handleCreate}>
+        <MaterialIcons name="add" size={24} color="#fff" />
+      </TouchableOpacity>
 
       <Modal visible={guidelineModal.visible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -523,19 +295,21 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '700',
     color: theme.colors.onSurface,
   },
-  createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#ffc107',
-    padding: 12,
-    borderRadius: 8,
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   loading: {
     flex: 1,
@@ -544,6 +318,9 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 80,
   },
   table: {
     backgroundColor: theme.colors.surface,
@@ -681,30 +458,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginTop: 16,
     marginBottom: 16,
   },
-  emptyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#ffc107',
-    padding: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  emptyButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
   },
   guidelineModalContent: {
     backgroundColor: theme.colors.surface,
@@ -732,78 +489,12 @@ const createStyles = (theme: any) => StyleSheet.create({
   modalBody: {
     padding: 16,
   },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.onSurface,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  textArea: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  childSelector: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  childOption: {
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  childOptionActive: {
-    backgroundColor: '#ffc107',
-  },
-  childOptionText: {
-    fontWeight: '500',
-    color: theme.colors.onSurfaceVariant,
-  },
-  childOptionTextActive: {
-    color: '#fff',
-  },
   modalFooter: {
     flexDirection: 'row',
     padding: 16,
     gap: 8,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
-  },
-  cancelButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.onSurfaceVariant,
-  },
-  submitButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: '#ffc107',
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
   },
   guidelineText: {
     fontSize: 16,

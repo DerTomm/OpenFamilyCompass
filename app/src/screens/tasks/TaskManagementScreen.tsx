@@ -1,3 +1,6 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -5,18 +8,17 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
   useWindowDimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { Button, Chip, DataTable, IconButton, Searchbar, Text, useTheme } from 'react-native-paper';
-import { useTaskDefinitions, useChildren, useDeleteTaskDefinition, useTaskInstances } from '../../hooks/useApi';
-import { useI18n } from '../../i18n/I18nContext';
-import { TaskDefinitionResponse } from '../../types/api';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ManageStackParamList } from '../../navigation/types';
-import { useDialogs } from '../../hooks/useDialogs';
+import { Chip, DataTable, IconButton, Searchbar, Text, useTheme } from 'react-native-paper';
 import { UserAvatar } from '../../components/ui';
+import { useChildren, useDeleteTaskDefinition, useTaskDefinitions, useTaskInstances } from '../../hooks/useApi';
+import { useDialogs } from '../../hooks/useDialogs';
+import { useI18n } from '../../i18n/I18nContext';
+import { ManageStackParamList } from '../../navigation/types';
+import { TaskDefinitionResponse } from '../../types/api';
 
 type NavigationProp = NativeStackNavigationProp<ManageStackParamList>;
 
@@ -243,15 +245,6 @@ export const TaskManagementScreen: React.FC = () => {
             value={searchQuery}
             style={styles.searchBar}
           />
-          <Button
-            mode="contained"
-            icon="plus"
-            onPress={handleCreate}
-            style={[styles.createButton, !isDesktop && styles.createButtonMobile]}
-            contentStyle={styles.createButtonContent}
-          >
-            {t('tasks.create')}
-          </Button>
         </View>
         <ScrollView
           horizontal
@@ -302,6 +295,9 @@ export const TaskManagementScreen: React.FC = () => {
         />
       )}
 
+      <TouchableOpacity style={styles.fab} onPress={handleCreate}>
+        <MaterialCommunityIcons name="plus" size={24} color="#fff" />
+      </TouchableOpacity>
       <Dialogs />
     </View>
   );
@@ -340,15 +336,21 @@ const createStyles = (theme: any) => StyleSheet.create({
     flex: 1,
     minWidth: 220,
   },
-  createButton: {
-    borderRadius: 8,
-  },
-  createButtonMobile: {
-    alignSelf: 'stretch',
-  },
-  createButtonContent: {
-    height: 40,
-    paddingHorizontal: 12,
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2196F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   chipScroll: {
     gap: 8,
@@ -374,6 +376,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   mobileListContent: {
     padding: 16,
+    paddingBottom: 80,
     gap: 12,
   },
   mobileCard: {

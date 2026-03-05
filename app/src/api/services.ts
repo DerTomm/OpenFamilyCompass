@@ -86,6 +86,13 @@ export const rewardsApi = {
   update: (id: number, data: Partial<CreateRewardRequest & { active: boolean }>) =>
     api.put<RewardResponse>(`/rewards/${id}`, data),
   deactivate: (id: number) => api.delete<void>(`/rewards/${id}`),
+  uploadImage: (id: number, uri: string, mimeType?: string) => {
+    const formData = new FormData();
+    const ext = uri.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const type = mimeType ?? (ext === 'png' ? 'image/png' : 'image/jpeg');
+    formData.append('file', { uri, name: `reward-image.${ext}`, type } as any);
+    return api.upload<RewardResponse>(`/rewards/${id}/image`, formData);
+  },
 };
 
 // Reward Redemptions

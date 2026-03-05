@@ -27,6 +27,8 @@ public class RewardDto {
         private int pointsCost;
         private String imagePath;
         private boolean active;
+        private Long userId;
+        private boolean hasImage;
         private LocalDateTime createdAt;
 
         public static Response fromEntity(Reward reward) {
@@ -37,6 +39,8 @@ public class RewardDto {
                     .pointsCost(reward.getPointsCost())
                     .imagePath(reward.getImagePath())
                     .active(reward.isActive())
+                    .userId(reward.getUser() != null ? reward.getUser().getId() : null)
+                    .hasImage(reward.getImageData() != null && reward.getImageData().length > 0)
                     .createdAt(reward.getCreatedAt())
                     .build();
         }
@@ -53,6 +57,8 @@ public class RewardDto {
 
         @Min(1)
         private int pointsCost;
+
+        private Long userId; // Optional: restrict to a specific child
     }
 
     @Data
@@ -66,6 +72,8 @@ public class RewardDto {
         private Integer pointsCost;
 
         private Boolean active;
+
+        private Long userId; // Optional: restrict to a specific child; send 0 to remove restriction
     }
 
     @Data

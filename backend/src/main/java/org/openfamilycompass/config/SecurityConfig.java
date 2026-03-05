@@ -56,18 +56,18 @@ public class SecurityConfig {
 
                         // Custom roles aus "roles" Claim
                         List<String> roles = jwt.getClaimAsStringList("roles");
-                        
+
                         // Handle roles list being null
                         if (roles == null) {
-                            roles = new java.util.ArrayList<>();
+                                roles = new java.util.ArrayList<>();
                         } else {
-                            // Ensure roles is a mutable list
-                            roles = new java.util.ArrayList<>(roles);
+                                // Ensure roles is a mutable list
+                                roles = new java.util.ArrayList<>(roles);
                         }
-                        
+
                         // Wenn ADMIN Rolle vorhanden ist, füge PARENT Rolle hinzu (Hierarchie)
                         if (roles.contains("ADMIN") && !roles.contains("PARENT")) {
-                            roles.add("PARENT");
+                                roles.add("PARENT");
                         }
 
                         Collection<GrantedAuthority> roleAuthorities = roles.stream()
@@ -87,7 +87,8 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
                 configuration.setAllowedOriginPatterns(java.util.List.of("*")); // Erlaube alle Origins für WebView
-                configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+                configuration.setAllowedMethods(
+                                java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
                 configuration.setAllowedHeaders(java.util.List.of("*"));
                 configuration.setExposedHeaders(java.util.List.of("Authorization"));
                 configuration.setAllowCredentials(true);
@@ -105,15 +106,22 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 // Public static resources
                                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**",
-                                                                "/favicon.png", "/favicon.ico").permitAll()
+                                                                "/favicon.png", "/favicon.ico")
+                                                .permitAll()
                                                 // Swagger UI
-                                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
+                                                                "/v3/api-docs/**")
+                                                .permitAll()
                                                 // Actuator
                                                 .requestMatchers("/actuator/**").permitAll()
                                                 // Auth Endpoints (LOGIN)
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                                 .requestMatchers("/api/avatar/icons").permitAll()
+                                                // Reward images are public (not sensitive)
+                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                                                "/api/v1/rewards/*/image")
+                                                .permitAll()
                                                 .requestMatchers("/error").permitAll()
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
@@ -123,7 +131,8 @@ public class SecurityConfig {
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .csrf(csrf -> csrf.disable())
                                 .exceptionHandling(handling -> handling
-                                                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
+                                                .authenticationEntryPoint(
+                                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
 
                 return http.build();
         }

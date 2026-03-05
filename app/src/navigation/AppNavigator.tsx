@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '../i18n/I18nContext';
@@ -11,25 +11,26 @@ import { selectIsAdmin, selectIsChild, useAuthStore } from '../store/authStore';
 
 // Screens
 import { UserListScreen } from '../screens/admin/UserListScreen';
-import { BehaviorListScreen } from '../screens/child/BehaviorListScreen';
-import { BehaviorOverviewScreen } from '../screens/parent/BehaviorOverviewScreen';
-import { BehaviorManageScreen } from '../screens/parent/BehaviorManageScreen';
-import { BehaviorEvaluateScreen } from '../screens/parent/BehaviorEvaluateScreen';
-import { ChildDetailScreen } from '../screens/parent/ChildDetailScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
+import { BehaviorListScreen } from '../screens/child/BehaviorListScreen';
 import { ChildDashboardScreen } from '../screens/child/DashboardScreen';
+import { ManageHomeScreen } from '../screens/manage/ManageHomeScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
+import { BehaviorEditScreen } from '../screens/parent/BehaviorEditScreen';
+import { BehaviorEvaluateScreen } from '../screens/parent/BehaviorEvaluateScreen';
+import { BehaviorManageScreen } from '../screens/parent/BehaviorManageScreen';
+import { BehaviorOverviewScreen } from '../screens/parent/BehaviorOverviewScreen';
+import { ChildDetailScreen } from '../screens/parent/ChildDetailScreen';
 import { ParentDashboardScreen } from '../screens/parent/DashboardScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { ServerSetupScreen } from '../screens/setup/ServerSetupScreen';
-import { RewardListScreen } from '../screens/shop/RewardListScreen';
-import { RewardEditScreen } from '../screens/shop/RewardEditScreen';
 import { PendingRedemptionsScreen } from '../screens/shop/PendingRedemptionsScreen';
+import { RewardEditScreen } from '../screens/shop/RewardEditScreen';
+import { RewardListScreen } from '../screens/shop/RewardListScreen';
 import { PendingApprovalScreen } from '../screens/tasks/PendingApprovalScreen';
+import { TaskDefinitionEditScreen } from '../screens/tasks/TaskDefinitionEditScreen';
 import { TaskListScreen } from '../screens/tasks/TaskListScreen';
 import { TaskManagementScreen } from '../screens/tasks/TaskManagementScreen';
-import { TaskDefinitionEditScreen } from '../screens/tasks/TaskDefinitionEditScreen';
-import { ManageHomeScreen } from '../screens/manage/ManageHomeScreen';
 
 // Types
 import {
@@ -167,6 +168,16 @@ const ManageStackNavigator: React.FC = () => {
         component={BehaviorManageScreen}
         options={{ title: t('behavior.manage.title') }}
       />
+      <ManageStack.Screen
+        name="BehaviorCreate"
+        component={BehaviorEditScreen}
+        options={{ title: t('behavior.create.title') }}
+      />
+      <ManageStack.Screen
+        name="BehaviorEdit"
+        component={BehaviorEditScreen}
+        options={{ title: t('behavior.edit.title') }}
+      />
       {isAdmin && (
         <ManageStack.Screen
           name="AdminUserList"
@@ -265,32 +276,32 @@ const MainTabsNavigator: React.FC = () => {
           },
         })}
       >
-          <Tab.Screen
-            name="Activities"
-            component={ActivitiesStackNavigator}
-            options={{ title: t('nav.activities') }}
-          />
+        <Tab.Screen
+          name="Activities"
+          component={ActivitiesStackNavigator}
+          options={{ title: t('nav.activities') }}
+        />
 
-          {!isChild && (
-            <Tab.Screen
-              name="Manage"
-              component={ManageStackNavigator}
-              options={{ title: t('nav.manage') }}
-            />
-          )}
-
+        {!isChild && (
           <Tab.Screen
-            name="Notifications"
-            component={NotificationsStackNavigator}
-            options={{ title: t('nav.notifications') }}
+            name="Manage"
+            component={ManageStackNavigator}
+            options={{ title: t('nav.manage') }}
           />
+        )}
 
-          <Tab.Screen
-            name="Profile"
-            component={ProfileStackNavigator}
-            options={{ title: t('nav.profile') }}
-          />
-        </Tab.Navigator>
+        <Tab.Screen
+          name="Notifications"
+          component={NotificationsStackNavigator}
+          options={{ title: t('nav.notifications') }}
+        />
+
+        <Tab.Screen
+          name="Profile"
+          component={ProfileStackNavigator}
+          options={{ title: t('nav.profile') }}
+        />
+      </Tab.Navigator>
     </View>
   );
 };
