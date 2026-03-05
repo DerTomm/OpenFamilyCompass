@@ -157,12 +157,12 @@ export const RewardEditScreen: React.FC = () => {
     }
   };
 
-  const handleDeactivate = () => {
+  const handleDelete = () => {
     showConfirm({
-      title: t('rewards.deactivate.title'),
-      message: t('rewards.deactivate.confirm'),
+      title: t('reward.delete.title'),
+      message: t('reward.delete.confirm'),
       onConfirm: () => deactivateMutation.mutate(rewardId!, { onSuccess: () => navigation.goBack() }),
-      confirmText: t('button.deactivate'),
+      confirmText: t('reward.delete'),
       cancelText: t('button.cancel'),
       destructive: true,
     });
@@ -188,6 +188,7 @@ export const RewardEditScreen: React.FC = () => {
             value={title}
             onChangeText={setTitle}
             placeholder={t('rewards.title.placeholder')}
+            placeholderTextColor={theme.colors.onSurfaceVariant}
           />
         </View>
 
@@ -198,6 +199,7 @@ export const RewardEditScreen: React.FC = () => {
             value={description}
             onChangeText={setDescription}
             placeholder={t('rewards.description.placeholder')}
+            placeholderTextColor={theme.colors.onSurfaceVariant}
             multiline
             numberOfLines={3}
           />
@@ -211,6 +213,7 @@ export const RewardEditScreen: React.FC = () => {
             onChangeText={setPointsCost}
             keyboardType="numeric"
             placeholder="0"
+            placeholderTextColor={theme.colors.onSurfaceVariant}
           />
         </View>
 
@@ -289,13 +292,13 @@ export const RewardEditScreen: React.FC = () => {
             )}
           </TouchableOpacity>
 
-          {isEditing && active && (
+          {isEditing && (
             <TouchableOpacity
               style={styles.deleteButton}
-              onPress={handleDeactivate}
+              onPress={handleDelete}
               disabled={isLoading}
             >
-              <Text style={styles.deleteButtonText}>{t('button.deactivate')}</Text>
+              <Text style={styles.deleteButtonText}>{t('reward.delete')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -334,7 +337,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    color: theme.colors.onSurface,
+    backgroundColor: theme.colors.surface,
   },
   textArea: {
     height: 100,
@@ -355,16 +359,16 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#f5f5f5',
+    borderColor: theme.colors.outline,
+    backgroundColor: theme.colors.surfaceVariant,
   },
   childOptionActive: {
-    backgroundColor: '#9C27B0',
-    borderColor: '#9C27B0',
+    backgroundColor: '#2196F3',
+    borderColor: '#2196F3',
   },
   childOptionText: {
     fontSize: 14,
-    color: '#333',
+    color: theme.colors.onSurface,
   },
   childOptionTextActive: {
     color: '#fff',
@@ -372,20 +376,20 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   imagePickerButton: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: theme.colors.outline,
     borderStyle: 'dashed',
     borderRadius: 8,
     height: 120,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fafafa',
+    backgroundColor: theme.colors.surfaceVariant,
     gap: 8,
   },
   imagePickerIcon: {
     fontSize: 32,
   },
   imagePickerText: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     fontSize: 14,
   },
   imagePreviewContainer: {
@@ -402,10 +406,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#9C27B0',
+    borderColor: '#2196F3',
   },
   changeImageButtonText: {
-    color: '#9C27B0',
+    color: '#2196F3',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -414,7 +418,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     gap: 12,
   },
   saveButton: {
-    backgroundColor: '#9C27B0',
+    backgroundColor: '#2196F3',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -425,7 +429,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

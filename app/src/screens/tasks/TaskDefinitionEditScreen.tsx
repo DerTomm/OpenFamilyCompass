@@ -1,3 +1,6 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,22 +12,19 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { 
-  useTaskDefinition, 
-  useCreateTaskDefinition, 
-  useUpdateTaskDefinition, 
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  useChildren,
+  useCreateTaskDefinition,
   useDeleteTaskDefinition,
-  useChildren 
+  useTaskDefinition,
+  useUpdateTaskDefinition
 } from '../../hooks/useApi';
+import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { ManageStackParamList } from '../../navigation/types';
 import { MonthlyRecurrenceMode, RecurrenceType } from '../../types/api';
-import { useDialogs } from '../../hooks/useDialogs';
 
 type TaskEditRouteProp = RouteProp<ManageStackParamList, 'TaskEdit'>;
 
@@ -259,8 +259,8 @@ export const TaskDefinitionEditScreen: React.FC = () => {
   };
 
   const toggleUserSelection = (userId: number) => {
-    setAssignedUserIds(prev => 
-      prev.includes(userId) 
+    setAssignedUserIds(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
@@ -318,14 +318,14 @@ export const TaskDefinitionEditScreen: React.FC = () => {
 
         <View style={styles.section}>
           <Text style={styles.label}>{t('tasks.recurrence')}</Text>
-          <TouchableOpacity 
-            style={styles.selectButton} 
+          <TouchableOpacity
+            style={styles.selectButton}
             onPress={() => setShowRecurrenceOptions(!showRecurrenceOptions)}
           >
             <Text style={styles.selectButtonText}>{t(`recurrence.${recurrenceType}`)}</Text>
             <MaterialCommunityIcons name="chevron-down" size={24} color="#666" />
           </TouchableOpacity>
-          
+
           {showRecurrenceOptions && (
             <View style={styles.optionsContainer}>
               {recurrenceOptions.map(type => (
@@ -640,7 +640,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderBottomColor: theme.colors.outlineVariant,
   },
   optionItemSelected: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: theme.colors.surfaceVariant,
   },
   optionText: {
     fontSize: 16,
@@ -659,12 +659,12 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.surfaceVariant,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   userChipSelected: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#2196F3',
     borderColor: '#2196F3',
   },
   userChipText: {
@@ -672,7 +672,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '500',
   },
   userChipTextSelected: {
-    color: '#2196F3',
+    color: '#fff',
     fontWeight: '600',
   },
   daySelectionGrid: {
@@ -689,7 +689,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderColor: 'transparent',
   },
   dayChipSelected: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#2196F3',
     borderColor: '#2196F3',
   },
   dayChipText: {
@@ -698,7 +698,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 13,
   },
   dayChipTextSelected: {
-    color: '#2196F3',
+    color: '#fff',
     fontWeight: '600',
   },
   buttonContainer: {
@@ -717,7 +717,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

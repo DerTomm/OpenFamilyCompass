@@ -14,7 +14,7 @@ import {
 import { useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_CONFIG, getApiBaseUrl } from '../../api/config';
-import { useRequestRedemption, useRewards } from '../../hooks/useApi';
+import { useDeactivateReward, useRequestRedemption, useRewards } from '../../hooks/useApi';
 import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
@@ -25,6 +25,7 @@ interface RewardCardProps {
   userPoints: number;
   onRedeem: () => void;
   onEdit: () => void;
+  onDelete: () => void;
   isRedeeming: boolean;
   isChild: boolean;
   t: (key: string) => string;
@@ -37,6 +38,7 @@ const RewardCard: React.FC<RewardCardProps> = ({
   userPoints,
   onRedeem,
   onEdit,
+  onDelete,
   isRedeeming,
   isChild,
   t,
@@ -72,7 +74,12 @@ const RewardCard: React.FC<RewardCardProps> = ({
               </View>
             )}
             {!isChild && (
-              <MaterialCommunityIcons name="pencil" size={20} color="#999" />
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                <MaterialCommunityIcons name="pencil" size={20} color="#999" />
+                <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); onDelete(); }} hitSlop={8}>
+                  <MaterialCommunityIcons name="trash-can-outline" size={20} color="#F44336" />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
 
@@ -144,6 +151,19 @@ export const RewardListScreen: React.FC = () => {
     navigation.navigate('RewardEdit', { rewardId: reward.id });
   };
 
+  const deactivateMutation = useDeactivateReward();
+
+  const handleDelete = (reward: RewardResponse) => {
+    showConfirm({
+      title: t('reward.delete.title'),
+      message: t('reward.delete.confirm'),
+      onConfirm: () => deactivateMutation.mutate(reward.id),
+      confirmText: t('reward.delete'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+    });
+  };
+
   const handleCreate = () => {
     navigation.navigate('RewardCreate');
   };
@@ -171,6 +191,7 @@ export const RewardListScreen: React.FC = () => {
               userPoints={user?.totalPoints || 0}
               onRedeem={() => handleRedeem(item)}
               onEdit={() => handleEdit(item)}
+              onDelete={() => handleDelete(item)}
               isRedeeming={requestRedemption.isPending && requestRedemption.variables === item.id}
               isChild={isChild}
               t={t}
@@ -348,7 +369,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#9C27B0',
+    backgroundColor: '#2196F3',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
