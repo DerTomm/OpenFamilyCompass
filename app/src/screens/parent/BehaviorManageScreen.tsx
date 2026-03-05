@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Platform,
   RefreshControl,
@@ -19,6 +18,7 @@ import {
 import { useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { behaviorsApi } from '../../api/services';
+import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { ManageStackParamList } from '../../navigation/types';
 import { BehaviorResponse } from '../../types/api';
@@ -120,6 +120,7 @@ export const BehaviorManageScreen: React.FC = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation = useNavigation<NavigationProp>();
+  const { showConfirm, Dialogs } = useDialogs();
 
   const [guidelineModal, setGuidelineModal] = useState<{ visible: boolean; guideline: string }>({
     visible: false,
@@ -147,21 +148,14 @@ export const BehaviorManageScreen: React.FC = () => {
   };
 
   const handleDelete = (behavior: BehaviorResponse) => {
-    const message = t('behavior.delete.confirm');
-    if (Platform.OS === 'web') {
-      if (window.confirm(message)) {
-        deleteMutation.mutate(behavior.id);
-      }
-    } else {
-      Alert.alert(t('behavior.delete.title'), message, [
-        { text: t('button.cancel'), style: 'cancel' },
-        {
-          text: t('behavior.delete'),
-          style: 'destructive',
-          onPress: () => deleteMutation.mutate(behavior.id),
-        },
-      ]);
-    }
+    showConfirm({
+      title: t('behavior.delete.title'),
+      message: t('behavior.delete.confirm'),
+      onConfirm: () => deleteMutation.mutate(behavior.id),
+      confirmText: t('behavior.delete'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+    });
   };
 
   return (
@@ -270,6 +264,7 @@ export const BehaviorManageScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      <Dialogs />
     </SafeAreaView>
   );
 };
@@ -277,14 +272,14 @@ export const BehaviorManageScreen: React.FC = () => {
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   header: {
     backgroundColor: theme.colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.outlineVariant,
     gap: 12,
   },
   headerContent: {
@@ -302,7 +297,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#ffc107',
+    backgroundColor: '#2196F3',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
@@ -342,11 +337,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.surfaceVariant,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 2,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.outlineVariant,
   },
   tableHeaderCell: {
     justifyContent: 'center',
@@ -354,7 +349,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   tableHeaderText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#424242',
+    color: theme.colors.onSurfaceVariant,
     textTransform: 'uppercase',
   },
   tableRow: {
@@ -362,7 +357,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.outlineVariant,
     alignItems: 'center',
   },
   tableCell: {
@@ -380,7 +375,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   iconButton: {
     padding: 8,
     borderRadius: 6,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.surfaceVariant,
   },
   cardList: {
     padding: 16,
@@ -439,7 +434,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     gap: 6,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.surfaceVariant,
   },
   actionButtonText: {
     fontWeight: '500',
@@ -475,7 +470,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.outlineVariant,
   },
   modalTitle: {
     fontSize: 18,
@@ -494,7 +489,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     padding: 16,
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: theme.colors.outlineVariant,
   },
   guidelineText: {
     fontSize: 16,

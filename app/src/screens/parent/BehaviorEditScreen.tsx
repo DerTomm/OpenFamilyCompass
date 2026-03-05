@@ -3,14 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -67,11 +65,7 @@ export const BehaviorEditScreen: React.FC = () => {
             navigation.goBack();
         },
         onError: () => {
-            if (Platform.OS === 'web') {
-                window.alert(t('behavior.create.error'));
-            } else {
-                Alert.alert(t('common.error'), t('behavior.create.error'));
-            }
+            showError(t('behavior.create.error'), t('common.error'));
         },
     });
 
@@ -83,11 +77,7 @@ export const BehaviorEditScreen: React.FC = () => {
             navigation.goBack();
         },
         onError: () => {
-            if (Platform.OS === 'web') {
-                window.alert(t('behavior.edit.error'));
-            } else {
-                Alert.alert(t('common.error'), t('behavior.edit.error'));
-            }
+            showError(t('behavior.edit.error'), t('common.error'));
         },
     });
 
@@ -311,7 +301,7 @@ const createStyles = (theme: any) => StyleSheet.create({
         backgroundColor: theme.colors.surfaceVariant,
     },
     childOptionActive: {
-        backgroundColor: '#ffc107',
+        backgroundColor: '#2196F3',
     },
     childOptionText: {
         fontSize: 14,
@@ -326,7 +316,7 @@ const createStyles = (theme: any) => StyleSheet.create({
         marginTop: 8,
     },
     saveButton: {
-        backgroundColor: '#ffc107',
+        backgroundColor: '#2196F3',
         padding: 14,
         borderRadius: 8,
         alignItems: 'center',
