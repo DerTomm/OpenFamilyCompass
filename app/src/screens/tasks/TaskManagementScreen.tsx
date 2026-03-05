@@ -52,9 +52,6 @@ export const TaskManagementScreen: React.FC = () => {
     );
 
     return (tasks ?? []).filter((task) => {
-      const isVisibleByLifecycle =
-        task.recurrenceType !== 'ONCE' || activeOnceTaskIds.has(task.id);
-
       const title = task.title.toLowerCase();
       const description = task.description?.toLowerCase() ?? '';
       const matchesSearch =
@@ -65,7 +62,7 @@ export const TaskManagementScreen: React.FC = () => {
         ? (task.assignedUsers ?? []).some((user) => user.id === selectedChildId)
         : true;
 
-      return isVisibleByLifecycle && matchesSearch && matchesChild;
+      return matchesSearch && matchesChild;
     });
   }, [tasks, taskInstances, searchQuery, selectedChildId]);
 

@@ -1,13 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  taskInstancesApi,
-  taskDefinitionsApi,
-  rewardsApi,
-  redemptionsApi,
-  usersApi,
-  pointsApi,
   notificationsApi,
-  profileApi,
+  pointsApi,
+  redemptionsApi,
+  rewardsApi,
+  taskDefinitionsApi,
+  taskInstancesApi,
+  usersApi
 } from '../api/services';
 import { selectIsParent, useAuthStore } from '../store/authStore';
 
@@ -31,9 +30,8 @@ export const queryKeys = {
 };
 
 import {
-  CreateTaskDefinitionRequest,
-  TaskDefinitionResponse,
   CreateRewardRequest,
+  CreateTaskDefinitionRequest
 } from '../types/api';
 
 // Task Hooks
@@ -58,6 +56,7 @@ export const useCreateTaskDefinition = () => {
     mutationFn: (data: CreateTaskDefinitionRequest) => taskDefinitionsApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskDefinitions'] });
+      queryClient.invalidateQueries({ queryKey: ['taskInstances'] });
     },
   });
 };
