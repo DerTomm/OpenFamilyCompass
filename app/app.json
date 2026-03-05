@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "scheme": "openfamilycompass",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -28,7 +27,6 @@
         "INTERNET",
         "ACCESS_NETWORK_STATE"
       ],
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -36,7 +34,9 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ]
   }
 }
