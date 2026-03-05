@@ -1,6 +1,6 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 // Root Stack (Auth vs Main App)
 export type RootStackParamList = {
@@ -45,6 +45,8 @@ export type ManageStackParamList = {
   RewardCreate: { rewardId?: number } | undefined;
   RewardEdit: { rewardId?: number };
   BehaviorManage: undefined;
+  BehaviorCreate: undefined;
+  BehaviorEdit: { behaviorId: number };
   AdminUserList: undefined;
 };
 
@@ -58,13 +60,13 @@ export type ProfileStackParamList = {
 };
 
 // Screen Props Types
-export type RootStackScreenProps<T extends keyof RootStackParamList> = 
+export type RootStackScreenProps<T extends keyof RootStackParamList> =
   NativeStackScreenProps<RootStackParamList, T>;
 
-export type AuthStackScreenProps<T extends keyof AuthStackParamList> = 
+export type AuthStackScreenProps<T extends keyof AuthStackParamList> =
   NativeStackScreenProps<AuthStackParamList, T>;
 
-export type MainTabScreenProps<T extends keyof MainTabParamList> = 
+export type MainTabScreenProps<T extends keyof MainTabParamList> =
   CompositeScreenProps<
     BottomTabScreenProps<MainTabParamList, T>,
     RootStackScreenProps<keyof RootStackParamList>
@@ -79,6 +81,6 @@ export type ActivitiesStackScreenProps<T extends keyof ActivitiesStackParamList>
 // Declare global types for useNavigation hook
 declare global {
   namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
+    interface RootParamList extends RootStackParamList { }
   }
 }

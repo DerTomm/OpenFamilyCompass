@@ -1,22 +1,24 @@
-import React from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { API_CONFIG, getApiBaseUrl } from '../../api/config';
 import { useRequestRedemption, useRewards } from '../../hooks/useApi';
+import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { RewardResponse } from '../../types/api';
-import { useDialogs } from '../../hooks/useDialogs';
 
 interface RewardCardProps {
   reward: RewardResponse;
@@ -27,6 +29,7 @@ interface RewardCardProps {
   isChild: boolean;
   t: (key: string) => string;
   styles: any;
+  serverUrl: string;
 }
 
 const RewardCard: React.FC<RewardCardProps> = ({
@@ -38,18 +41,27 @@ const RewardCard: React.FC<RewardCardProps> = ({
   isChild,
   t,
   styles,
+  serverUrl,
 }) => {
   const canAfford = userPoints >= reward.pointsCost;
 
   return (
     <View style={styles.card}>
-      <TouchableOpacity 
-        style={styles.cardContent} 
+      <TouchableOpacity
+        style={styles.cardContent}
         onPress={!isChild ? onEdit : undefined}
         activeOpacity={!isChild ? 0.7 : 1}
       >
         <View style={styles.rewardIcon}>
-          <Text style={styles.rewardEmoji}>🎁</Text>
+          {reward.hasImage ? (
+            <Image
+              source={{ uri: `${serverUrl}/api/v1/rewards/${reward.id}/image` }}
+              style={styles.rewardImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={styles.rewardEmoji}>🎁</Text>
+          )}
         </View>
         <View style={styles.rewardInfo}>
           <View style={styles.titleRow}>
@@ -63,7 +75,7 @@ const RewardCard: React.FC<RewardCardProps> = ({
               <MaterialCommunityIcons name="pencil" size={20} color="#999" />
             )}
           </View>
-          
+
           {reward.description && (
             <Text style={styles.rewardDescription} numberOfLines={2}>
               {reward.description}
@@ -108,6 +120,11 @@ export const RewardListScreen: React.FC = () => {
   const { showConfirm, Dialogs } = useDialogs();
   const theme = useTheme();
   const styles = createStyles(theme);
+  const [serverUrl, setServerUrl] = useState(API_CONFIG.baseUrl);
+
+  useEffect(() => {
+    getApiBaseUrl().then(setServerUrl);
+  }, []);
 
   // If parent, fetch all (active and inactive), if child fetch only active
   const { data: rewards, isLoading, refetch, isRefetching } = useRewards(isChild ? true : undefined);
@@ -158,6 +175,7 @@ export const RewardListScreen: React.FC = () => {
               isChild={isChild}
               t={t}
               styles={styles}
+              serverUrl={serverUrl}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -233,6 +251,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  rewardImage: {
+    width: 60,
+    height: 60,
   },
   rewardEmoji: {
     fontSize: 32,

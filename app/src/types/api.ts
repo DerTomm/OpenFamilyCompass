@@ -144,6 +144,8 @@ export interface RewardResponse {
   pointsCost: number;
   imagePath?: string;
   active: boolean;
+  userId?: number;
+  hasImage?: boolean;
   createdAt: string;
 }
 
@@ -151,6 +153,7 @@ export interface CreateRewardRequest {
   title: string;
   description?: string;
   pointsCost: number;
+  userId?: number | null; // null or absent = visible to all
 }
 
 export interface RewardRedemptionResponse {

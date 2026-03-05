@@ -1,6 +1,12 @@
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useQuery } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -9,17 +15,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
-import { 
-  useReward, 
-  useCreateReward, 
-  useUpdateReward, 
-  useDeactivateReward 
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { API_CONFIG, getApiBaseUrl } from '../../api/config';
+import { rewardsApi, usersApi } from '../../api/services';
+import {
+  useCreateReward,
+  useDeactivateReward,
+  useReward,
+  useUpdateReward
 } from '../../hooks/useApi';
-import { useI18n } from '../../i18n/I18nContext';
 import { useDialogs } from '../../hooks/useDialogs';
+import { useI18n } from '../../i18n/I18nContext';
 
 export const RewardEditScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -29,7 +36,7 @@ export const RewardEditScreen: React.FC = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   // route.params can be undefined if navigated via RewardCreate alias
-  const rewardId = route.params?.rewardId; 
+  const rewardId = route.params?.rewardId;
   const isEditing = !!rewardId;
 
   const { data: reward, isLoading: isLoadingReward } = useReward(rewardId!);
@@ -42,6 +49,19 @@ export const RewardEditScreen: React.FC = () => {
   const [description, setDescription] = useState('');
   const [pointsCost, setPointsCost] = useState('50');
   const [active, setActive] = useState(true);
+  const [userId, setUserId] = useState<number | undefined>(undefined);
+  const [localImageUri, setLocalImageUri] = useState<string | undefined>(undefined);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [serverUrl, setServerUrl] = useState(API_CONFIG.baseUrl);
+
+  const { data: children } = useQuery({
+    queryKey: ['children'],
+    queryFn: () => usersApi.listChildren(),
+  });
+
+  useEffect(() => {
+    getApiBaseUrl().then(setServerUrl);
+  }, []);
 
   useEffect(() => {
     if (reward) {
@@ -49,6 +69,7 @@ export const RewardEditScreen: React.FC = () => {
       setDescription(reward.description || '');
       setPointsCost(reward.pointsCost.toString());
       setActive(reward.active);
+      setUserId(reward.userId ?? undefined);
     }
   }, [reward]);
 
@@ -67,15 +88,72 @@ export const RewardEditScreen: React.FC = () => {
       title,
       description,
       pointsCost: cost,
+      userId: isEditing ? (userId ?? 0) : (userId ?? undefined),
+    };
+
+    const afterSave = async (savedId: number) => {
+      if (localImageUri) {
+        setIsUploadingImage(true);
+        try {
+          await rewardsApi.uploadImage(savedId, localImageUri);
+        } catch {
+          // Image upload failed but reward was saved — continue
+        } finally {
+          setIsUploadingImage(false);
+        }
+      }
+      navigation.goBack();
     };
 
     if (isEditing) {
       updateMutation.mutate(
         { id: rewardId, data: { ...rewardData, active } },
-        { onSuccess: () => navigation.goBack() }
+        { onSuccess: () => afterSave(rewardId) }
       );
     } else {
-      createMutation.mutate(rewardData, { onSuccess: () => navigation.goBack() });
+      createMutation.mutate(rewardData, { onSuccess: (newReward) => afterSave(newReward.id) });
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setLocalImageUri(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t('error.title'), t('rewards.image.permission_denied'));
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setLocalImageUri(result.assets[0].uri);
+    }
+  };
+
+  const handleSelectImage = () => {
+    if (Platform.OS === 'android') {
+      Alert.alert(
+        t('rewards.image.select_title'),
+        undefined,
+        [
+          { text: t('rewards.image.from_gallery'), onPress: pickImage },
+          { text: t('rewards.image.take_photo'), onPress: takePhoto },
+          { text: t('button.cancel'), style: 'cancel' },
+        ]
+      );
+    } else {
+      pickImage();
     }
   };
 
@@ -90,7 +168,7 @@ export const RewardEditScreen: React.FC = () => {
     });
   };
 
-  const isLoading = isLoadingReward || createMutation.isPending || updateMutation.isPending || deactivateMutation.isPending;
+  const isLoading = isLoadingReward || createMutation.isPending || updateMutation.isPending || deactivateMutation.isPending || isUploadingImage;
 
   if (isEditing && isLoadingReward) {
     return (
@@ -104,7 +182,7 @@ export const RewardEditScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.label}>{t('rewards.title')}</Text>
+          <Text style={styles.label}>{t('reward.name')}</Text>
           <TextInput
             style={styles.input}
             value={title}
@@ -134,6 +212,54 @@ export const RewardEditScreen: React.FC = () => {
             keyboardType="numeric"
             placeholder="0"
           />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>{t('rewards.child.label')}</Text>
+          <View style={styles.childSelector}>
+            <TouchableOpacity
+              style={[styles.childOption, userId === undefined && styles.childOptionActive]}
+              onPress={() => setUserId(undefined)}
+            >
+              <Text style={[styles.childOptionText, userId === undefined && styles.childOptionTextActive]}>
+                {t('children.all')}
+              </Text>
+            </TouchableOpacity>
+            {(children ?? []).map((child) => (
+              <TouchableOpacity
+                key={child.id}
+                style={[styles.childOption, userId === child.id && styles.childOptionActive]}
+                onPress={() => setUserId(child.id)}
+              >
+                <Text style={[styles.childOptionText, userId === child.id && styles.childOptionTextActive]}>
+                  {child.firstName}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>{t('rewards.image.label')}</Text>
+          {(localImageUri || (isEditing && reward?.hasImage)) ? (
+            <View style={styles.imagePreviewContainer}>
+              <Image
+                source={{
+                  uri: localImageUri ?? `${serverUrl}/api/v1/rewards/${rewardId}/image`,
+                }}
+                style={styles.imagePreview}
+                resizeMode="cover"
+              />
+              <TouchableOpacity style={styles.changeImageButton} onPress={handleSelectImage}>
+                <Text style={styles.changeImageButtonText}>{t('rewards.image.change')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.imagePickerButton} onPress={handleSelectImage}>
+              <Text style={styles.imagePickerIcon}>📷</Text>
+              <Text style={styles.imagePickerText}>{t('rewards.image.add')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {isEditing && (
@@ -218,6 +344,70 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  childSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  childOption: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#f5f5f5',
+  },
+  childOptionActive: {
+    backgroundColor: '#9C27B0',
+    borderColor: '#9C27B0',
+  },
+  childOptionText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  childOptionTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  imagePickerButton: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fafafa',
+    gap: 8,
+  },
+  imagePickerIcon: {
+    fontSize: 32,
+  },
+  imagePickerText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  imagePreviewContainer: {
+    gap: 8,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 180,
+    borderRadius: 8,
+  },
+  changeImageButton: {
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#9C27B0',
+  },
+  changeImageButtonText: {
+    color: '#9C27B0',
+    fontSize: 13,
+    fontWeight: '600',
   },
   buttonContainer: {
     marginTop: 20,

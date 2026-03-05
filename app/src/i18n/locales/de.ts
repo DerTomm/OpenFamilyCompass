@@ -169,6 +169,22 @@ export const de = {
     'reward.name': 'Belohnungsname',
     'reward.description': 'Beschreibung',
     'reward.cost.label': 'Kosten in Punkten',
+    'rewards.description': 'Beschreibung',
+    'rewards.description.placeholder': 'Beschreibung (optional)',
+    'rewards.title.placeholder': 'Name der Belohnung',
+    'rewards.cost': 'Punkte-Kosten',
+    'rewards.error.title_required': 'Bitte einen Titel eingeben',
+    'rewards.error.points_invalid': 'Bitte eine gültige Punktzahl eingeben',
+    'rewards.deactivate.title': 'Belohnung deaktivieren',
+    'rewards.deactivate.confirm': 'Möchtest du diese Belohnung wirklich deaktivieren?',
+    'rewards.child.label': 'Auf ein Kind einschränken (optional)',
+    'rewards.image.label': 'Foto',
+    'rewards.image.add': 'Foto hinzufügen',
+    'rewards.image.change': 'Ändern',
+    'rewards.image.select_title': 'Bild auswählen',
+    'rewards.image.from_gallery': 'Aus Galerie',
+    'rewards.image.take_photo': 'Foto aufnehmen',
+    'rewards.image.permission_denied': 'Kamera-Zugriff wurde nicht gewährt. Bitte erlaube den Kamera-Zugriff in den Einstellungen.',
 
     // Behavior
     'behavior.title': 'Verhaltensregeln',
@@ -256,6 +272,7 @@ export const de = {
     'button.close': 'Schließen',
     'button.edit': 'Bearbeiten',
     'button.delete': 'Löschen',
+    'button.deactivate': 'Deaktivieren',
     'button.back': 'Zurück',
 
     // Common

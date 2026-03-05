@@ -14,7 +14,7 @@ const processQueue = (error: any, token: string | null = null) => {
       prom.resolve(token);
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -32,14 +32,14 @@ const createApiClient = (): AxiosInstance => {
     async (config: InternalAxiosRequestConfig) => {
       // Set base URL dynamically if not already set or if it's relative
       if (!config.baseURL || !config.baseURL.startsWith('http')) {
-         config.baseURL = `${await getApiBaseUrl()}/api/${API_CONFIG.apiVersion}`;
+        config.baseURL = `${await getApiBaseUrl()}/api/${API_CONFIG.apiVersion}`;
       }
 
       // Add auth token if available
       try {
         const token = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
         if (token && !config.headers.Authorization) {
-            config.headers.Authorization = `Bearer ${token}`;
+          config.headers.Authorization = `Bearer ${token}`;
         }
       } catch (e) {
         console.warn('Error reading token from storage:', e);
@@ -63,8 +63,8 @@ const createApiClient = (): AxiosInstance => {
       // in that case a refresh can fix the token and the retry will succeed.
       if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
         if (isRefreshing) {
-          return new Promise(function(resolve, reject) {
-            failedQueue.push({resolve, reject});
+          return new Promise(function (resolve, reject) {
+            failedQueue.push({ resolve, reject });
           }).then(token => {
             originalRequest.headers.Authorization = 'Bearer ' + token;
             return client(originalRequest);
@@ -109,11 +109,11 @@ const createApiClient = (): AxiosInstance => {
 
             // Clear all auth state on any refresh error
             await secureStorage.clear();
-            
+
             // Redirect will be handled by auth state change
             return Promise.reject(refreshError);
           } finally {
-             isRefreshing = false;
+            isRefreshing = false;
           }
         } else {
           // No refresh token available - clear state
@@ -145,4 +145,9 @@ export const api = {
 
   delete: <T>(url: string) =>
     apiClient.delete<T>(url).then(res => res.data),
+
+  upload: <T>(url: string, formData: FormData) =>
+    apiClient.post<T>(url, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(res => res.data),
 };

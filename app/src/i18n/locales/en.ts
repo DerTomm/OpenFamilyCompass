@@ -163,6 +163,22 @@ export const en = {
     'reward.name': 'Reward Name',
     'reward.description': 'Description',
     'reward.cost.label': 'Cost in Points',
+    'rewards.description': 'Description',
+    'rewards.description.placeholder': 'Description (optional)',
+    'rewards.title.placeholder': 'Reward name',
+    'rewards.cost': 'Points cost',
+    'rewards.error.title_required': 'Please enter a title',
+    'rewards.error.points_invalid': 'Please enter a valid point value',
+    'rewards.deactivate.title': 'Deactivate reward',
+    'rewards.deactivate.confirm': 'Do you really want to deactivate this reward?',
+    'rewards.child.label': 'Restrict to a child (optional)',
+    'rewards.image.label': 'Photo',
+    'rewards.image.add': 'Add photo',
+    'rewards.image.change': 'Change',
+    'rewards.image.select_title': 'Select image',
+    'rewards.image.from_gallery': 'Choose from library',
+    'rewards.image.take_photo': 'Take a photo',
+    'rewards.image.permission_denied': 'Camera access was denied. Please allow camera access in your settings.',
 
     // Behavior
     'behavior.title': 'Behavior Rules',
@@ -250,6 +266,7 @@ export const en = {
     'button.close': 'Close',
     'button.edit': 'Edit',
     'button.delete': 'Delete',
+    'button.deactivate': 'Deactivate',
     'button.back': 'Back',
 
     // Common

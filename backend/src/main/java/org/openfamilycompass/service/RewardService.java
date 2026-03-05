@@ -1,14 +1,16 @@
 package org.openfamilycompass.service;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.openfamilycompass.model.Reward;
+import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.RewardRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +31,8 @@ public class RewardService {
     }
 
     @Transactional
-    public Reward updateReward(@NonNull Long id, @NonNull String title, String description, 
-                              int pointsCost, String imagePath) {
+    public Reward updateReward(@NonNull Long id, @NonNull String title, String description,
+            int pointsCost, String imagePath) {
         Reward reward = rewardRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reward not found"));
 
@@ -48,7 +50,7 @@ public class RewardService {
     public void deactivateReward(@NonNull Long id) {
         Reward reward = rewardRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reward not found"));
-        
+
         reward.setActive(false);
         rewardRepository.save(reward);
     }
@@ -63,6 +65,10 @@ public class RewardService {
 
     public List<Reward> findAll() {
         return rewardRepository.findAllByOrderByPointsCostAsc();
+    }
+
+    public List<Reward> findActiveForUser(User user) {
+        return rewardRepository.findActiveForUser(user);
     }
 
     @Transactional

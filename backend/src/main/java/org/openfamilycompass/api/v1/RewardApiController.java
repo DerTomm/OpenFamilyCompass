@@ -1,5 +1,6 @@
 package org.openfamilycompass.api.v1;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import org.openfamilycompass.service.RewardRedemptionService;
 import org.openfamilycompass.service.RewardService;
 import org.openfamilycompass.service.UserService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +51,23 @@ public class RewardApiController {
     @GetMapping
     @Operation(summary = "List all rewards")
     public ResponseEntity<List<RewardDto.Response>> listRewards(
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) Boolean active) {
+
+        // If the caller is a child, only return rewards visible to them
+        if (jwt != null) {
+            try {
+                User currentUser = getCurrentUser(jwt);
+                if (currentUser.getRole() == UserRole.CHILD) {
+                    return ResponseEntity.ok(
+                            rewardService.findActiveForUser(currentUser).stream()
+                                    .map(RewardDto.Response::fromEntity)
+                                    .collect(Collectors.toList()));
+                }
+            } catch (Exception ignored) {
+                // unauthenticated – fall through
+            }
+        }
 
         List<Reward> rewards;
         if (active != null && active) {
@@ -74,6 +93,12 @@ public class RewardApiController {
         reward.setDescription(request.getDescription());
         reward.setPointsCost(request.getPointsCost());
         reward.setActive(true);
+
+        if (request.getUserId() != null) {
+            User user = userService.findById(request.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
+            reward.setUser(user);
+        }
 
         Reward saved = rewardService.save(reward);
         return ResponseEntity.status(HttpStatus.CREATED).body(RewardDto.Response.fromEntity(saved));
@@ -109,6 +134,16 @@ public class RewardApiController {
         if (request.getActive() != null) {
             reward.setActive(request.getActive());
         }
+        if (request.getUserId() != null) {
+            if (request.getUserId() == 0L) {
+                // 0 signals "remove restriction"
+                reward.setUser(null);
+            } else {
+                User user = userService.findById(request.getUserId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
+                reward.setUser(user);
+            }
+        }
 
         Reward saved = rewardService.save(reward);
         return ResponseEntity.ok(RewardDto.Response.fromEntity(saved));
@@ -125,6 +160,54 @@ public class RewardApiController {
         rewardService.save(reward);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'PARENT')")
+    @Operation(summary = "Upload reward image")
+    public ResponseEntity<RewardDto.Response> uploadRewardImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+
+        Reward reward = rewardService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reward not found"));
+
+        if (file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File size exceeds 5 MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only image files are allowed");
+        }
+
+        try {
+            reward.setImageData(file.getBytes());
+            reward.setImageContentType(contentType);
+            Reward saved = rewardService.save(reward);
+            return ResponseEntity.ok(RewardDto.Response.fromEntity(saved));
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store image");
+        }
+    }
+
+    @GetMapping("/{id}/image")
+    @Operation(summary = "Get reward image")
+    public ResponseEntity<byte[]> getRewardImage(@PathVariable Long id) {
+        Reward reward = rewardService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reward not found"));
+
+        if (reward.getImageData() == null || reward.getImageData().length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String ct = reward.getImageContentType() != null ? reward.getImageContentType() : "image/jpeg";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(ct))
+                .header("Cache-Control", "public, max-age=86400")
+                .body(reward.getImageData());
     }
 
     // ============ REDEMPTIONS ============
