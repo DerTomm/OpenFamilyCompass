@@ -29,7 +29,10 @@
         "CAMERA",
         "READ_MEDIA_IMAGES",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
       ],
       "predictiveBackGestureEnabled": false
     },
@@ -41,6 +44,13 @@
       "expo-secure-store",
       "@react-native-community/datetimepicker",
       "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#2196F3",
+          "defaultChannel": "default"
+        }
+      ],
       [
         "expo-image-picker",
         {
