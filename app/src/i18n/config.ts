@@ -28,6 +28,10 @@ i18n
         compatibilityJSON: 'v4',
         interpolation: {
             escapeValue: false, // React already escapes
+            format: (value, format, lng) => {
+                if (format === 'uppercase') return value.toUpperCase();
+                return value;
+            },
         },
         react: {
             useSuspense: false, // Important for React Native

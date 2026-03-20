@@ -355,7 +355,7 @@ export const ChildDetailScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={[]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header Card with Points */}
         <Card elevation={3} style={{ marginBottom: spacing.md, overflow: 'hidden' }}>
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.md,
   },
   headerContent: {
     flexDirection: 'row',

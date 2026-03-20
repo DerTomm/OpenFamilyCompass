@@ -143,7 +143,7 @@ export const BehaviorEditScreen: React.FC = () => {
     }
 
     return (
-        <SafeAreaView style={styles.container} edges={['bottom']}>
+        <SafeAreaView style={styles.container} edges={[]}>
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.section}>
                     <Text style={styles.label}>{t('behavior.title.label')} *</Text>
@@ -172,22 +172,22 @@ export const BehaviorEditScreen: React.FC = () => {
 
                 <View style={styles.row}>
                     <View style={[styles.section, styles.halfSection]}>
-                        <Text style={styles.label}>{t('behavior.plusPoints.label')} *</Text>
+                        <Text style={styles.label}>Max. Minuspunkte *</Text>
                         <TextInput
                             style={styles.input}
-                            value={plusPoints}
-                            onChangeText={setPlusPoints}
+                            value={minusPoints}
+                            onChangeText={setMinusPoints}
                             placeholder="0"
                             placeholderTextColor={theme.colors.onSurfaceVariant}
                             keyboardType="number-pad"
                         />
                     </View>
                     <View style={[styles.section, styles.halfSection]}>
-                        <Text style={styles.label}>{t('behavior.minusPoints.label')} *</Text>
+                        <Text style={styles.label}>Max. Pluspunkte *</Text>
                         <TextInput
                             style={styles.input}
-                            value={minusPoints}
-                            onChangeText={setMinusPoints}
+                            value={plusPoints}
+                            onChangeText={setPlusPoints}
                             placeholder="0"
                             placeholderTextColor={theme.colors.onSurfaceVariant}
                             keyboardType="number-pad"

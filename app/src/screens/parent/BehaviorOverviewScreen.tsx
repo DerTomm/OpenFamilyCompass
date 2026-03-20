@@ -1,3 +1,6 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -8,16 +11,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserAvatar } from '../../components/ui';
-import { useNavigation } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useChildren } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
-import { ChildResponse } from '../../types/api';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivitiesStackParamList } from '../../navigation/types';
+import { ChildResponse } from '../../types/api';
 
 type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
 
@@ -30,7 +30,7 @@ interface ChildCardProps {
 
 const ChildCard: React.FC<ChildCardProps> = ({ child, onPress, t, styles }) => {
   const theme = useTheme();
-  
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <UserAvatar
@@ -69,7 +69,7 @@ export const BehaviorOverviewScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>
