@@ -57,7 +57,9 @@
           "photosPermission": "Die App benötigt Zugriff auf deine Fotos, um Belohnungsbilder hinzuzufügen.",
           "cameraPermission": "Die App benötigt Zugriff auf die Kamera, um Fotos für Belohnungen aufzunehmen."
         }
-      ]
+      ],
+      "expo-localization",
+      "expo-web-browser"
     ]
   }
 }
