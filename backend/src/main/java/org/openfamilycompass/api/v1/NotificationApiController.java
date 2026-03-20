@@ -107,7 +107,13 @@ public class NotificationApiController {
             @Valid @RequestBody NotificationDto.RegisterDeviceRequest request) {
 
         User currentUser = getCurrentUser(jwt);
-        String deviceId = request.getPlatform() + "_" + request.getToken().substring(0, Math.min(20, request.getToken().length()));
+        // Bevorzuge die vom Client gesendete stabile Geräte-ID (UUID).
+        // Fallback auf token-basierte ID für Abwärtskompatibilität mit alten
+        // App-Versionen.
+        String deviceId = (request.getDeviceId() != null && !request.getDeviceId().isBlank())
+                ? request.getDeviceId()
+                : request.getPlatform() + "_"
+                        + request.getToken().substring(0, Math.min(20, request.getToken().length()));
 
         // Check if device already registered
         var existingDevice = userDeviceRepository.findByDeviceId(deviceId);

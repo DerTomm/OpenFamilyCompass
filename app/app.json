@@ -17,7 +17,7 @@
       "bundleIdentifier": "org.openfamilycompass.app"
     },
     "android": {
-      "package": "org.openfamilycompass.app",
+      "package": "org.openfamilycompass.android",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
