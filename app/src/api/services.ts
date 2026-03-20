@@ -151,8 +151,8 @@ export const notificationsApi = {
   markAsRead: (id: number) => api.post<void>(`/notifications/${id}/read`),
   markAllAsRead: () => api.post<void>('/notifications/read-all'),
   getUnreadCount: () => api.get<{ count: number }>('/notifications/unread-count'),
-  registerDevice: (token: string, platform: 'android' | 'ios' | 'web') =>
-    api.post<void>('/notifications/register-device', { token, platform }),
+  registerDevice: (token: string, platform: 'android' | 'ios' | 'web', deviceId: string) =>
+    api.post<void>('/notifications/register-device', { token, platform, deviceId }),
   unregisterDevice: (token: string) =>
     api.post<void>('/notifications/unregister-device', { token }),
 };
