@@ -1,4 +1,7 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,15 +16,12 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import Slider from '@react-native-community/slider';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { behaviorsApi, evaluationsApi, usersApi } from '../../api/services';
-import { useI18n } from '../../i18n/I18nContext';
-import { BehaviorResponse, BehaviorEvaluationResponse, ChildResponse } from '../../types/api';
 import { useDialogs } from '../../hooks/useDialogs';
+import { useI18n } from '../../i18n/I18nContext';
+import { BehaviorEvaluationResponse, BehaviorResponse } from '../../types/api';
 
 interface EvaluationModalProps {
   visible: boolean;
@@ -52,26 +52,35 @@ const EvaluationModal: React.FC<EvaluationModalProps> = ({
   const [points, setPoints] = useState(0);
   const [remarks, setRemarks] = useState('');
 
+  // Only initialize when the modal opens or the behavior changes — NOT when existingEvaluation
+  // changes reference (which happens on every draft update and would cause an infinite loop).
   React.useEffect(() => {
-    if (behavior) {
-      if (existingEvaluation) {
-        setPoints(existingEvaluation.currentPoints);
-        setRemarks(existingEvaluation.remarks || '');
-      } else {
-        setPoints(0);
-        setRemarks('');
-      }
+    if (!behavior || !visible) return;
+    if (existingEvaluation) {
+      setPoints(existingEvaluation.currentPoints);
+      setRemarks(existingEvaluation.remarks || '');
+    } else {
+      setPoints(0);
+      setRemarks('');
     }
-  }, [behavior, existingEvaluation, visible]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [behavior?.id, visible]);
+
+  // Keep a stable ref so we can call the latest onDraftChange without adding it to deps
+  // (adding it would re-trigger the effect every render because updateDraftItem may change reference).
+  const onDraftChangeRef = React.useRef(onDraftChange);
+  React.useEffect(() => {
+    onDraftChangeRef.current = onDraftChange;
+  });
 
   React.useEffect(() => {
     if (!visible || !behavior) return;
-    onDraftChange?.({
+    onDraftChangeRef.current?.({
       behaviorId: behavior.id,
       currentPoints: points,
       remarks: remarks || undefined,
     });
-  }, [behavior, onDraftChange, points, remarks, visible]);
+  }, [behavior?.id, points, remarks, visible]);
 
   const handleSave = () => {
     if (!behavior) return;
@@ -189,9 +198,9 @@ const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
   const progressPercentage = totalRange === 0 ? 50 : ((currentPoints + behavior.minusPoints) / totalRange) * 100;
 
   const getProgressColor = () => {
-    if (currentPoints < 0) return '#dc3545';
-    if (currentPoints === 0) return '#6c757d';
-    return '#198754';
+    if (currentPoints < 0) return '#dc3545'; // Rot für negative Werte
+    if (currentPoints > 0) return '#198754'; // Grün für positive Werte
+    return '#ffc107'; // Gelb für 0
   };
 
   const formatSigned = (value: number) => (value > 0 ? `+${value}` : String(value));
@@ -204,13 +213,17 @@ const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
         </View>
         <View style={[styles.tableCell, { flex: 1, alignItems: 'center' }]}>
           <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View
-                style={[styles.progressFill, { width: `${progressPercentage}%`, backgroundColor: getProgressColor() }]}
-              />
-              <Text style={styles.progressText}>
-                {formatSigned(currentPoints)} ({`-${behavior.minusPoints}..+${behavior.plusPoints}`})
-              </Text>
+            <View style={styles.progressBarWithLabels}>
+              <Text style={styles.progressLabelLeft}>-{behavior.minusPoints}</Text>
+              <View style={styles.progressBar}>
+                <View
+                  style={[styles.progressFill, { width: `${progressPercentage}%`, backgroundColor: getProgressColor() }]}
+                />
+                <Text style={styles.progressText}>
+                  {formatSigned(currentPoints)}
+                </Text>
+              </View>
+              <Text style={styles.progressLabelRight}>+{behavior.plusPoints}</Text>
             </View>
           </View>
         </View>
@@ -236,13 +249,17 @@ const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
       <View style={styles.cardContent}>
         <Text style={styles.cardLabel}>{t('behavior.points')}:</Text>
         <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View
-              style={[styles.progressFill, { width: `${progressPercentage}%`, backgroundColor: getProgressColor() }]}
-            />
-            <Text style={styles.progressText}>
-              {formatSigned(currentPoints)} ({`-${behavior.minusPoints}..+${behavior.plusPoints}`})
-            </Text>
+          <View style={styles.progressBarWithLabels}>
+            <Text style={styles.progressLabelLeft}>-{behavior.minusPoints}</Text>
+            <View style={styles.progressBar}>
+              <View
+                style={[styles.progressFill, { width: `${progressPercentage}%`, backgroundColor: getProgressColor() }]}
+              />
+              <Text style={styles.progressText}>
+                {formatSigned(currentPoints)}
+              </Text>
+            </View>
+            <Text style={styles.progressLabelRight}>+{behavior.plusPoints}</Text>
           </View>
         </View>
       </View>
@@ -351,9 +368,9 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
           ? { ...draft, items: rest, updatedAt: Date.now() }
           : null;
         if (nextDraft) {
-          AsyncStorage.setItem(draftStorageKey, JSON.stringify(nextDraft)).catch(() => {});
+          AsyncStorage.setItem(draftStorageKey, JSON.stringify(nextDraft)).catch(() => { });
         } else {
-          AsyncStorage.removeItem(draftStorageKey).catch(() => {});
+          AsyncStorage.removeItem(draftStorageKey).catch(() => { });
         }
         setDraft(nextDraft);
       }
@@ -425,15 +442,15 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
             },
           },
         };
-        
+
         // Persist to AsyncStorage (debounced)
         if (draftSaveTimeout.current) {
           clearTimeout(draftSaveTimeout.current);
         }
         draftSaveTimeout.current = setTimeout(() => {
-          AsyncStorage.setItem(draftStorageKey, JSON.stringify(next)).catch(() => {});
+          AsyncStorage.setItem(draftStorageKey, JSON.stringify(next)).catch(() => { });
         }, 250);
-        
+
         return next;
       });
     },
@@ -521,12 +538,12 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
   const existingEvaluation = selectedBehavior ? effectiveEvaluationFor(selectedBehavior) : null;
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>
             <MaterialIcons name="star" size={24} color="#ffc107" />{' '}
-            {child ? t('behavior.evaluate.title', { 0: child.firstName }) : t('behavior.evaluate')}
+            {child ? t('behavior.evaluate.title', { childName: child.firstName }) : t('behavior.evaluate')}
           </Text>
           <Text style={styles.subtitle}>{t('behavior.evaluate.subtitle')}</Text>
           {draft?.updatedAt && (
@@ -605,7 +622,7 @@ export const BehaviorEvaluateScreen: React.FC<{ route: any }> = ({ route }) => {
               <View style={styles.finalizeText}>
                 <Text style={styles.finalizeTitle}>{t('behavior.finalize')}</Text>
                 <Text style={styles.finalizeDesc}>
-                  {child ? t('behavior.finalize.desc', { 0: child.firstName }) : ''}
+                  {child ? t('behavior.finalize.desc', { firstName: child.firstName }) : ''}
                 </Text>
               </View>
             </View>
@@ -792,10 +809,27 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  progressContainer: {
+  progressBarWithLabels: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
   },
+  progressLabelLeft: {
+    fontSize: 12,
+    color: theme.colors.onSurfaceVariant,
+    marginRight: 8,
+    minWidth: 20,
+    textAlign: 'right',
+  },
+  progressLabelRight: {
+    fontSize: 12,
+    color: theme.colors.onSurfaceVariant,
+    marginLeft: 8,
+    minWidth: 20,
+    textAlign: 'left',
+  },
   progressBar: {
+    flex: 1,
     height: 30,
     backgroundColor: '#e9ecef',
     borderRadius: 15,

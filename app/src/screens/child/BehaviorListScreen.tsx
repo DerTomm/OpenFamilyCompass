@@ -1,3 +1,5 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,14 +13,12 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { evaluationsApi } from '../../api/services';
 import { useI18n } from '../../i18n/I18nContext';
-import { BehaviorEvaluationResponse } from '../../types/api';
 import { useAuthStore } from '../../store/authStore';
+import { BehaviorEvaluationResponse } from '../../types/api';
 
 interface GuidelineModalProps {
   visible: boolean;
@@ -30,7 +30,7 @@ interface GuidelineModalProps {
 
 const GuidelineModal: React.FC<GuidelineModalProps> = ({ visible, title, guideline, onClose, styles }) => {
   const { t } = useI18n();
-  
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.modalOverlay}>
@@ -65,7 +65,7 @@ interface RemarksModalProps {
 
 const RemarksModal: React.FC<RemarksModalProps> = ({ visible, title, remarks, onClose, styles }) => {
   const { t } = useI18n();
-  
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.modalOverlay}>
@@ -106,7 +106,7 @@ const BehaviorCard: React.FC<BehaviorCardProps> = ({ evaluation, isDesktop, onSh
     totalRange === 0 ? 50 : ((evaluation.currentPoints + evaluation.behavior.minusPoints) / totalRange) * 100;
 
   const formatSigned = (value: number) => (value > 0 ? `+${value}` : String(value));
-  
+
   const getProgressColor = () => {
     if (evaluation.currentPoints < 0) return '#dc3545';
     if (evaluation.currentPoints === 0) return '#6c757d';
@@ -124,11 +124,11 @@ const BehaviorCard: React.FC<BehaviorCardProps> = ({ evaluation, isDesktop, onSh
         <View style={[styles.tableCell, { flex: 1, alignItems: 'center' }]}>
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
-                  styles.progressFill, 
+                  styles.progressFill,
                   { width: `${progressPercentage}%`, backgroundColor: getProgressColor() }
-                ]} 
+                ]}
               />
               <Text style={styles.progressText}>
                 {formatSigned(evaluation.currentPoints)} ({`-${evaluation.behavior.minusPoints}..+${evaluation.behavior.plusPoints}`})
@@ -152,16 +152,16 @@ const BehaviorCard: React.FC<BehaviorCardProps> = ({ evaluation, isDesktop, onSh
       <TouchableOpacity onPress={onShowGuideline} style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{evaluation.behavior.title}</Text>
       </TouchableOpacity>
-      
+
       <View style={styles.cardContent}>
         <Text style={styles.cardLabel}>{t('behavior.points')}:</Text>
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
+                styles.progressFill,
                 { width: `${progressPercentage}%`, backgroundColor: getProgressColor() }
-              ]} 
+              ]}
             />
             <Text style={styles.progressText}>
               {formatSigned(evaluation.currentPoints)} ({`-${evaluation.behavior.minusPoints}..+${evaluation.behavior.plusPoints}`})
@@ -209,7 +209,7 @@ export const BehaviorListScreen: React.FC = () => {
   const totalPoints = evaluations?.reduce((sum, item) => sum + item.currentPoints, 0) || 0;
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>

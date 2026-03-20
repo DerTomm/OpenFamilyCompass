@@ -36,7 +36,7 @@ interface BehaviorRowProps {
 }
 
 const BehaviorRow: React.FC<BehaviorRowProps> = ({ behavior, isDesktop, onEdit, onDelete, onShowGuideline, t, styles }) => {
-  const pointsRange = `+${behavior.plusPoints} / -${behavior.minusPoints}`;
+  const pointsRange = `-${behavior.minusPoints} bis +${behavior.plusPoints}`;
 
   if (isDesktop) {
     return (
@@ -159,7 +159,7 @@ export const BehaviorManageScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>
