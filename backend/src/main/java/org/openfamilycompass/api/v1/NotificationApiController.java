@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import org.openfamilycompass.api.v1.dto.NotificationDto;
 import org.openfamilycompass.model.Notification;
 import org.openfamilycompass.model.User;
-import org.openfamilycompass.model.UserDevice;
 import org.openfamilycompass.repository.UserDeviceRepository;
 import org.openfamilycompass.service.NotificationService;
 import org.openfamilycompass.service.UserService;
@@ -14,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -101,6 +101,7 @@ public class NotificationApiController {
     }
 
     @PostMapping("/register-device")
+    @Transactional
     @Operation(summary = "Register device for push notifications")
     public ResponseEntity<Void> registerDevice(
             @AuthenticationPrincipal Jwt jwt,
@@ -115,23 +116,7 @@ public class NotificationApiController {
                 : request.getPlatform() + "_"
                         + request.getToken().substring(0, Math.min(20, request.getToken().length()));
 
-        // Check if device already registered
-        var existingDevice = userDeviceRepository.findByDeviceId(deviceId);
-        if (existingDevice.isEmpty()) {
-            UserDevice device = new UserDevice();
-            device.setUser(currentUser);
-            device.setDeviceId(deviceId);
-            device.setFcmToken(request.getToken());
-            device.setCreatedAt(java.time.LocalDateTime.now());
-            device.setUpdatedAt(java.time.LocalDateTime.now());
-            userDeviceRepository.save(device);
-        } else {
-            // Update existing device token
-            UserDevice device = existingDevice.get();
-            device.setFcmToken(request.getToken());
-            device.setUpdatedAt(java.time.LocalDateTime.now());
-            userDeviceRepository.save(device);
-        }
+        userDeviceRepository.upsertDevice(currentUser.getId(), deviceId, request.getToken());
 
         return ResponseEntity.noContent().build();
     }

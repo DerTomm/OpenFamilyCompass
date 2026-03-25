@@ -264,7 +264,7 @@ class TaskDefinitionRepositoryTest {
         task.setRecurrenceType(RecurrenceType.ONCE);
         task.setCreatedBy(createdBy);
         task.setStartDate(LocalDate.now());
-        task.setEndDate(LocalDate.now().plusDays(7));
+        task.setSeriesEndDate(LocalDate.now().plusDays(7));
         return task;
     }
 }

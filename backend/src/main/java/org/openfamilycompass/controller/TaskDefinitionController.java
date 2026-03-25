@@ -15,6 +15,6 @@ public class TaskDefinitionController {
     private Set<Long> userIds; // Mehrere Kinder
     private RecurrenceType recurrenceType;
     private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDate seriesEndDate;
     private String weeklyDays;
 }

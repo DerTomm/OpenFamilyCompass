@@ -178,7 +178,7 @@ class TaskInstanceRepositoryTest {
     }
 
     @Test
-    void findByDueDateBeforeAndStatusNotIn_ShouldReturnOverdueTasksExcludingStatuses() {
+    void findByDeadlineBeforeAndStatusNotIn_ShouldReturnOverdueTasksExcludingStatuses() {
         // Given
         User parent = createUser("parent", UserRole.PARENT);
         User child = createUser("child", UserRole.CHILD);
@@ -201,8 +201,8 @@ class TaskInstanceRepositoryTest {
         entityManager.flush();
 
         // When
-        List<TaskInstance> overdueTasks = taskInstanceRepository.findByDueDateBeforeAndStatusNotIn(
-                today, List.of(TaskStatus.CHILD_COMPLETED, TaskStatus.APPROVED, TaskStatus.REJECTED));
+        List<TaskInstance> overdueTasks = taskInstanceRepository.findByDeadlineBeforeAndStatusNotIn(
+                today.atStartOfDay(), List.of(TaskStatus.CHILD_COMPLETED, TaskStatus.APPROVED, TaskStatus.REJECTED));
 
         // Then
         assertThat(overdueTasks).hasSize(2);
@@ -211,7 +211,7 @@ class TaskInstanceRepositoryTest {
     }
 
     @Test
-    void findByStatusAndDueDateBefore_ShouldReturnTasksWithStatusAndOverdue() {
+    void findByStatusAndDeadlineBefore_ShouldReturnTasksWithStatusAndOverdue() {
         // Given
         User parent = createUser("parent", UserRole.PARENT);
         User child = createUser("child", UserRole.CHILD);
@@ -234,13 +234,13 @@ class TaskInstanceRepositoryTest {
         entityManager.flush();
 
         // When
-        List<TaskInstance> overduePendingTasks = taskInstanceRepository.findByStatusAndDueDateBefore(
-                TaskStatus.PENDING, today);
+        List<TaskInstance> overduePendingTasks = taskInstanceRepository.findByStatusAndDeadlineBefore(
+                TaskStatus.PENDING, today.atStartOfDay());
 
         // Then
         assertThat(overduePendingTasks).hasSize(1);
         assertThat(overduePendingTasks.get(0).getStatus()).isEqualTo(TaskStatus.PENDING);
-        assertThat(overduePendingTasks.get(0).getDueDate()).isBefore(today);
+        assertThat(overduePendingTasks.get(0).getDeadline().toLocalDate()).isBefore(today);
     }
 
     @Test
@@ -344,7 +344,7 @@ class TaskInstanceRepositoryTest {
         TaskInstance task = new TaskInstance();
         task.setTaskDefinition(taskDefinition);
         task.setAssignedUser(assignedUser);
-        task.setDueDate(dueDate);
+        task.setDeadline(dueDate.atTime(23, 59, 59));
         task.setStatus(TaskStatus.PENDING);
         return task;
     }

@@ -33,7 +33,7 @@ class TaskInstanceTest {
         taskInstance.setId(1L);
         taskInstance.setTaskDefinition(taskDefinition);
         taskInstance.setAssignedUser(assignedUser);
-        taskInstance.setDueDate(LocalDate.now().plusDays(1));
+        taskInstance.setDeadline(LocalDate.now().plusDays(1).atTime(23, 59, 59));
         taskInstance.setStatus(TaskStatus.PENDING);
         taskInstance.setCompletedAt(null);
         taskInstance.setApprovedAt(null);
@@ -61,7 +61,7 @@ class TaskInstanceTest {
         assertThat(newTask.getId()).isNull();
         assertThat(newTask.getTaskDefinition()).isNull();
         assertThat(newTask.getAssignedUser()).isNull();
-        assertThat(newTask.getDueDate()).isNull();
+        assertThat(newTask.getDeadline()).isNull();
         assertThat(newTask.getStatus()).isEqualTo(TaskStatus.PENDING);
         assertThat(newTask.getCompletedAt()).isNull();
         assertThat(newTask.getApprovedAt()).isNull();
@@ -77,7 +77,7 @@ class TaskInstanceTest {
         Long id = 1L;
         TaskDefinition definition = taskDefinition;
         User user = assignedUser;
-        LocalDate dueDate = LocalDate.now().plusDays(3);
+        LocalDateTime deadline = LocalDate.now().plusDays(3).atTime(23, 59, 59);
         TaskStatus status = TaskStatus.APPROVED;
         LocalDateTime completedAt = LocalDateTime.now().minusHours(2);
         LocalDateTime approvedAt = LocalDateTime.now().minusHours(1);
@@ -87,14 +87,14 @@ class TaskInstanceTest {
         LocalDateTime createdAt = LocalDateTime.now().minusDays(1);
 
         // When
-        TaskInstance task = new TaskInstance(id, definition, user, dueDate, status,
+        TaskInstance task = new TaskInstance(id, definition, user, deadline, status,
                 completedAt, approvedAt, awardedPoints, approver, parentNotes, createdAt);
 
         // Then
         assertThat(task.getId()).isEqualTo(id);
         assertThat(task.getTaskDefinition()).isEqualTo(definition);
         assertThat(task.getAssignedUser()).isEqualTo(user);
-        assertThat(task.getDueDate()).isEqualTo(dueDate);
+        assertThat(task.getDeadline()).isEqualTo(deadline);
         assertThat(task.getStatus()).isEqualTo(status);
         assertThat(task.getCompletedAt()).isEqualTo(completedAt);
         assertThat(task.getApprovedAt()).isEqualTo(approvedAt);
@@ -122,7 +122,7 @@ class TaskInstanceTest {
     @Test
     void settersAndGetters_ShouldWorkCorrectly() {
         // Given
-        LocalDate newDueDate = LocalDate.of(2024, 12, 31);
+        LocalDateTime newDeadline = LocalDate.of(2024, 12, 31).atTime(23, 59, 59);
         TaskStatus newStatus = TaskStatus.APPROVED;
         LocalDateTime completedAt = LocalDateTime.now();
         LocalDateTime approvedAt = LocalDateTime.now().plusHours(1);
@@ -130,7 +130,7 @@ class TaskInstanceTest {
         String parentNotes = "Excellent work!";
 
         // When
-        taskInstance.setDueDate(newDueDate);
+        taskInstance.setDeadline(newDeadline);
         taskInstance.setStatus(newStatus);
         taskInstance.setCompletedAt(completedAt);
         taskInstance.setApprovedAt(approvedAt);
@@ -139,7 +139,7 @@ class TaskInstanceTest {
         taskInstance.setParentNotes(parentNotes);
 
         // Then
-        assertThat(taskInstance.getDueDate()).isEqualTo(newDueDate);
+        assertThat(taskInstance.getDeadline()).isEqualTo(newDeadline);
         assertThat(taskInstance.getStatus()).isEqualTo(newStatus);
         assertThat(taskInstance.getCompletedAt()).isEqualTo(completedAt);
         assertThat(taskInstance.getApprovedAt()).isEqualTo(approvedAt);

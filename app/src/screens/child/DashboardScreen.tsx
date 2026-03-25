@@ -1,17 +1,17 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, EmptyState, QuickActionCard, UserAvatar } from '../../components/ui';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useI18n } from '../../i18n/I18nContext';
-import { useAuthStore } from '../../store/authStore';
-import { ActivitiesStackParamList } from '../../navigation/types';
-import { spacing } from '../../theme/theme';
 import { usePointTransactions, useTaskInstances } from '../../hooks/useApi';
+import { useI18n } from '../../i18n/I18nContext';
+import { ActivitiesStackParamList } from '../../navigation/types';
+import { useAuthStore } from '../../store/authStore';
+import { spacing } from '../../theme/theme';
 
 type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
 
@@ -23,10 +23,18 @@ export const ChildDashboardScreen: React.FC = () => {
   const styles = createStyles(theme);
 
   // Load recent transactions
-  const { data: transactionsData } = usePointTransactions({ userId: user?.id, limit: 5 });
+  const { data: transactionsData, refetch: refetchTransactions } = usePointTransactions({ userId: user?.id, limit: 5 });
   const transactions = transactionsData?.transactions || [];
-  const { data: tasks = [] } = useTaskInstances(user?.id ? { assignedUserId: user.id } : undefined);
+  const { data: tasks = [], refetch: refetchTasks, isRefetching } = useTaskInstances(user?.id ? { assignedUserId: user.id } : undefined);
   const activeTasks = tasks.filter((task) => ['PENDING', 'IN_PROGRESS'].includes(task.status)).slice(0, 5);
+
+  // Daten neu laden wenn der Screen in den Fokus kommt (z.B. nach Aufgaben-Erstellung durch Elternteil)
+  useFocusEffect(
+    useCallback(() => {
+      refetchTasks();
+      refetchTransactions();
+    }, [refetchTasks, refetchTransactions])
+  );
 
   // Total points
   const totalPoints = user?.totalPoints || 0;
@@ -45,6 +53,9 @@ export const ChildDashboardScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={() => { refetchTasks(); refetchTransactions(); }} />
+        }
       >
         {/* Points Card */}
         <Surface style={styles.pointsCard} elevation={3}>
@@ -134,11 +145,9 @@ export const ChildDashboardScreen: React.FC = () => {
                           {task.taskDefinition.title}
                         </Text>
                         <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                          {task.dueAt
-                            ? new Date(task.dueAt).toLocaleString('de-DE')
-                            : task.dueDate
-                              ? new Date(task.dueDate).toLocaleDateString('de-DE')
-                              : t('tasks.deadline.optional')}
+                          {task.deadline
+                            ? new Date(task.deadline).toLocaleString('de-DE')
+                            : t('tasks.deadline.optional')}
                         </Text>
                       </View>
                       <Text variant="bodyLarge" style={{ fontWeight: '700', color: theme.colors.primary }}>

@@ -67,7 +67,7 @@ export const taskDefinitionsApi = {
 
 // Task Instances
 export const taskInstancesApi = {
-  list: (params?: { assignedUserId?: number; status?: string; dueDateFrom?: string; dueDateTo?: string }) =>
+  list: (params?: { assignedUserId?: number; status?: string; deadlineFrom?: string; deadlineTo?: string }) =>
     api.get<TaskInstanceResponse[]>('/tasks/instances', params),
   getById: (id: number) => api.get<TaskInstanceResponse>(`/tasks/instances/${id}`),
   complete: (id: number) => api.post<TaskInstanceResponse>(`/tasks/instances/${id}/complete`),

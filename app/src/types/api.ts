@@ -89,6 +89,8 @@ export interface TaskDefinitionResponse {
   assignedUsers: ChildResponse[];
   createdBy?: UserResponse;
   startDate?: string;
+  seriesEndDate?: string;
+  deadline?: string;
   endDate?: string;
   endAt?: string;
   weeklyDays?: string[];
@@ -106,8 +108,8 @@ export interface CreateTaskDefinitionRequest {
   recurrenceType: RecurrenceType;
   assignedUserIds: number[];
   startDate?: string;
-  endDate?: string;
-  endAt?: string;
+  seriesEndDate?: string;
+  deadline?: string;
   weeklyDays?: string[];
   monthlyMode?: MonthlyRecurrenceMode;
   monthlyWeekNumber?: number;
@@ -120,8 +122,7 @@ export interface TaskInstanceResponse {
   id: number;
   taskDefinition: TaskDefinitionResponse;
   assignedUser: ChildResponse;
-  dueDate?: string;
-  dueAt?: string;
+  deadline?: string;
   status: TaskStatus;
   completedAt?: string;
   approvedAt?: string;

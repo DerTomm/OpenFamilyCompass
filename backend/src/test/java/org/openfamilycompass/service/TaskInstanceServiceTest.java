@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,31 +75,31 @@ class TaskInstanceServiceTest {
         taskInstance.setId(1L);
         taskInstance.setTaskDefinition(taskDefinition);
         taskInstance.setAssignedUser(child);
-        taskInstance.setDueDate(LocalDate.now().plusDays(1));
+        taskInstance.setDeadline(LocalDate.now().plusDays(1).atTime(23, 59, 59));
         taskInstance.setStatus(TaskStatus.PENDING);
     }
 
     @Test
     void createTaskInstance_ShouldCreateTaskInstanceWithCorrectDefaults() {
         // Given
-        LocalDate dueDate = LocalDate.now().plusDays(3);
+        LocalDateTime deadline = LocalDate.now().plusDays(3).atTime(23, 59, 59);
         TaskInstance savedInstance = new TaskInstance();
         savedInstance.setId(2L);
         savedInstance.setTaskDefinition(taskDefinition);
         savedInstance.setAssignedUser(child);
-        savedInstance.setDueDate(dueDate);
+        savedInstance.setDeadline(deadline);
         savedInstance.setStatus(TaskStatus.PENDING);
 
         when(taskInstanceRepository.save(any(TaskInstance.class))).thenReturn(savedInstance);
 
         // When
-        TaskInstance result = taskInstanceService.createTaskInstance(taskDefinition, child, dueDate);
+        TaskInstance result = taskInstanceService.createTaskInstance(taskDefinition, child, deadline);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getTaskDefinition()).isEqualTo(taskDefinition);
         assertThat(result.getAssignedUser()).isEqualTo(child);
-        assertThat(result.getDueDate()).isEqualTo(dueDate);
+        assertThat(result.getDeadline()).isEqualTo(deadline);
         assertThat(result.getStatus()).isEqualTo(TaskStatus.PENDING);
 
         ArgumentCaptor<TaskInstance> captor = ArgumentCaptor.forClass(TaskInstance.class);
@@ -106,7 +107,7 @@ class TaskInstanceServiceTest {
         TaskInstance captured = captor.getValue();
         assertThat(captured.getTaskDefinition()).isEqualTo(taskDefinition);
         assertThat(captured.getAssignedUser()).isEqualTo(child);
-        assertThat(captured.getDueDate()).isEqualTo(dueDate);
+        assertThat(captured.getDeadline()).isEqualTo(deadline);
         assertThat(captured.getStatus()).isEqualTo(TaskStatus.PENDING);
     }
 
@@ -115,7 +116,7 @@ class TaskInstanceServiceTest {
         // Given
         LocalDate today = LocalDate.now();
         List<TaskInstance> expectedTasks = List.of(taskInstance);
-        when(taskInstanceRepository.findByStatusAndDueDateBefore(TaskStatus.PENDING, today))
+        when(taskInstanceRepository.findByStatusAndDeadlineBefore(TaskStatus.PENDING, today.atStartOfDay()))
                 .thenReturn(expectedTasks);
 
         // When
@@ -123,7 +124,7 @@ class TaskInstanceServiceTest {
 
         // Then
         assertThat(result).isEqualTo(expectedTasks);
-        verify(taskInstanceRepository).findByStatusAndDueDateBefore(TaskStatus.PENDING, today);
+        verify(taskInstanceRepository).findByStatusAndDeadlineBefore(TaskStatus.PENDING, today.atStartOfDay());
     }
 
     @Test

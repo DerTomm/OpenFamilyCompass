@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -70,7 +71,7 @@ class TaskDefinitionServiceTest {
         taskDefinition.setRecurrenceType(RecurrenceType.ONCE);
         taskDefinition.setCreatedBy(parent);
         taskDefinition.setStartDate(LocalDate.now());
-        taskDefinition.setEndDate(LocalDate.now().plusDays(7));
+        taskDefinition.setSeriesEndDate(LocalDate.now().plusDays(7));
     }
 
     @Test
@@ -91,7 +92,7 @@ class TaskDefinitionServiceTest {
         savedDefinition.setRecurrenceType(recurrenceType);
         savedDefinition.setAssignedUsers(assignedUsers);
         savedDefinition.setCreatedBy(parent);
-        savedDefinition.setEndDate(endDate);
+        savedDefinition.setSeriesEndDate(endDate);
 
         when(taskDefinitionRepository.save(any(TaskDefinition.class))).thenReturn(savedDefinition);
 
@@ -107,11 +108,11 @@ class TaskDefinitionServiceTest {
         assertThat(result.getRecurrenceType()).isEqualTo(recurrenceType);
         assertThat(result.getAssignedUsers()).isEqualTo(assignedUsers);
         assertThat(result.getCreatedBy()).isEqualTo(parent);
-        assertThat(result.getEndDate()).isEqualTo(endDate);
+        assertThat(result.getSeriesEndDate()).isEqualTo(endDate);
 
         // Verify TaskInstances were created for ONCE tasks
-        verify(taskInstanceService).createTaskInstance(savedDefinition, child1, endDate);
-        verify(taskInstanceService).createTaskInstance(savedDefinition, child2, endDate);
+        verify(taskInstanceService).createTaskInstance(savedDefinition, child1, (LocalDateTime) null);
+        verify(taskInstanceService).createTaskInstance(savedDefinition, child2, (LocalDateTime) null);
     }
 
     @Test
@@ -252,7 +253,7 @@ class TaskDefinitionServiceTest {
         updated.setAssignedUsers(newAssignedUsers);
         updated.setCreatedBy(parent);
         updated.setStartDate(newStartDate);
-        updated.setEndDate(newEndDate);
+        updated.setSeriesEndDate(newEndDate);
         updated.setWeeklyDays(newWeeklyDays);
 
         when(taskDefinitionRepository.findById(id)).thenReturn(Optional.of(existing));
@@ -270,7 +271,7 @@ class TaskDefinitionServiceTest {
         assertThat(result.getRecurrenceType()).isEqualTo(newRecurrenceType);
         assertThat(result.getAssignedUsers()).isEqualTo(newAssignedUsers);
         assertThat(result.getStartDate()).isEqualTo(newStartDate);
-        assertThat(result.getEndDate()).isEqualTo(newEndDate);
+        assertThat(result.getSeriesEndDate()).isEqualTo(newEndDate);
         assertThat(result.getWeeklyDays()).isEqualTo(newWeeklyDays);
     }
 
@@ -306,7 +307,7 @@ class TaskDefinitionServiceTest {
         taskDefinitionService.generateTaskInstances();
 
         // Then
-        verify(taskInstanceService).createTaskInstance(weeklyTask, child1, today);
+        verify(taskInstanceService).createTaskInstance(weeklyTask, child1, today.atTime(23, 59, 59));
     }
 
     @Test
@@ -350,7 +351,7 @@ class TaskDefinitionServiceTest {
         // Mock that task instance already exists for this task definition and date
         TaskInstance existingInstance = new TaskInstance();
         existingInstance.setTaskDefinition(weeklyTask);
-        existingInstance.setDueDate(today);
+        existingInstance.setDeadline(today.atTime(23, 59, 59));
         List<TaskInstance> existingInstances = List.of(existingInstance);
         when(taskInstanceService.findByUser(child1)).thenReturn(existingInstances);
 
@@ -373,7 +374,7 @@ class TaskDefinitionServiceTest {
         expiredTask.setTitle("Expired Task");
         expiredTask.setRecurrenceType(RecurrenceType.WEEKLY);
         expiredTask.setAssignedUsers(assignedUsers);
-        expiredTask.setEndDate(pastEndDate);
+        expiredTask.setSeriesEndDate(pastEndDate);
         expiredTask.setWeeklyDays(today.getDayOfWeek().toString());
 
         List<TaskDefinition> allDefinitions = List.of(expiredTask);
