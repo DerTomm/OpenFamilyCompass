@@ -34,15 +34,16 @@ public class TaskDefinitionService {
     @Transactional
     public TaskDefinition createTaskDefinition(@NonNull String title, String description, int basePoints,
             @NonNull RecurrenceType recurrenceType, @NonNull Set<User> assignedUsers,
-            @NonNull User createdBy, LocalDate startDate, LocalDate endDate, String weeklyDays) {
+            @NonNull User createdBy, LocalDate startDate, LocalDate seriesEndDate, String weeklyDays) {
         return createTaskDefinition(title, description, basePoints, recurrenceType, assignedUsers, createdBy,
-                startDate, endDate, null, weeklyDays);
+                startDate, seriesEndDate, null, weeklyDays);
     }
 
     @Transactional
     public TaskDefinition createTaskDefinition(@NonNull String title, String description, int basePoints,
             @NonNull RecurrenceType recurrenceType, @NonNull Set<User> assignedUsers,
-            @NonNull User createdBy, LocalDate startDate, LocalDate endDate, LocalDateTime endAt, String weeklyDays) {
+            @NonNull User createdBy, LocalDate startDate, LocalDate seriesEndDate, LocalDateTime deadline,
+            String weeklyDays) {
         TaskDefinition definition = new TaskDefinition();
         definition.setTitle(title);
         definition.setDescription(description);
@@ -51,29 +52,33 @@ public class TaskDefinitionService {
         definition.setAssignedUsers(assignedUsers);
         definition.setCreatedBy(createdBy);
         definition.setStartDate(startDate);
-        definition.setEndDate(endDate);
-        definition.setEndAt(endAt);
+        definition.setSeriesEndDate(seriesEndDate);
+        definition.setDeadline(deadline);
         definition.setWeeklyDays(weeklyDays);
 
         TaskDefinition savedDefinition = taskDefinitionRepository.save(definition);
 
-        // Für einmalige Aufgaben: Erstelle sofort TaskInstances
-        // Due Date = End Date (kann null sein)
-        log.info("TaskDefinition created: title='{}', recurrenceType='{}', endDate='{}', assignedUsers.size={}",
-                title, recurrenceType, endDate, assignedUsers.size());
+        // Für einmalige Aufgaben: Erstelle sofort TaskInstances (sofern kein
+        // zukünftiges Startdatum)
+        log.info(
+                "TaskDefinition created: title='{}', recurrenceType='{}', startDate='{}', deadline='{}', assignedUsers.size={}",
+                title, recurrenceType, startDate, deadline, assignedUsers.size());
         if (recurrenceType == RecurrenceType.ONCE) {
-            log.info("Creating TaskInstances for ONCE task '{}' with {} assigned users, dueDate='{}'",
-                    title, assignedUsers.size(), endDate);
-            for (User user : assignedUsers) {
-                log.info("Creating TaskInstance for user: {}", user.getFirstName());
-                if (endAt != null) {
-                    taskInstanceService.createTaskInstance(savedDefinition, user, endDate, endAt);
-                } else {
-                    taskInstanceService.createTaskInstance(savedDefinition, user, endDate);
+            LocalDate today = LocalDate.now();
+            if (startDate == null || !startDate.isAfter(today)) {
+                log.info("Creating TaskInstances for ONCE task '{}' with {} assigned users, deadline='{}'",
+                        title, assignedUsers.size(), deadline);
+                for (User user : assignedUsers) {
+                    log.info("Creating TaskInstance for user: {}", user.getFirstName());
+                    taskInstanceService.createTaskInstance(savedDefinition, user, deadline);
                 }
+            } else {
+                log.info(
+                        "ONCE task '{}' hat Startdatum in der Zukunft ({}), Instanzen werden erst am Startdatum erstellt",
+                        title, startDate);
             }
         } else {
-            log.info("NOT creating TaskInstances: recurrenceType={}, endDate={}", recurrenceType, endDate);
+            log.info("NOT creating TaskInstances: recurrenceType={}, seriesEndDate={}", recurrenceType, seriesEndDate);
         }
 
         return savedDefinition;
@@ -133,28 +138,117 @@ public class TaskDefinitionService {
     public TaskDefinition updateTaskDefinition(@NonNull Long id, @NonNull String title, String description,
             int basePoints,
             @NonNull RecurrenceType recurrenceType, @NonNull Set<User> assignedUsers,
-            LocalDate startDate, LocalDate endDate, String weeklyDays) {
+            LocalDate startDate, LocalDate seriesEndDate, String weeklyDays) {
         return updateTaskDefinition(id, title, description, basePoints, recurrenceType, assignedUsers,
-                startDate, endDate, null, weeklyDays);
+                startDate, seriesEndDate, null, weeklyDays);
     }
 
     @Transactional
     public TaskDefinition updateTaskDefinition(@NonNull Long id, @NonNull String title, String description,
             int basePoints,
             @NonNull RecurrenceType recurrenceType, @NonNull Set<User> assignedUsers,
-            LocalDate startDate, LocalDate endDate, LocalDateTime endAt, String weeklyDays) {
+            LocalDate startDate, LocalDate seriesEndDate, LocalDateTime deadline, String weeklyDays) {
         TaskDefinition definition = taskDefinitionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("TaskDefinition not found"));
+
+        // Neu zugewiesene Nutzer merken, bevor wir überschreiben
+        Set<User> previousUsers = definition.getAssignedUsers() != null
+                ? new java.util.HashSet<>(definition.getAssignedUsers())
+                : new java.util.HashSet<>();
+
         definition.setTitle(title);
         definition.setDescription(description);
         definition.setBasePoints(basePoints);
         definition.setRecurrenceType(recurrenceType);
         definition.setAssignedUsers(assignedUsers);
         definition.setStartDate(startDate);
-        definition.setEndDate(endDate);
-        definition.setEndAt(endAt);
+        definition.setSeriesEndDate(seriesEndDate);
+        definition.setDeadline(deadline);
         definition.setWeeklyDays(weeklyDays);
-        return taskDefinitionRepository.save(definition);
+        TaskDefinition saved = taskDefinitionRepository.save(definition);
+
+        // Für ONCE-Aufgaben: für jeden neu zugewiesenen Nutzer sofort eine TaskInstance
+        // erstellen (sofern kein zukünftiges Startdatum)
+        // Für wiederkehrende Aufgaben: sofort erstellen, wenn heute ein Fälligkeitstag
+        // ist
+        if (recurrenceType == RecurrenceType.ONCE) {
+            LocalDate today = LocalDate.now();
+            if (startDate == null || !startDate.isAfter(today)) {
+                for (User user : assignedUsers) {
+                    boolean isNew = previousUsers.stream().noneMatch(p -> p.getId().equals(user.getId()));
+                    if (isNew) {
+                        log.info("Creating TaskInstance for newly assigned user '{}' on ONCE task '{}'",
+                                user.getFirstName(), title);
+                        taskInstanceService.createTaskInstance(saved, user, deadline);
+                    }
+                }
+            }
+        } else {
+            LocalDate today = LocalDate.now();
+            // Startdatum noch nicht erreicht? Dann noch nichts erstellen.
+            if (saved.getStartDate() == null || !saved.getStartDate().isAfter(today)) {
+                LocalDate dueDate = calculateNextDueDate(today, saved);
+                if (dueDate != null
+                        && (saved.getSeriesEndDate() == null
+                                || !dueDate.isAfter(saved.getSeriesEndDate()))) {
+                    for (User user : assignedUsers) {
+                        boolean isNew = previousUsers.stream().noneMatch(p -> p.getId().equals(user.getId()));
+                        if (!isNew) {
+                            continue;
+                        }
+                        // Nur erstellen, wenn noch keine Instanz für heute existiert
+                        boolean exists = taskInstanceService.findByUser(user).stream()
+                                .anyMatch(inst -> inst.getTaskDefinition().getId().equals(saved.getId())
+                                        && inst.getDeadline() != null
+                                        && inst.getDeadline().toLocalDate().equals(dueDate));
+                        if (!exists) {
+                            log.info(
+                                    "Creating TaskInstance for newly assigned user '{}' on recurring task '{}' (due today: {})",
+                                    user.getFirstName(), title, dueDate);
+                            taskInstanceService.createTaskInstance(saved, user, dueDate.atTime(23, 59, 59));
+                        }
+                    }
+                }
+            }
+        }
+
+        return saved;
+    }
+
+    /**
+     * Erstellt für eine Menge neu zugewiesener Nutzer sofort eine TaskInstance,
+     * wenn die wiederkehrende Aufgabe heute fällig ist und noch keine Instanz
+     * existiert.
+     * Wird vom API-Controller nach einem save() aufgerufen.
+     */
+    @Transactional
+    public void createInstancesForNewUsersIfDueToday(@NonNull TaskDefinition definition,
+            @NonNull Set<User> newlyAssigned) {
+        if (newlyAssigned.isEmpty()) {
+            return;
+        }
+        LocalDate today = LocalDate.now();
+        if (definition.getStartDate() != null && definition.getStartDate().isAfter(today)) {
+            return;
+        }
+        LocalDate dueDate = calculateNextDueDate(today, definition);
+        if (dueDate == null) {
+            return;
+        }
+        if (definition.getSeriesEndDate() != null && dueDate.isAfter(definition.getSeriesEndDate())) {
+            return;
+        }
+        for (User user : newlyAssigned) {
+            boolean exists = taskInstanceService.findByUser(user).stream()
+                    .anyMatch(inst -> inst.getTaskDefinition().getId().equals(definition.getId())
+                            && inst.getDeadline() != null
+                            && inst.getDeadline().toLocalDate().equals(dueDate));
+            if (!exists) {
+                log.info("Creating TaskInstance for newly assigned user '{}' on recurring task '{}' (due today: {})",
+                        user.getFirstName(), definition.getTitle(), dueDate);
+                taskInstanceService.createTaskInstance(definition, user, dueDate.atTime(23, 59, 59));
+            }
+        }
     }
 
     // Check every day at midnight
@@ -169,18 +263,34 @@ public class TaskDefinitionService {
                 continue;
             }
 
-            // Für wiederholende Aufgaben (einmalige werden sofort erstellt)
-            if (definition.getRecurrenceType() != RecurrenceType.ONCE) {
+            if (definition.getRecurrenceType() == RecurrenceType.ONCE) {
+                // ONCE-Aufgaben mit Startdatum: Instanzen erst am Startdatum erstellen
+                // (ohne Startdatum wurden sie bereits sofort bei der Erstellung erstellt)
+                if (definition.getStartDate() != null && definition.getStartDate().equals(today)) {
+                    for (User user : definition.getAssignedUsers()) {
+                        boolean exists = taskInstanceService.findByUser(user).stream()
+                                .anyMatch(inst -> inst.getTaskDefinition().getId().equals(definition.getId()));
+                        if (!exists) {
+                            log.info("Erstelle zeitverzögerte ONCE-TaskInstance: Aufgabe='{}', Nutzer='{}'",
+                                    definition.getTitle(), user.getFirstName());
+                            taskInstanceService.createTaskInstance(definition, user, definition.getDeadline());
+                        }
+                    }
+                }
+            } else {
+                // Wiederkehrende Aufgaben
                 for (User user : definition.getAssignedUsers()) {
                     LocalDate dueDate = calculateNextDueDate(today, definition);
-                    if (dueDate != null && (definition.getEndDate() == null || dueDate.isBefore(definition.getEndDate())
-                            || dueDate.equals(definition.getEndDate()))) {
+                    if (dueDate != null
+                            && (definition.getSeriesEndDate() == null || dueDate.isBefore(definition.getSeriesEndDate())
+                                    || dueDate.equals(definition.getSeriesEndDate()))) {
                         // Prüfe, ob bereits eine Instanz für diesen Tag existiert
                         boolean exists = taskInstanceService.findByUser(user).stream()
                                 .anyMatch(instance -> instance.getTaskDefinition().equals(definition)
-                                        && instance.getDueDate().equals(dueDate));
+                                        && instance.getDeadline() != null
+                                        && instance.getDeadline().toLocalDate().equals(dueDate));
                         if (!exists) {
-                            taskInstanceService.createTaskInstance(definition, user, dueDate);
+                            taskInstanceService.createTaskInstance(definition, user, dueDate.atTime(23, 59, 59));
                         }
                     }
                 }

@@ -31,18 +31,11 @@ public class TaskInstanceService {
 
     @Transactional
     public TaskInstance createTaskInstance(@NonNull TaskDefinition definition, @NonNull User assignedUser,
-            LocalDate dueDate) {
-        return createTaskInstance(definition, assignedUser, dueDate, null);
-    }
-
-    @Transactional
-    public TaskInstance createTaskInstance(@NonNull TaskDefinition definition, @NonNull User assignedUser,
-            LocalDate dueDate, LocalDateTime dueAt) {
+            LocalDateTime deadline) {
         TaskInstance instance = new TaskInstance();
         instance.setTaskDefinition(definition);
         instance.setAssignedUser(assignedUser);
-        instance.setDueDate(dueDate);
-        instance.setDueAt(dueAt);
+        instance.setDeadline(deadline);
         instance.setStatus(TaskStatus.PENDING);
 
         TaskInstance savedInstance = taskInstanceRepository.save(instance);
@@ -59,16 +52,12 @@ public class TaskInstanceService {
 
     @Transactional(readOnly = true)
     public List<TaskInstance> findOverduePending(@NonNull LocalDate today) {
-        return findOverduePending(today, LocalDateTime.now());
+        return findOverduePending(today.atStartOfDay());
     }
 
     @Transactional(readOnly = true)
-    public List<TaskInstance> findOverduePending(@NonNull LocalDate today, @NonNull LocalDateTime now) {
-        List<TaskInstance> dateOnlyOverdue = taskInstanceRepository.findByStatusAndDueDateBefore(TaskStatus.PENDING, today);
-        List<TaskInstance> dateTimeOverdue = taskInstanceRepository.findByStatusAndDueAtBefore(TaskStatus.PENDING, now);
-        return java.util.stream.Stream.concat(dateOnlyOverdue.stream(), dateTimeOverdue.stream())
-                .distinct()
-                .toList();
+    public List<TaskInstance> findOverduePending(@NonNull LocalDateTime now) {
+        return taskInstanceRepository.findByStatusAndDeadlineBefore(TaskStatus.PENDING, now);
     }
 
     @Transactional
@@ -167,23 +156,28 @@ public class TaskInstanceService {
         return taskInstanceRepository.findByStatus(TaskStatus.CHILD_COMPLETED);
     }
 
+    @Transactional(readOnly = true)
     public List<TaskInstance> findPendingForUser(@NonNull User user) {
         return taskInstanceRepository.findByAssignedUserAndStatusIn(user,
                 List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS));
     }
 
+    @Transactional(readOnly = true)
     public List<TaskInstance> findByUserAndStatus(@NonNull User user, @NonNull TaskStatus status) {
         return taskInstanceRepository.findByAssignedUserAndStatus(user, status);
     }
 
+    @Transactional(readOnly = true)
     public List<TaskInstance> findByUser(@NonNull User user) {
         return taskInstanceRepository.findByAssignedUser(user);
     }
 
+    @Transactional(readOnly = true)
     public List<TaskInstance> findByAssignedUser(@NonNull User user) {
         return taskInstanceRepository.findByAssignedUser(user);
     }
 
+    @Transactional(readOnly = true)
     public List<TaskInstance> findByStatus(@NonNull TaskStatus status) {
         return taskInstanceRepository.findByStatus(status);
     }
@@ -196,7 +190,8 @@ public class TaskInstanceService {
     }
 
     @Transactional
-    public TaskInstance approve(@NonNull TaskInstance instance, @NonNull User approver, int awardedPoints, String notes) {
+    public TaskInstance approve(@NonNull TaskInstance instance, @NonNull User approver, int awardedPoints,
+            String notes) {
         return approveTask(instance.getId(), approver, awardedPoints, notes);
     }
 
@@ -205,10 +200,12 @@ public class TaskInstanceService {
         return rejectTask(instance.getId(), rejector, notes);
     }
 
+    @Transactional(readOnly = true)
     public List<TaskInstance> findAll() {
         return taskInstanceRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Optional<TaskInstance> findById(@NonNull Long id) {
         return taskInstanceRepository.findById(id);
     }

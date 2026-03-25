@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 public class TaskDefinition {
 
     public TaskDefinition(Long id, String title, String description, int basePoints, RecurrenceType recurrenceType,
-            Set<User> assignedUsers, User createdBy, LocalDate startDate, LocalDate endDate,
+            Set<User> assignedUsers, User createdBy, LocalDate startDate, LocalDate seriesEndDate,
             String weeklyDays, LocalDateTime createdAt) {
         this.id = id;
         this.title = title;
@@ -40,7 +40,7 @@ public class TaskDefinition {
         this.assignedUsers = assignedUsers;
         this.createdBy = createdBy;
         this.startDate = startDate;
-        this.endDate = endDate;
+        this.seriesEndDate = seriesEndDate;
         this.weeklyDays = weeklyDays;
         this.createdAt = createdAt;
     }
@@ -73,11 +73,11 @@ public class TaskDefinition {
     @Column(name = "start_date")
     private LocalDate startDate; // Optional: Wann die Aufgabe startet
 
-    @Column(name = "end_date")
-    private LocalDate endDate; // Optional: Wann die Aufgabe endet
+    @Column(name = "series_end_date")
+    private LocalDate seriesEndDate; // Optional: Bis wann eine Wiederholungsserie Instanzen erzeugt
 
-    @Column(name = "end_at")
-    private LocalDateTime endAt; // Optional: Exakte Deadline für ONCE Aufgaben
+    @Column(name = "deadline")
+    private LocalDateTime deadline; // Optional: Exakter Frist-Zeitpunkt für ONCE-Aufgaben
 
     @Column(name = "weekly_days", columnDefinition = "TEXT")
     private String weeklyDays; // JSON oder kommasepariert: MONDAY,TUESDAY für WEEKLY

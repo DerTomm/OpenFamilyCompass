@@ -22,7 +22,7 @@ class TaskDefinitionControllerTest {
         dto.setUserIds(Set.of(1L, 2L, 3L));
         dto.setRecurrenceType(RecurrenceType.ONCE);
         dto.setStartDate(LocalDate.now());
-        dto.setEndDate(LocalDate.now().plusDays(7));
+        dto.setSeriesEndDate(LocalDate.now().plusDays(7));
         dto.setWeeklyDays("MONDAY,TUESDAY");
     }
 
@@ -47,7 +47,7 @@ class TaskDefinitionControllerTest {
         assertThat(newDto.getUserIds()).isNull();
         assertThat(newDto.getRecurrenceType()).isNull();
         assertThat(newDto.getStartDate()).isNull();
-        assertThat(newDto.getEndDate()).isNull();
+        assertThat(newDto.getSeriesEndDate()).isNull();
         assertThat(newDto.getWeeklyDays()).isNull();
     }
 
@@ -70,7 +70,7 @@ class TaskDefinitionControllerTest {
         dto.setUserIds(userIds);
         dto.setRecurrenceType(recurrenceType);
         dto.setStartDate(startDate);
-        dto.setEndDate(endDate);
+        dto.setSeriesEndDate(endDate);
         dto.setWeeklyDays(weeklyDays);
 
         // Then
@@ -80,7 +80,7 @@ class TaskDefinitionControllerTest {
         assertThat(dto.getUserIds()).isEqualTo(userIds);
         assertThat(dto.getRecurrenceType()).isEqualTo(recurrenceType);
         assertThat(dto.getStartDate()).isEqualTo(startDate);
-        assertThat(dto.getEndDate()).isEqualTo(endDate);
+        assertThat(dto.getSeriesEndDate()).isEqualTo(endDate);
         assertThat(dto.getWeeklyDays()).isEqualTo(weeklyDays);
     }
 
@@ -128,11 +128,11 @@ class TaskDefinitionControllerTest {
     void dates_ShouldHandleNullValues() {
         // When
         dto.setStartDate(null);
-        dto.setEndDate(null);
+        dto.setSeriesEndDate(null);
 
         // Then
         assertThat(dto.getStartDate()).isNull();
-        assertThat(dto.getEndDate()).isNull();
+        assertThat(dto.getSeriesEndDate()).isNull();
     }
 
     @Test

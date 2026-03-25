@@ -34,7 +34,7 @@ class TaskDefinitionTest {
         taskDefinition.setRecurrenceType(RecurrenceType.ONCE);
         taskDefinition.setCreatedBy(createdBy);
         taskDefinition.setStartDate(LocalDate.now());
-        taskDefinition.setEndDate(LocalDate.now().plusDays(7));
+        taskDefinition.setSeriesEndDate(LocalDate.now().plusDays(7));
         taskDefinition.setWeeklyDays("MONDAY,TUESDAY");
 
         Set<User> assignedUsers = new HashSet<>();
@@ -66,7 +66,7 @@ class TaskDefinitionTest {
         assertThat(newTask.getAssignedUsers()).isNull();
         assertThat(newTask.getCreatedBy()).isNull();
         assertThat(newTask.getStartDate()).isNull();
-        assertThat(newTask.getEndDate()).isNull();
+        assertThat(newTask.getSeriesEndDate()).isNull();
         assertThat(newTask.getWeeklyDays()).isNull();
         assertThat(newTask.getCreatedAt()).isNull();
     }
@@ -98,7 +98,7 @@ class TaskDefinitionTest {
         assertThat(task.getAssignedUsers()).isEqualTo(assignedUsers);
         assertThat(task.getCreatedBy()).isEqualTo(creator);
         assertThat(task.getStartDate()).isEqualTo(startDate);
-        assertThat(task.getEndDate()).isEqualTo(endDate);
+        assertThat(task.getSeriesEndDate()).isEqualTo(endDate);
         assertThat(task.getWeeklyDays()).isEqualTo(weeklyDays);
         assertThat(task.getCreatedAt()).isNotNull();
     }
@@ -136,7 +136,7 @@ class TaskDefinitionTest {
         taskDefinition.setBasePoints(basePoints);
         taskDefinition.setRecurrenceType(recurrenceType);
         taskDefinition.setStartDate(startDate);
-        taskDefinition.setEndDate(endDate);
+        taskDefinition.setSeriesEndDate(endDate);
         taskDefinition.setWeeklyDays(weeklyDays);
 
         // Then
@@ -146,7 +146,7 @@ class TaskDefinitionTest {
         assertThat(taskDefinition.getBasePoints()).isEqualTo(basePoints);
         assertThat(taskDefinition.getRecurrenceType()).isEqualTo(recurrenceType);
         assertThat(taskDefinition.getStartDate()).isEqualTo(startDate);
-        assertThat(taskDefinition.getEndDate()).isEqualTo(endDate);
+        assertThat(taskDefinition.getSeriesEndDate()).isEqualTo(endDate);
         assertThat(taskDefinition.getWeeklyDays()).isEqualTo(weeklyDays);
     }
 

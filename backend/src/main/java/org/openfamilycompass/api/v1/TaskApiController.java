@@ -9,9 +9,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openfamilycompass.api.v1.dto.TaskDto;
+import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.TaskDefinition;
 import org.openfamilycompass.model.TaskInstance;
-import org.openfamilycompass.model.RecurrenceType;
 import org.openfamilycompass.model.TaskStatus;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
@@ -38,10 +38,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Tasks", description = "Task definitions and instances")
 public class TaskApiController {
 
@@ -81,7 +83,8 @@ public class TaskApiController {
         Set<User> assignedUsers = new HashSet<>();
         for (Long userId : request.getAssignedUserIds()) {
             User user = userService.findById(userId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found: " + userId));
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found: " + userId));
             assignedUsers.add(user);
         }
 
@@ -100,10 +103,9 @@ public class TaskApiController {
                 request.getMonthlyDayOfMonth(),
                 request.getMonthlyAdjustToLastDay());
 
-        LocalDateTime endAt = request.getRecurrenceType() == RecurrenceType.ONCE ? request.getEndAt() : null;
-        LocalDate endDate = request.getRecurrenceType() == RecurrenceType.ONCE
-                ? (endAt != null ? endAt.toLocalDate() : request.getEndDate())
-                : request.getEndDate();
+        LocalDateTime deadline = request.getRecurrenceType() == RecurrenceType.ONCE ? request.getDeadline() : null;
+        LocalDate seriesEndDate = request.getRecurrenceType() != RecurrenceType.ONCE ? request.getSeriesEndDate()
+                : null;
 
         TaskDefinition saved = taskDefinitionService.createTaskDefinition(
                 request.getTitle(),
@@ -113,8 +115,8 @@ public class TaskApiController {
                 assignedUsers,
                 currentUser,
                 request.getStartDate(),
-                endDate,
-                endAt,
+                seriesEndDate,
+                deadline,
                 weeklyDaysPayload);
         return ResponseEntity.status(HttpStatus.CREATED).body(TaskDto.DefinitionResponse.fromEntity(saved));
     }
@@ -152,18 +154,15 @@ public class TaskApiController {
         if (request.getStartDate() != null) {
             definition.setStartDate(request.getStartDate());
         }
-        if (request.getEndDate() != null) {
-            definition.setEndDate(request.getEndDate());
-            if (definition.getRecurrenceType() == RecurrenceType.ONCE && request.getEndAt() == null) {
-                definition.setEndAt(request.getEndDate().atTime(23, 59));
-            }
+        if (request.getSeriesEndDate() != null) {
+            definition.setSeriesEndDate(request.getSeriesEndDate());
         }
-        if (request.getEndAt() != null) {
-            definition.setEndAt(request.getEndAt());
-            definition.setEndDate(request.getEndAt().toLocalDate());
+        if (request.getDeadline() != null) {
+            definition.setDeadline(request.getDeadline());
         }
         RecurrenceType effectiveRecurrence = definition.getRecurrenceType();
-        if (request.getWeeklyDays() != null || request.getMonthlyWeekNumber() != null || request.getMonthlyMode() != null
+        if (request.getWeeklyDays() != null || request.getMonthlyWeekNumber() != null
+                || request.getMonthlyMode() != null
                 || request.getMonthlyDayOfMonth() != null || request.getMonthlyAdjustToLastDay() != null
                 || request.getRecurrenceType() != null) {
             String currentSchedule = definition.getWeeklyDays();
@@ -198,17 +197,48 @@ public class TaskApiController {
                     effectiveMonthlyAdjustToLastDay));
         }
         if (request.getAssignedUserIds() != null) {
+            Set<User> previousUsers = new HashSet<>(definition.getAssignedUsers());
             Set<User> assignedUsers = new HashSet<>();
             for (Long userId : request.getAssignedUserIds()) {
                 User user = userService.findById(userId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found: " + userId));
+                        .orElseThrow(
+                                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found: " + userId));
                 assignedUsers.add(user);
             }
+            Set<User> newlyAssigned = assignedUsers.stream()
+                    .filter(u -> previousUsers.stream().noneMatch(p -> p.getId().equals(u.getId())))
+                    .collect(java.util.stream.Collectors.toSet());
             definition.setAssignedUsers(assignedUsers);
+
+            if (definition.getRecurrenceType() != RecurrenceType.ONCE) {
+                definition.setDeadline(null);
+            }
+
+            TaskDefinition saved = taskDefinitionService.save(definition);
+
+            // Für ONCE-Aufgaben: TaskInstances für neu zugewiesene Nutzer erstellen (nach
+            // dem save!)
+            // Für wiederkehrende Aufgaben: sofort erstellen wenn heute ein Fälligkeitstag
+            // ist
+            if (saved.getRecurrenceType() == RecurrenceType.ONCE) {
+                // Nur sofort erstellen, wenn kein zukünftiges Startdatum gesetzt ist
+                LocalDate today = LocalDate.now();
+                if (saved.getStartDate() == null || !saved.getStartDate().isAfter(today)) {
+                    for (User newUser : newlyAssigned) {
+                        taskInstanceService.createTaskInstance(saved, newUser, saved.getDeadline());
+                        log.info("Created TaskInstance for newly assigned user '{}' on ONCE task '{}'",
+                                newUser.getUsername(), saved.getTitle());
+                    }
+                }
+            } else {
+                taskDefinitionService.createInstancesForNewUsersIfDueToday(saved, newlyAssigned);
+            }
+
+            return ResponseEntity.ok(TaskDto.DefinitionResponse.fromEntity(saved));
         }
 
         if (definition.getRecurrenceType() != RecurrenceType.ONCE) {
-            definition.setEndAt(null);
+            definition.setDeadline(null);
         }
 
         TaskDefinition saved = taskDefinitionService.save(definition);
@@ -233,14 +263,16 @@ public class TaskApiController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) Long assignedUserId,
             @RequestParam(required = false) TaskStatus status,
-            @RequestParam(required = false) LocalDate dueDateFrom,
-            @RequestParam(required = false) LocalDate dueDateTo) {
+            @RequestParam(required = false) LocalDate deadlineFrom,
+            @RequestParam(required = false) LocalDate deadlineTo) {
 
         User currentUser = getCurrentUser(jwt);
         List<TaskInstance> instances;
 
         if (currentUser.getRole() == UserRole.CHILD) {
             instances = taskInstanceService.findByAssignedUser(currentUser);
+            log.debug("[listTaskInstances] CHILD user '{}' (id={}) → {} instances found",
+                    currentUser.getUsername(), currentUser.getId(), instances.size());
         } else if (assignedUserId != null) {
             User assignedUser = userService.findById(assignedUserId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
@@ -254,19 +286,35 @@ public class TaskApiController {
                     .filter(i -> i.getStatus() == status)
                     .collect(Collectors.toList());
         }
-        if (dueDateFrom != null) {
+        if (deadlineFrom != null) {
             instances = instances.stream()
-                    .filter(i -> i.getDueDate() == null || !i.getDueDate().isBefore(dueDateFrom))
+                    .filter(i -> i.getDeadline() == null || !i.getDeadline().toLocalDate().isBefore(deadlineFrom))
                     .collect(Collectors.toList());
         }
-        if (dueDateTo != null) {
+        if (deadlineTo != null) {
             instances = instances.stream()
-                    .filter(i -> i.getDueDate() == null || !i.getDueDate().isAfter(dueDateTo))
+                    .filter(i -> i.getDeadline() == null || !i.getDeadline().toLocalDate().isAfter(deadlineTo))
                     .collect(Collectors.toList());
         }
 
         return ResponseEntity.ok(
                 instances.stream()
+                        .sorted((a, b) -> {
+                            // Aufgaben ohne Deadline zuerst (sofort fällig), dann nach Deadline aufsteigend
+                            if (a.getDeadline() == null && b.getDeadline() == null) {
+                                // Bei gleicher Deadline-Situation: neueste zuerst
+                                if (a.getCreatedAt() == null)
+                                    return 1;
+                                if (b.getCreatedAt() == null)
+                                    return -1;
+                                return b.getCreatedAt().compareTo(a.getCreatedAt());
+                            }
+                            if (a.getDeadline() == null)
+                                return -1;
+                            if (b.getDeadline() == null)
+                                return 1;
+                            return a.getDeadline().compareTo(b.getDeadline());
+                        })
                         .map(TaskDto.InstanceResponse::fromEntity)
                         .collect(Collectors.toList()));
     }

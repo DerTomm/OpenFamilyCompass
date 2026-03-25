@@ -125,8 +125,7 @@ public class ParentController {
 
         // Für ONCE: Due Date == Start Date (behandelt als End Date im Service)
         LocalDate effectiveEndDate = form.getRecurrenceType() == RecurrenceType.ONCE ? form.getStartDate()
-                : form.getEndDate();
-
+                : form.getSeriesEndDate();
         taskDefinitionService.createTaskDefinition(form.getTitle(), form.getDescription(),
                 form.getBasePoints(), form.getRecurrenceType(), assignedUsers,
                 currentUser, form.getStartDate(), effectiveEndDate, form.getWeeklyDays());
@@ -156,7 +155,7 @@ public class ParentController {
                 .collect(java.util.stream.Collectors.toSet()) : Set.of();
         taskDefinitionService.updateTaskDefinition(id, form.getTitle(), form.getDescription(),
                 form.getBasePoints(), form.getRecurrenceType(), assignedUsers,
-                form.getStartDate(), form.getEndDate(), form.getWeeklyDays());
+                form.getStartDate(), form.getSeriesEndDate(), form.getWeeklyDays());
         return "redirect:/parent/tasks";
     }
 

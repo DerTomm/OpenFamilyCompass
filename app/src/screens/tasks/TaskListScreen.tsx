@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCompleteTask, useTaskInstances } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
@@ -60,7 +60,7 @@ interface TaskCardProps {
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isChild, t, styles }) => {
   const canComplete = isChild && (task.status === 'PENDING' || task.status === 'IN_PROGRESS');
-  const dueInfo = task.dueDate ? getDueInfo(task.dueDate, t) : null;
+  const dueInfo = task.deadline ? getDueInfo(task.deadline, t) : null;
 
   return (
     <View style={styles.card}>
@@ -83,16 +83,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isC
           </Text>
         </View>
 
-        {task.dueDate && dueInfo && (
+        {task.deadline && dueInfo && (
           <View style={[styles.deadlineBadge, dueInfo.overdue && styles.deadlineBadgeOverdue]}>
             <Text style={styles.deadlineBadgeText}>{dueInfo.text}</Text>
           </View>
         )}
       </View>
 
-      {task.dueDate && (
+      {task.deadline && (
         <Text style={styles.dueDate}>
-          {new Date(task.dueDate).toLocaleDateString()}
+          {new Date(task.deadline).toLocaleDateString()}
         </Text>
       )}
 

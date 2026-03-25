@@ -37,8 +37,8 @@ public class TaskDto {
         private List<UserDto.ChildResponse> assignedUsers;
         private UserDto.Response createdBy;
         private LocalDate startDate;
-        private LocalDate endDate;
-        private LocalDateTime endAt;
+        private LocalDate seriesEndDate;
+        private LocalDateTime deadline;
         private List<String> weeklyDays;
         private String monthlyMode;
         private Integer monthlyWeekNumber;
@@ -109,8 +109,8 @@ public class TaskDto {
                             : Collections.emptyList())
                     .createdBy(def.getCreatedBy() != null ? UserDto.Response.fromEntity(def.getCreatedBy()) : null)
                     .startDate(def.getStartDate())
-                    .endDate(def.getEndDate())
-                    .endAt(def.getEndAt())
+                    .seriesEndDate(def.getSeriesEndDate())
+                    .deadline(def.getDeadline())
                     .weeklyDays(days)
                     .monthlyMode(monthlyMode)
                     .monthlyWeekNumber(monthlyWeekNumber)
@@ -140,8 +140,8 @@ public class TaskDto {
         private Set<Long> assignedUserIds;
 
         private LocalDate startDate;
-        private LocalDate endDate;
-        private LocalDateTime endAt;
+        private LocalDate seriesEndDate;
+        private LocalDateTime deadline;
         private List<String> weeklyDays;
         private String monthlyMode;
         private Integer monthlyWeekNumber;
@@ -162,8 +162,8 @@ public class TaskDto {
         private RecurrenceType recurrenceType;
         private Set<Long> assignedUserIds;
         private LocalDate startDate;
-        private LocalDate endDate;
-        private LocalDateTime endAt;
+        private LocalDate seriesEndDate;
+        private LocalDateTime deadline;
         private List<String> weeklyDays;
         private String monthlyMode;
         private Integer monthlyWeekNumber;
@@ -179,8 +179,7 @@ public class TaskDto {
         private Long id;
         private DefinitionResponse taskDefinition;
         private UserDto.ChildResponse assignedUser;
-        private LocalDate dueDate;
-        private LocalDateTime dueAt;
+        private LocalDateTime deadline;
         private TaskStatus status;
         private LocalDateTime completedAt;
         private LocalDateTime approvedAt;
@@ -194,8 +193,7 @@ public class TaskDto {
                     .id(instance.getId())
                     .taskDefinition(DefinitionResponse.fromEntity(instance.getTaskDefinition()))
                     .assignedUser(UserDto.ChildResponse.fromEntity(instance.getAssignedUser()))
-                    .dueDate(instance.getDueDate())
-                    .dueAt(instance.getDueAt())
+                    .deadline(instance.getDeadline())
                     .status(instance.getStatus())
                     .completedAt(instance.getCompletedAt())
                     .approvedAt(instance.getApprovedAt())
