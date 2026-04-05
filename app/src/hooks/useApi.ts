@@ -87,8 +87,8 @@ export const useTaskInstances = (params?: { assignedUserId?: number; status?: st
   return useQuery({
     queryKey: queryKeys.taskInstances(params),
     queryFn: () => taskInstancesApi.list(params),
-    staleTime: 0,           // Immer als veraltet betrachten – neue Aufgaben erscheinen sofort beim nächsten Mount
-    refetchInterval: 30000, // Alle 30 s automatisch neu laden (wichtig wenn Eltern auf anderem Gerät eine Aufgabe erstellen)
+    staleTime: 0,           // Always treat as stale – new tasks appear immediately on next mount
+    refetchInterval: 30000, // Auto-refresh every 30 s (important when a parent creates a task on another device)
   });
 };
 

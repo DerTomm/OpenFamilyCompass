@@ -49,9 +49,9 @@ public class Notification {
     private LocalDateTime createdAt;
 
     @Column(name = "read_at")
-    private LocalDateTime readAt; // null = ungelesen
+    private LocalDateTime readAt; // null = unread
 
-    // Hilfsmethode um zu prüfen, ob gelesen
+    // Helper method to check if read
     public boolean isRead() {
         return readAt != null;
     }

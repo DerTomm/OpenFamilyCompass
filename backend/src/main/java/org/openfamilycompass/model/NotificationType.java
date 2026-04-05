@@ -1,15 +1,15 @@
 package org.openfamilycompass.model;
 
 public enum NotificationType {
-    TASK_ASSIGNED("clipboard-list", "warning"), // Kind: Neue Aufgabe zugewiesen
-    TASK_COMPLETED("check-circle", "success"), // Eltern: Aufgabe wurde von Kind abgeschlossen
-    TASK_APPROVED("check-circle", "success"), // Kind: Aufgabe wurde genehmigt
-    TASK_REJECTED("times-circle", "danger"), // Kind: Aufgabe wurde abgelehnt
-    TASK_EXPIRED("times-circle", "danger"), // Kind: Aufgabe ist abgelaufen
-    REWARD_REQUESTED("gift", "warning"), // Eltern: Belohnung wurde beantragt
-    REWARD_APPROVED("gift", "success"), // Kind: Belohnung wurde genehmigt
-    REWARD_REJECTED("times-circle", "danger"), // Kind: Belohnung wurde abgelehnt
-    POINTS_EARNED("star", "warning"); // Kind: Neue Punkte erhalten
+    TASK_ASSIGNED("clipboard-list", "warning"), // Child: New task assigned
+    TASK_COMPLETED("check-circle", "success"), // Parents: Task was completed by child
+    TASK_APPROVED("check-circle", "success"), // Child: Task was approved
+    TASK_REJECTED("times-circle", "danger"), // Child: Task was rejected
+    TASK_EXPIRED("times-circle", "danger"), // Child: Task has expired
+    REWARD_REQUESTED("gift", "warning"), // Parents: Reward was requested
+    REWARD_APPROVED("gift", "success"), // Child: Reward was approved
+    REWARD_REJECTED("times-circle", "danger"), // Child: Reward was rejected
+    POINTS_EARNED("star", "warning"); // Child: New points received
 
     private final String iconClass;
     private final String colorClass;

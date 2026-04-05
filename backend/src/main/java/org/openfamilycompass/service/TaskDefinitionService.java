@@ -58,8 +58,8 @@ public class TaskDefinitionService {
 
         TaskDefinition savedDefinition = taskDefinitionRepository.save(definition);
 
-        // Für einmalige Aufgaben: Erstelle sofort TaskInstances (sofern kein
-        // zukünftiges Startdatum)
+        // For one-time tasks: create TaskInstances immediately (if no
+        // future start date)
         log.info(
                 "TaskDefinition created: title='{}', recurrenceType='{}', startDate='{}', deadline='{}', assignedUsers.size={}",
                 title, recurrenceType, startDate, deadline, assignedUsers.size());
@@ -74,7 +74,7 @@ public class TaskDefinitionService {
                 }
             } else {
                 log.info(
-                        "ONCE task '{}' hat Startdatum in der Zukunft ({}), Instanzen werden erst am Startdatum erstellt",
+                        "ONCE task '{}' has a future start date ({}), instances will be created on the start date",
                         title, startDate);
             }
         } else {
@@ -128,9 +128,9 @@ public class TaskDefinitionService {
         if (!taskDefinitionRepository.existsById(id)) {
             throw new IllegalArgumentException("TaskDefinition not found");
         }
-        // Lösche zuerst alle zugehörigen TaskInstances
+        // First delete all associated TaskInstances
         taskInstanceService.deleteByTaskDefinitionId(id);
-        // Dann lösche die TaskDefinition
+        // Then delete the TaskDefinition
         taskDefinitionRepository.deleteById(id);
     }
 
@@ -151,7 +151,7 @@ public class TaskDefinitionService {
         TaskDefinition definition = taskDefinitionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("TaskDefinition not found"));
 
-        // Neu zugewiesene Nutzer merken, bevor wir überschreiben
+        // Remember newly assigned users before overwriting
         Set<User> previousUsers = definition.getAssignedUsers() != null
                 ? new java.util.HashSet<>(definition.getAssignedUsers())
                 : new java.util.HashSet<>();
@@ -167,10 +167,10 @@ public class TaskDefinitionService {
         definition.setWeeklyDays(weeklyDays);
         TaskDefinition saved = taskDefinitionRepository.save(definition);
 
-        // Für ONCE-Aufgaben: für jeden neu zugewiesenen Nutzer sofort eine TaskInstance
-        // erstellen (sofern kein zukünftiges Startdatum)
-        // Für wiederkehrende Aufgaben: sofort erstellen, wenn heute ein Fälligkeitstag
-        // ist
+        // For ONCE tasks: immediately create a TaskInstance for each newly assigned
+        // user
+        // (if no future start date)
+        // For recurring tasks: create immediately if today is a due date
         if (recurrenceType == RecurrenceType.ONCE) {
             LocalDate today = LocalDate.now();
             if (startDate == null || !startDate.isAfter(today)) {
@@ -185,7 +185,7 @@ public class TaskDefinitionService {
             }
         } else {
             LocalDate today = LocalDate.now();
-            // Startdatum noch nicht erreicht? Dann noch nichts erstellen.
+            // Start date not yet reached? Then don't create anything yet.
             if (saved.getStartDate() == null || !saved.getStartDate().isAfter(today)) {
                 LocalDate dueDate = calculateNextDueDate(today, saved);
                 if (dueDate != null
@@ -196,7 +196,7 @@ public class TaskDefinitionService {
                         if (!isNew) {
                             continue;
                         }
-                        // Nur erstellen, wenn noch keine Instanz für heute existiert
+                        // Only create if no instance for today exists yet
                         boolean exists = taskInstanceService.findByUser(user).stream()
                                 .anyMatch(inst -> inst.getTaskDefinition().getId().equals(saved.getId())
                                         && inst.getDeadline() != null
@@ -216,10 +216,9 @@ public class TaskDefinitionService {
     }
 
     /**
-     * Erstellt für eine Menge neu zugewiesener Nutzer sofort eine TaskInstance,
-     * wenn die wiederkehrende Aufgabe heute fällig ist und noch keine Instanz
-     * existiert.
-     * Wird vom API-Controller nach einem save() aufgerufen.
+     * For a set of newly assigned users, immediately creates a TaskInstance
+     * if the recurring task is due today and no instance exists yet.
+     * Called by the API controller after a save().
      */
     @Transactional
     public void createInstancesForNewUsersIfDueToday(@NonNull TaskDefinition definition,
@@ -264,27 +263,27 @@ public class TaskDefinitionService {
             }
 
             if (definition.getRecurrenceType() == RecurrenceType.ONCE) {
-                // ONCE-Aufgaben mit Startdatum: Instanzen erst am Startdatum erstellen
-                // (ohne Startdatum wurden sie bereits sofort bei der Erstellung erstellt)
+                // ONCE tasks with start date: create instances only on the start date
+                // (without start date they were already created immediately upon creation)
                 if (definition.getStartDate() != null && definition.getStartDate().equals(today)) {
                     for (User user : definition.getAssignedUsers()) {
                         boolean exists = taskInstanceService.findByUser(user).stream()
                                 .anyMatch(inst -> inst.getTaskDefinition().getId().equals(definition.getId()));
                         if (!exists) {
-                            log.info("Erstelle zeitverzögerte ONCE-TaskInstance: Aufgabe='{}', Nutzer='{}'",
+                            log.info("Creating delayed ONCE TaskInstance: task='{}', user='{}'",
                                     definition.getTitle(), user.getFirstName());
                             taskInstanceService.createTaskInstance(definition, user, definition.getDeadline());
                         }
                     }
                 }
             } else {
-                // Wiederkehrende Aufgaben
+                // Recurring tasks
                 for (User user : definition.getAssignedUsers()) {
                     LocalDate dueDate = calculateNextDueDate(today, definition);
                     if (dueDate != null
                             && (definition.getSeriesEndDate() == null || dueDate.isBefore(definition.getSeriesEndDate())
                                     || dueDate.equals(definition.getSeriesEndDate()))) {
-                        // Prüfe, ob bereits eine Instanz für diesen Tag existiert
+                        // Check if an instance for this day already exists
                         boolean exists = taskInstanceService.findByUser(user).stream()
                                 .anyMatch(instance -> instance.getTaskDefinition().equals(definition)
                                         && instance.getDeadline() != null
@@ -308,18 +307,20 @@ public class TaskDefinitionService {
             log.info("Expiring overdue task: {} for user {}", task.getTaskDefinition().getTitle(),
                     task.getAssignedUser().getFirstName());
             // Send notification
-            notificationService.createNotification(task.getAssignedUser(), NotificationType.TASK_EXPIRED,
-                    "Aufgabe abgelaufen", "Aufgabe '" + task.getTaskDefinition().getTitle() + "' ist abgelaufen.",
+            notificationService.createLocalizedNotification(task.getAssignedUser(), NotificationType.TASK_EXPIRED,
+                    "notification.task.expired.title",
+                    "notification.task.expired.message",
+                    new Object[] { task.getTaskDefinition().getTitle() },
                     task.getTaskDefinition().getId());
 
             if (task.getTaskDefinition().getRecurrenceType() == RecurrenceType.ONCE
                     && task.getTaskDefinition().getCreatedBy() != null) {
-                notificationService.createNotification(
+                notificationService.createLocalizedNotification(
                         task.getTaskDefinition().getCreatedBy(),
                         NotificationType.TASK_EXPIRED,
-                        "Frist verpasst",
-                        "Die Aufgabe '" + task.getTaskDefinition().getTitle() + "' von "
-                                + task.getAssignedUser().getFirstName() + " ist abgelaufen.",
+                        "notification.task.deadline_missed.title",
+                        "notification.task.deadline_missed.message",
+                        new Object[] { task.getTaskDefinition().getTitle(), task.getAssignedUser().getFirstName() },
                         task.getId());
             }
         }

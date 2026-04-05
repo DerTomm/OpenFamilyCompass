@@ -48,7 +48,7 @@ public class SecurityConfig {
         public JwtAuthenticationConverter jwtAuthenticationConverter() {
                 JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
 
-                // Custom converter für "roles" Claim im JWT
+                // Custom converter for "roles" claim in JWT
                 converter.setJwtGrantedAuthoritiesConverter(jwt -> {
                         // Standard scopes
                         JwtGrantedAuthoritiesConverter scopeConverter = new JwtGrantedAuthoritiesConverter();
@@ -65,7 +65,7 @@ public class SecurityConfig {
                                 roles = new java.util.ArrayList<>(roles);
                         }
 
-                        // Wenn ADMIN Rolle vorhanden ist, füge PARENT Rolle hinzu (Hierarchie)
+                        // If ADMIN role is present, add PARENT role (hierarchy)
                         if (roles.contains("ADMIN") && !roles.contains("PARENT")) {
                                 roles.add("PARENT");
                         }
@@ -74,7 +74,7 @@ public class SecurityConfig {
                                         .map(role -> (GrantedAuthority) new SimpleGrantedAuthority("ROLE_" + role))
                                         .collect(Collectors.toList());
 
-                        // Kombiniere scope und role authorities
+                        // Combine scope and role authorities
                         return Stream.concat(
                                         scopeAuthorities != null ? scopeAuthorities.stream() : Stream.empty(),
                                         roleAuthorities.stream()).collect(Collectors.toSet());
@@ -86,7 +86,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOriginPatterns(java.util.List.of("*")); // Erlaube alle Origins für WebView
+                configuration.setAllowedOriginPatterns(java.util.List.of("*")); // Allow all origins for WebView
                 configuration.setAllowedMethods(
                                 java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
                 configuration.setAllowedHeaders(java.util.List.of("*"));

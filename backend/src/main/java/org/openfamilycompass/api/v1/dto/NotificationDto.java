@@ -61,8 +61,8 @@ public class NotificationDto {
         private String platform;
 
         /**
-         * Stabile Geräte-ID (UUID), unabhängig vom FCM-Token. Wenn vorhanden, wird sie
-         * als DB-Schlüssel verwendet.
+         * Stable device ID (UUID), independent of the FCM token. If present, it is
+         * used as the database key.
          */
         private String deviceId;
     }

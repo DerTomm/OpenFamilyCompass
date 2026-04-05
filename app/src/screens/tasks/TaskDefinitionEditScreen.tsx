@@ -362,7 +362,7 @@ export const TaskDefinitionEditScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Startdatum – gilt für alle Aufgabentypen */}
+        {/* Start date – applies to all task types */}
         <View style={styles.section}>
           <Text style={styles.label}>{t('tasks.startDate.optional')}</Text>
           <Text style={styles.hint}>{t('tasks.startDate.hint')}</Text>

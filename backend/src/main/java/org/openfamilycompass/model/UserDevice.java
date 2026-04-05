@@ -31,7 +31,7 @@ public class UserDevice {
     private User user;
 
     @Column(name = "device_id", nullable = false, unique = true)
-    private String deviceId; // Eindeutige ID pro Gerät
+    private String deviceId; // Unique ID per device
 
     @Column(name = "fcm_token", nullable = false)
     private String fcmToken;

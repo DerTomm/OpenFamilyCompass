@@ -12,8 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_CONFIG, secureStorage, STORAGE_KEYS } from '../../api/config';
 import { Button } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
-import { useI18n } from '../../i18n/I18nContext';
 import { useDialogs } from '../../hooks/useDialogs';
+import { useI18n } from '../../i18n/I18nContext';
 
 export const LoginScreen: React.FC = () => {
   const { login } = useAuth();
@@ -30,7 +30,7 @@ export const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState('');
 
   useEffect(() => {
-    // Lade die gespeicherte Server-URL beim Start
+    // Load the stored server URL on startup
     loadServerUrl();
   }, []);
 
@@ -48,13 +48,13 @@ export const LoginScreen: React.FC = () => {
 
   const saveServerUrl = async () => {
     try {
-      // Validiere die URL
+      // Validate the URL
       if (!serverUrl || !serverUrl.startsWith('http')) {
         showError(t('login.server.url.invalid'), t('common.error'));
         return;
       }
 
-      // Entferne trailing slash
+      // Remove trailing slash
       const cleanUrl = serverUrl.replace(/\/$/, '');
 
       await secureStorage.setItem(STORAGE_KEYS.SERVER_URL, cleanUrl);
@@ -93,10 +93,10 @@ export const LoginScreen: React.FC = () => {
         {/* Logo Section */}
         <View style={styles.logoContainer}>
           <Surface style={[styles.logoCircle, { backgroundColor: theme.colors.primary + '20' }]} elevation={2}>
-            <Image 
-              source={require('../../../assets/icon.png')} 
-              style={{ width: 100, height: 100 }} 
-              resizeMode="contain" 
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={{ width: 100, height: 100 }}
+              resizeMode="contain"
             />
           </Surface>
 

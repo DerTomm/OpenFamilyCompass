@@ -2,6 +2,7 @@ package org.openfamilycompass.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 import org.openfamilycompass.model.Notification;
 import org.openfamilycompass.model.NotificationType;
@@ -9,6 +10,7 @@ import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.NotificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final FcmService fcmService;
     private final UserService userService;
+    private final MessageSource messageSource;
 
     @Transactional
     public Notification createNotification(User user, NotificationType type, String title, String message,
@@ -46,6 +49,56 @@ public class NotificationService {
         return savedNotification;
     }
 
+    /**
+     * Creates a notification whose title and message are resolved from the
+     * message source using the target user's preferred language.
+     *
+     * @param user        the notification recipient (their {@code language} field
+     *                    determines the locale)
+     * @param type        notification type
+     * @param titleKey    message key for the title (no arguments)
+     * @param messageKey  message key for the body text
+     * @param messageArgs arguments passed to the message format (may be null)
+     * @param referenceId id of the referenced entity
+     */
+    @Transactional
+    public Notification createLocalizedNotification(User user, NotificationType type,
+            String titleKey, String messageKey, Object[] messageArgs, Long referenceId) {
+        Locale locale = resolveLocale(user);
+        String title = messageSource.getMessage(titleKey, null, locale);
+        String message = messageSource.getMessage(messageKey, messageArgs, locale);
+        return createNotification(user, type, title, message, referenceId);
+    }
+
+    /**
+     * Like {@link #createLocalizedNotification} but appends an optional note
+     * (e.g. a rejection reason) to the message body. The note prefix
+     * ("Note: " / "Notiz: ") is also resolved from the message source using
+     * the key {@code notification.note.suffix}.
+     *
+     * @param note raw note text entered by a user; pass {@code null} to omit
+     */
+    @Transactional
+    public Notification createLocalizedNotification(User user, NotificationType type,
+            String titleKey, String messageKey, Object[] messageArgs, String note, Long referenceId) {
+        Locale locale = resolveLocale(user);
+        String title = messageSource.getMessage(titleKey, null, locale);
+        String message = messageSource.getMessage(messageKey, messageArgs, locale);
+        if (note != null && !note.isBlank()) {
+            message += messageSource.getMessage("notification.note.suffix", new Object[] { note }, locale);
+        }
+        return createNotification(user, type, title, message, referenceId);
+    }
+
+    /** Derives a {@link Locale} from the user's stored language preference. */
+    private Locale resolveLocale(User user) {
+        String lang = user.getLanguage();
+        if (lang == null || lang.isBlank()) {
+            return Locale.ENGLISH;
+        }
+        return Locale.forLanguageTag(lang);
+    }
+
     public List<Notification> getNotificationsForUser(User user) {
         return notificationRepository.findByUserOrderByCreatedAtDesc(user);
     }
@@ -63,7 +116,7 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
 
-        // Sicherstellen, dass der User die Benachrichtigung auch besitzt
+        // Ensure the user actually owns the notification
         if (!notification.getUser().getId().equals(user.getId())) {
             throw new IllegalArgumentException("Notification does not belong to user");
         }

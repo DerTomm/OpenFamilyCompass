@@ -50,12 +50,12 @@ public class RewardRedemptionService {
         // Notify all parents about reward request
         List<User> parents = userRepository.findByRole(UserRole.PARENT);
         for (User parent : parents) {
-            notificationService.createNotification(
+            notificationService.createLocalizedNotification(
                     parent,
                     NotificationType.REWARD_REQUESTED,
-                    "Belohnungsanfrage",
-                    String.format("%s möchte die Belohnung '%s' (%d Punkte) einlösen.",
-                            user.getFirstName(), reward.getTitle(), reward.getPointsCost()),
+                    "notification.reward.requested.title",
+                    "notification.reward.requested.message",
+                    new Object[] { user.getFirstName(), reward.getTitle(), reward.getPointsCost() },
                     saved.getId());
         }
 
@@ -81,13 +81,13 @@ public class RewardRedemptionService {
         RewardRedemption saved = redemptionRepository.save(redemption);
 
         // Notify child about approved reward
-        notificationService.createNotification(
+        notificationService.createLocalizedNotification(
                 redemption.getUser(),
                 NotificationType.REWARD_APPROVED,
-                "Belohnung genehmigt",
-                String.format("Deine Belohnung '%s' wurde genehmigt! %s",
-                        redemption.getReward().getTitle(),
-                        notes != null ? "Notiz: " + notes : ""),
+                "notification.reward.approved.title",
+                "notification.reward.approved.message",
+                new Object[] { redemption.getReward().getTitle() },
+                notes,
                 redemption.getId());
 
         return saved;
@@ -120,12 +120,12 @@ public class RewardRedemptionService {
         RewardRedemption saved = redemptionRepository.save(redemption);
 
         // Notify child about rejected reward
-        notificationService.createNotification(
+        notificationService.createLocalizedNotification(
                 redemption.getUser(),
                 NotificationType.REWARD_REJECTED,
-                "Belohnung abgelehnt",
-                String.format("Deine Belohnung '%s' wurde abgelehnt. Die Punkte wurden zurückerstattet.",
-                        redemption.getReward().getTitle()),
+                "notification.reward.rejected.title",
+                "notification.reward.rejected.message",
+                new Object[] { redemption.getReward().getTitle() },
                 redemption.getId());
 
         return saved;

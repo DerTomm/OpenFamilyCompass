@@ -5,13 +5,13 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { notificationsApi } from '../api/services';
 
-// In Expo Go sind native Push-Benachrichtigungen seit SDK 53 nicht verfügbar.
-// Das Modul darf dort nicht geladen werden – daher kein statisches import.
+// Native push notifications have not been available in Expo Go since SDK 53.
+// The module must not be loaded there – hence no static import.
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 const DEVICE_ID_KEY = 'fcm_device_id';
 
-/** Liefert eine stabile Geräte-ID (UUID), die unabhängig vom FCM-Token ist. */
+/** Returns a stable device ID (UUID), independent of the FCM token. */
 const getOrCreateDeviceId = async (): Promise<string> => {
     let deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
     if (!deviceId) {
@@ -22,15 +22,15 @@ const getOrCreateDeviceId = async (): Promise<string> => {
 };
 
 /**
- * Registriert das Gerät bei Firebase Cloud Messaging (FCM) und
- * sendet den Token an das Backend, sobald der Nutzer eingeloggt ist.
- * Funktioniert nur in Development/Production Builds, nicht in Expo Go.
+ * Registers the device with Firebase Cloud Messaging (FCM) and
+ * sends the token to the backend as soon as the user is logged in.
+ * Works only in Development/Production builds, not in Expo Go.
  */
 export const usePushNotifications = (isAuthenticated: boolean) => {
     useEffect(() => {
         if (!isAuthenticated || Platform.OS === 'web' || isExpoGo) return;
 
-        // Dynamischer Import – wird nur außerhalb von Expo Go erreicht
+        // Dynamic import – only reached outside of Expo Go
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const Notifications = require('expo-notifications');
         let subscription: { remove: () => void } | null = null;

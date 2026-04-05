@@ -40,11 +40,12 @@ public class TaskInstanceService {
 
         TaskInstance savedInstance = taskInstanceRepository.save(instance);
 
-        notificationService.createNotification(
+        notificationService.createLocalizedNotification(
                 assignedUser,
                 NotificationType.TASK_ASSIGNED,
-                "Neue Aufgabe",
-                String.format("Dir wurde die Aufgabe '%s' zugewiesen.", definition.getTitle()),
+                "notification.task.assigned.title",
+                "notification.task.assigned.message",
+                new Object[] { definition.getTitle() },
                 savedInstance.getId());
 
         return savedInstance;
@@ -82,12 +83,12 @@ public class TaskInstanceService {
                 ? instance.getTaskDefinition().getCreatedBy()
                 : instance.getAssignedUser();
 
-        notificationService.createNotification(
+        notificationService.createLocalizedNotification(
                 parentToNotify,
                 NotificationType.TASK_COMPLETED,
-                "Aufgabe erledigt",
-                String.format("%s hat die Aufgabe '%s' als erledigt markiert.",
-                        instance.getAssignedUser().getFirstName(), instance.getTaskDefinition().getTitle()),
+                "notification.task.completed.title",
+                "notification.task.completed.message",
+                new Object[] { instance.getAssignedUser().getFirstName(), instance.getTaskDefinition().getTitle() },
                 instance.getId());
 
         return savedInstance;
@@ -118,12 +119,12 @@ public class TaskInstanceService {
                 instanceId, approver);
 
         // Notify child about approved task
-        notificationService.createNotification(
+        notificationService.createLocalizedNotification(
                 instance.getAssignedUser(),
                 NotificationType.TASK_APPROVED,
-                "Aufgabe genehmigt",
-                String.format("Deine Aufgabe '%s' wurde genehmigt. Du erhältst %d Punkte.",
-                        instance.getTaskDefinition().getTitle(), awardedPoints),
+                "notification.task.approved.title",
+                "notification.task.approved.message",
+                new Object[] { instance.getTaskDefinition().getTitle(), awardedPoints },
                 instance.getId());
 
         return savedInstance;
@@ -141,12 +142,13 @@ public class TaskInstanceService {
         TaskInstance savedInstance = taskInstanceRepository.save(instance);
 
         // Notify child about rejected task
-        notificationService.createNotification(
+        notificationService.createLocalizedNotification(
                 instance.getAssignedUser(),
                 NotificationType.TASK_REJECTED,
-                "Aufgabe abgelehnt",
-                String.format("Deine Aufgabe '%s' wurde abgelehnt. %s",
-                        instance.getTaskDefinition().getTitle(), notes != null ? "Notiz: " + notes : ""),
+                "notification.task.rejected.title",
+                "notification.task.rejected.message",
+                new Object[] { instance.getTaskDefinition().getTitle() },
+                notes,
                 instance.getId());
 
         return savedInstance;

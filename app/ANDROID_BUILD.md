@@ -1,99 +1,99 @@
-# EAS Build Guide für OpenFamilyCompass Android App
+# EAS Build Guide for OpenFamilyCompass Android App
 
-## Voraussetzungen
-✅ EAS CLI installiert: `npm install -g eas-cli`
-✅ eas.json Konfiguration erstellt
-✅ Android-Konfiguration in app.json aktualisiert
+## Prerequisites
+✅ EAS CLI installed: `npm install -g eas-cli`
+✅ eas.json configuration created
+✅ Android configuration updated in app.json
 
-## Build-Profile
+## Build Profiles
 
-### 1. Development Build (zum Testen)
+### 1. Development Build (for testing)
 ```bash
 cd app
 eas build --profile development --platform android
 ```
-- Erstellt Debug APK
-- Beinhaltet Development Tools
-- Für internes Testen
+- Creates debug APK
+- Includes development tools
+- For internal testing
 
-### 2. Preview Build (Pre-Release)
+### 2. Preview Build (pre-release)
 ```bash
 eas build --profile preview --platform android
 ```
-- Erstellt APK ohne Debug-Tools
-- Für Beta-Tester
-- Internal Distribution
+- Creates APK without debug tools
+- For beta testers
+- Internal distribution
 
-### 3. Production Build (Release)
+### 3. Production Build (release)
 ```bash
 eas build --profile production --platform android
 ```
-- Erstellt Production APK
-- Für Google Play Store oder direkte Distribution
+- Creates production APK
+- For Google Play Store or direct distribution
 
-## Erste Schritte
+## Getting Started
 
 ### 1. EAS Login
 ```bash
 eas login
 ```
-Du benötigst einen Expo Account (kostenlos bei https://expo.dev)
+You need an Expo account (free at https://expo.dev)
 
-### 2. Projekt konfigurieren
+### 2. Configure project
 ```bash
 eas build:configure
 ```
 
-### 3. Ersten Build starten
+### 3. Start first build
 ```bash
 eas build --profile preview --platform android
 ```
 
-## Lokaler Build (ohne EAS Cloud)
+## Local Build (without EAS Cloud)
 
-Falls Du lokal ohne Expo Cloud bauen möchtest:
+If you want to build locally without Expo Cloud:
 
 ```bash
-# Prebuild - generiert native Android Projekt
+# Prebuild - generates native Android project
 npx expo prebuild --platform android
 
-# Mit Android Studio öffnen oder:
+# Open with Android Studio or:
 cd android
 ./gradlew assembleDebug
 
-# APK findet sich dann in:
+# APK can then be found at:
 # android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## API Konfiguration für Production
+## API Configuration for Production
 
-**Wichtig:** In `app/src/api/config.ts` die Backend-URL für Production anpassen:
+**Important:** Adjust the backend URL for production in `app/src/api/config.ts`:
 
 ```typescript
 export const getApiBaseUrl = async (): Promise<string> => {
   if (Platform.OS === 'web') {
     return 'http://localhost:8080';
   }
-  // Für Android App: Nutze deine echte Backend-URL
-  return 'https://deine-domain.de'; // <-- HIER ANPASSEN
+  // For Android app: use your real backend URL
+  return 'https://your-domain.com'; // <-- ADJUST HERE
 };
 ```
 
-## App signieren (für Production)
+## Signing the app (for production)
 
-Für Google Play Store benötigst Du einen Keystore:
+For Google Play Store you need a keystore:
 
 ```bash
-# EAS kann automatisch einen Keystore erstellen
+# EAS can automatically create a keystore
 eas build --profile production --platform android
 
-# Oder manuell:
+# Or manually:
 keytool -genkeypair -v -keystore my-release-key.keystore -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-## Nächste Schritte
+## Next Steps
 
-1. ✅ EAS Account erstellen
-2. ✅ Ersten Preview Build erstellen
-3. ⏳ App auf Gerät testen
-4. ⏳ Production Build für Play Store
+1. ✅ Create EAS account
+2. ✅ Create first preview build
+3. ⏳ Test app on device
+4. ⏳ Production build for Play Store

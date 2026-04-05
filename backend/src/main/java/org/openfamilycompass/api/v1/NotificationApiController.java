@@ -108,9 +108,9 @@ public class NotificationApiController {
             @Valid @RequestBody NotificationDto.RegisterDeviceRequest request) {
 
         User currentUser = getCurrentUser(jwt);
-        // Bevorzuge die vom Client gesendete stabile Geräte-ID (UUID).
-        // Fallback auf token-basierte ID für Abwärtskompatibilität mit alten
-        // App-Versionen.
+        // Prefer the stable device ID (UUID) sent by the client.
+        // Fall back to token-based ID for backwards compatibility with older
+        // app versions.
         String deviceId = (request.getDeviceId() != null && !request.getDeviceId().isBlank())
                 ? request.getDeviceId()
                 : request.getPlatform() + "_"

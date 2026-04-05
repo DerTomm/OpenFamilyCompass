@@ -10,12 +10,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    // Alle Benachrichtigungen eines Users, neueste zuerst
+    // All notifications for a user, newest first
     List<Notification> findByUserOrderByCreatedAtDesc(User user);
 
-    // Nur ungelesene Benachrichtigungen eines Users
+    // Only unread notifications for a user
     List<Notification> findByUserAndReadAtIsNullOrderByCreatedAtDesc(User user);
 
-    // Anzahl ungelesener Benachrichtigungen eines Users
+    // Number of unread notifications for a user
     long countByUserAndReadAtIsNull(User user);
 }
