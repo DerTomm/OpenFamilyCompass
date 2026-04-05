@@ -12,7 +12,7 @@ public class TaskDefinitionController {
     private String title;
     private String description;
     private int basePoints;
-    private Set<Long> userIds; // Mehrere Kinder
+    private Set<Long> userIds; // Multiple children
     private RecurrenceType recurrenceType;
     private LocalDate startDate;
     private LocalDate seriesEndDate;

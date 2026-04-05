@@ -198,9 +198,9 @@ const BehaviorEvalRow: React.FC<BehaviorEvalRowProps> = ({
   const progressPercentage = totalRange === 0 ? 50 : ((currentPoints + behavior.minusPoints) / totalRange) * 100;
 
   const getProgressColor = () => {
-    if (currentPoints < 0) return '#dc3545'; // Rot für negative Werte
-    if (currentPoints > 0) return '#198754'; // Grün für positive Werte
-    return '#ffc107'; // Gelb für 0
+    if (currentPoints < 0) return '#dc3545'; // Red for negative values
+    if (currentPoints > 0) return '#198754'; // Green for positive values
+    return '#ffc107'; // Yellow for 0
   };
 
   const formatSigned = (value: number) => (value > 0 ? `+${value}` : String(value));

@@ -141,11 +141,13 @@ class TaskInstanceServiceTest {
         assertThat(taskInstance.getStatus()).isEqualTo(TaskStatus.CHILD_COMPLETED);
         assertThat(taskInstance.getCompletedAt()).isNotNull();
 
-        verify(notificationService).createNotification(
+        verify(notificationService).createLocalizedNotification(
                 eq(parent),
                 eq(NotificationType.TASK_COMPLETED),
-                eq("Aufgabe erledigt"),
-                argThat(message -> message.contains("Test Task") && message.contains("TestChild")),
+                eq("notification.task.completed.title"),
+                eq("notification.task.completed.message"),
+                argThat(args -> args != null && args.length == 2
+                        && "TestChild".equals(args[0]) && "Test Task".equals(args[1])),
                 eq(1L));
     }
 
@@ -213,12 +215,13 @@ class TaskInstanceServiceTest {
                 argThat(description -> description.contains("Test Task")),
                 eq(1L), eq(parent));
 
-        verify(notificationService).createNotification(
+        verify(notificationService).createLocalizedNotification(
                 eq(child),
                 eq(NotificationType.TASK_APPROVED),
-                eq("Aufgabe genehmigt"),
-                argThat(message -> message.contains("Test Task") && message.contains("genehmigt")
-                        && message.contains("15")),
+                eq("notification.task.approved.title"),
+                eq("notification.task.approved.message"),
+                argThat(args -> args != null && args.length == 2
+                        && "Test Task".equals(args[0]) && Integer.valueOf(15).equals(args[1])),
                 eq(1L));
     }
 
@@ -265,12 +268,13 @@ class TaskInstanceServiceTest {
 
         verify(pointService, never()).addPoints(any(User.class), any(Integer.class), any(), any(), any(), any());
 
-        verify(notificationService).createNotification(
+        verify(notificationService).createLocalizedNotification(
                 eq(child),
                 eq(NotificationType.TASK_REJECTED),
-                eq("Aufgabe abgelehnt"),
-                argThat(message -> message.contains("Test Task") && message.contains("abgelehnt")
-                        && message.contains(notes)),
+                eq("notification.task.rejected.title"),
+                eq("notification.task.rejected.message"),
+                argThat(args -> args != null && args.length == 1 && "Test Task".equals(args[0])),
+                eq(notes),
                 eq(1L));
     }
 

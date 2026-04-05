@@ -63,7 +63,7 @@ export const BehaviorOverviewScreen: React.FC = () => {
   };
 
   const handleManage = () => {
-    // Stammdaten-Verwaltung ist im "Verwalten"-Bereich
+    // Master data management is in the "Manage" section
     const parent = navigation.getParent<any>();
     parent?.navigate('Manage', { screen: 'BehaviorManage' });
   };

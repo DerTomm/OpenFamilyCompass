@@ -28,7 +28,7 @@ export const ChildDashboardScreen: React.FC = () => {
   const { data: tasks = [], refetch: refetchTasks, isRefetching } = useTaskInstances(user?.id ? { assignedUserId: user.id } : undefined);
   const activeTasks = tasks.filter((task) => ['PENDING', 'IN_PROGRESS'].includes(task.status)).slice(0, 5);
 
-  // Daten neu laden wenn der Screen in den Fokus kommt (z.B. nach Aufgaben-Erstellung durch Elternteil)
+  // Reload data when the screen comes into focus (e.g. after a parent creates a task on another device)
   useFocusEffect(
     useCallback(() => {
       refetchTasks();

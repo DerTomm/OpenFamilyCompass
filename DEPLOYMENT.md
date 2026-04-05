@@ -1,68 +1,68 @@
 # OpenFamilyCompass - Deployment Guide
 
-## 🐳 Docker Deployment (Empfohlen)
+## 🐳 Docker Deployment (Recommended)
 
-Diese Anleitung beschreibt das Deployment von OpenFamilyCompass mit Docker Compose.
+This guide describes the deployment of OpenFamilyCompass using Docker Compose.
 
-### Voraussetzungen
+### Prerequisites
 
 - Docker (>= 20.10)
 - Docker Compose (>= 2.0)
-- Mindestens 2GB freier RAM
-- Mindestens 5GB freier Speicherplatz
+- At least 2 GB free RAM
+- At least 5 GB free disk space
 
-### Schnellstart
+### Quick Start
 
-1. **Repository klonen**
+1. **Clone the repository**
    ```bash
    git clone https://github.com/dertomm/OpenFamilyCompass.git
    cd OpenFamilyCompass
    ```
 
-2. **Umgebungsvariablen konfigurieren**
+2. **Configure environment variables**
    ```bash
    cp .env.example .env
    ```
    
-   Bearbeite die `.env` Datei und setze sichere Passwörter:
+   Edit the `.env` file and set secure passwords:
    ```env
-   POSTGRES_PASSWORD=dein_sicheres_db_passwort
-   APP_ADMIN_DEFAULT_PASSWORD=dein_admin_passwort
+   POSTGRES_PASSWORD=your_secure_db_password
+   APP_ADMIN_DEFAULT_PASSWORD=your_admin_password
    ```
 
-3. **Docker Container starten**
+3. **Start Docker containers**
    ```bash
    docker-compose up -d
    ```
 
-4. **Zugriff auf die Anwendung**
+4. **Access the application**
    - **Expo Go App** (Android/iOS): 
-     - Installiere [Expo Go](https://expo.dev/go) auf deinem Gerät
-     - Scanne den QR-Code in den Logs: `docker-compose logs frontend`
-     - Oder verbinde manuell mit: `exp://localhost:8081`
+     - Install [Expo Go](https://expo.dev/go) on your device
+     - Scan the QR code in the logs: `docker-compose logs frontend`
+     - Or connect manually with: `exp://localhost:8081`
    - **Backend API**: http://localhost:8080
-   - **API Dokumentation**: http://localhost:8080/swagger-ui.html
+   - **API Documentation**: http://localhost:8080/swagger-ui.html
 
-5. **Standard-Login**
+5. **Default login**
    - **Username**: admin
-   - **Passwort**: Das in `.env` gesetzte `APP_ADMIN_DEFAULT_PASSWORD`
+   - **Password**: The `APP_ADMIN_DEFAULT_PASSWORD` set in `.env`
 
 ### Services
 
-Die Docker Compose Konfiguration startet 3 Services:
+The Docker Compose configuration starts 3 services:
 
-| Service | Port | Beschreibung |
-|---------|------|--------------|
-| `postgres` | 5432 | PostgreSQL 16 Datenbank |
+| Service | Port | Description |
+|---------|------|-------------|
+| `postgres` | 5432 | PostgreSQL 16 database |
 | `backend` | 8080 | Spring Boot REST API |
-| `frontend` | 8081 | Expo Metro Bundler (für Expo Go) |
+| `frontend` | 8081 | Expo Metro Bundler (for Expo Go) |
 | `frontend` | 19000/19001 | Expo Dev Server |
 
-### Konfiguration
+### Configuration
 
-#### Ports ändern
+#### Change ports
 
-Ändere die Ports in der `.env` Datei:
+Change the ports in the `.env` file:
 
 ```env
 POSTGRES_PORT=5432
@@ -70,111 +70,111 @@ BACKEND_PORT=8080
 FRONTEND_PORT=3000
 ```
 
-#### Backend API URL für Mobile App
+#### Backend API URL for mobile app
 
-Wenn das Backend auf einem anderen Server läuft, passe die URL in der `.env` an:
+If the backend is running on a different server, adjust the URL in `.env`:
 
 ```env
-EXPO_PUBLIC_API_URL=http://deine-server-ip:8080
+EXPO_PUBLIC_API_URL=http://your-server-ip:8080
 ```
 
-**Wichtig**: Nach Änderung muss der Frontend-Container neu gestartet werden:
+**Important**: After changes, the frontend container must be restarted:
 ```bash
 docker-compose restart frontend
 ```
 
-#### Expo Dev Server für Remote-Zugriff
+#### Expo Dev Server for remote access
 
-Wenn du von einem anderen Gerät (z.B. Smartphone im gleichen Netzwerk) zugreifen möchtest:
+If you want to access from another device (e.g. a smartphone on the same network):
 
 ```env
-EXPO_HOST=192.168.1.100  # Deine Server-IP
+EXPO_HOST=192.168.1.100  # Your server IP
 ```
 
-Dann:
+Then:
 ```bash
 docker-compose up -d --build frontend
 ```
 
-### Docker Befehle
+### Docker Commands
 
-#### Status überprüfen
+#### Check status
 ```bash
 docker-compose ps
 ```
 
-#### Logs anzeigen
+#### Show logs
 ```bash
-# Alle Services
+# All services
 docker-compose logs -f
 
-# Nur Backend
+# Backend only
 docker-compose logs -f backend
 
-# Nur Frontend
+# Frontend only
 docker-compose logs -f frontend
 ```
 
-#### Services neu starten
+#### Restart services
 ```bash
 docker-compose restart
 ```
 
-#### Services stoppen
+#### Stop services
 ```bash
 docker-compose stop
 ```
 
-#### Services stoppen und entfernen
+#### Stop and remove services
 ```bash
 docker-compose down
 ```
 
-#### Datenbank auch löschen
+#### Also delete database
 ```bash
 docker-compose down -v
 ```
 
-#### Container neu bauen
+#### Rebuild containers
 ```bash
 docker-compose up -d --build
 ```
 
-### Datenbank
+### Database
 
-#### Datenbank Backup erstellen
+#### Create database backup
 ```bash
 docker exec ofc-postgres pg_dump -U openfamilycompass_user openfamilycompass_db > backup.sql
 ```
 
-#### Datenbank Backup wiederherstellen
+#### Restore database backup
 ```bash
 cat backup.sql | docker exec -i ofc-postgres psql -U openfamilycompass_user -d openfamilycompass_db
 ```
 
-### Produktions-Deployment
+### Production Deployment
 
-#### Sicherheitsempfehlungen
+#### Security recommendations
 
-1. **Sichere Passwörter verwenden**
+1. **Use secure passwords**
    ```bash
-   # Zufällige Passwörter generieren
+   # Generate random passwords
    openssl rand -base64 32
    ```
 
-2. **HTTPS aktivieren** (mit Reverse Proxy)
-   - Nginx oder Traefik als Reverse Proxy
-   - Let's Encrypt für SSL-Zertifikate
+2. **Enable HTTPS** (with reverse proxy)
+   - Nginx or Traefik as reverse proxy
+   - Let's Encrypt for SSL certificates
 
-3. **Firewall konfigurieren**
-   - Nur Port 80/443 öffnen
-   - Interne Ports (5432, 8080) schließen
+3. **Configure firewall**
+   - Open only ports 80/443
+   - Close internal ports (5432, 8080)
 
-4. **Regelmäßige Backups**
-   - Automatisierte Datenbank-Backups einrichten
-   - Media-Verzeichnis sichern (`media_data` Volume)
+4. **Regular backups**
+   - Set up automated database backups
+   - Back up the media directory (`media_data` volume)
 
-#### Nginx Reverse Proxy Beispiel
+#### Nginx Reverse Proxy Example
 
 ```nginx
 server {
@@ -199,52 +199,52 @@ server {
 
 #### Application Update
 
-1. Code aktualisieren
+1. Update code
    ```bash
    git pull
    ```
 
-2. Container neu bauen
+2. Rebuild containers
    ```bash
    docker-compose up -d --build
    ```
 
-3. Datenbank-Migrationen laufen automatisch (Flyway)
+3. Database migrations run automatically (Flyway)
 
 ### Troubleshooting
 
-#### Frontend zeigt "Network Error"
+#### Frontend shows "Network Error"
 
-- Prüfe `EXPO_PUBLIC_API_URL` in `.env`
-- Backend muss erreichbar sein
-- CORS-Einstellungen prüfen
+- Check `EXPO_PUBLIC_API_URL` in `.env`
+- Backend must be reachable
+- Check CORS settings
 
-#### Backend startet nicht
+#### Backend does not start
 
 ```bash
-# Logs prüfen
+# Check logs
 docker-compose logs backend
 
-# Datenbank erreichbar?
+# Is the database reachable?
 docker-compose exec backend ping postgres
 ```
 
-#### Datenbank-Connection-Fehler
+#### Database connection error
 
 ```bash
-# Postgres Status prüfen
+# Check Postgres status
 docker-compose exec postgres pg_isready -U openfamilycompass_user
 
-# Passwörter in .env prüfen
+# Check passwords in .env
 ```
 
-#### Port bereits belegt
+#### Port already in use
 
 ```bash
-# Belegten Port finden
+# Find port in use
 netstat -tuln | grep 8080
 
-# Anderen Port in .env setzen
+# Set a different port in .env
 BACKEND_PORT=8081
 ```
 
@@ -252,7 +252,7 @@ BACKEND_PORT=8081
 
 #### Healthchecks
 
-Alle Services haben Healthchecks konfiguriert:
+All services have healthchecks configured:
 
 ```bash
 # Postgres
@@ -265,8 +265,8 @@ curl http://localhost:8080/actuator/health
 curl http://localhost:3000/health
 ```
 
-### Ressourcen
+### Resources
 
 - **GitHub**: https://github.com/dertomm/OpenFamilyCompass
-- **Dokumentation**: Siehe README.md
+- **Documentation**: See README.md
 - **Issues**: https://github.com/dertomm/OpenFamilyCompass/issues

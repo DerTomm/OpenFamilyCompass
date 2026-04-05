@@ -216,12 +216,11 @@ public class TaskApiController {
 
             TaskDefinition saved = taskDefinitionService.save(definition);
 
-            // Für ONCE-Aufgaben: TaskInstances für neu zugewiesene Nutzer erstellen (nach
-            // dem save!)
-            // Für wiederkehrende Aufgaben: sofort erstellen wenn heute ein Fälligkeitstag
-            // ist
+            // For ONCE tasks: create TaskInstances for newly assigned users (after
+            // the save!)
+            // For recurring tasks: create immediately if today is a due date
             if (saved.getRecurrenceType() == RecurrenceType.ONCE) {
-                // Nur sofort erstellen, wenn kein zukünftiges Startdatum gesetzt ist
+                // Only create immediately if no future start date is set
                 LocalDate today = LocalDate.now();
                 if (saved.getStartDate() == null || !saved.getStartDate().isAfter(today)) {
                     for (User newUser : newlyAssigned) {
@@ -300,9 +299,9 @@ public class TaskApiController {
         return ResponseEntity.ok(
                 instances.stream()
                         .sorted((a, b) -> {
-                            // Aufgaben ohne Deadline zuerst (sofort fällig), dann nach Deadline aufsteigend
+                            // Tasks without deadline first (due immediately), then by deadline ascending
                             if (a.getDeadline() == null && b.getDeadline() == null) {
-                                // Bei gleicher Deadline-Situation: neueste zuerst
+                                // Same deadline situation: newest first
                                 if (a.getCreatedAt() == null)
                                     return 1;
                                 if (b.getCreatedAt() == null)

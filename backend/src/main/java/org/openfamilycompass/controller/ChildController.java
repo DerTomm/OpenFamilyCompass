@@ -139,7 +139,7 @@ public class ChildController {
                 try {
                         redemptionService.requestReward(freshUser, reward);
                 } catch (IllegalStateException e) {
-                        // Nicht genug Punkte
+                        // Not enough points
                         return "redirect:/child/shop?error=notenough";
                 }
 

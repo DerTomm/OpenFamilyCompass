@@ -64,23 +64,23 @@ public class TaskDefinition {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "task_definition_assigned_users", joinColumns = @JoinColumn(name = "task_definition_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private Set<User> assignedUsers; // Kinder, denen die Aufgabe gilt
+    private Set<User> assignedUsers; // Children assigned to this task
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy; // Elternteil, der die Definition erstellt hat
+    private User createdBy; // Parent who created the definition
 
     @Column(name = "start_date")
-    private LocalDate startDate; // Optional: Wann die Aufgabe startet
+    private LocalDate startDate; // Optional: When the task starts
 
     @Column(name = "series_end_date")
-    private LocalDate seriesEndDate; // Optional: Bis wann eine Wiederholungsserie Instanzen erzeugt
+    private LocalDate seriesEndDate; // Optional: Until when a recurring series generates instances
 
     @Column(name = "deadline")
-    private LocalDateTime deadline; // Optional: Exakter Frist-Zeitpunkt für ONCE-Aufgaben
+    private LocalDateTime deadline; // Optional: Exact deadline timestamp for ONCE tasks
 
     @Column(name = "weekly_days", columnDefinition = "TEXT")
-    private String weeklyDays; // JSON oder kommasepariert: MONDAY,TUESDAY für WEEKLY
+    private String weeklyDays; // JSON or comma-separated: MONDAY,TUESDAY for WEEKLY
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

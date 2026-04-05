@@ -37,7 +37,7 @@ public class TaskInstance {
     private User assignedUser; // Das spezifische Kind
 
     @Column(name = "deadline")
-    private LocalDateTime deadline; // Frist dieser Instanz (Datum+Uhrzeit, null = keine Frist)
+    private LocalDateTime deadline; // Deadline of this instance (date+time, null = no deadline)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

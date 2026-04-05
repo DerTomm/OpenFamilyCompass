@@ -123,7 +123,7 @@ public class ParentController {
         log.info("Form data: title='{}', recurrenceType='{}', startDate='{}', userIds={}",
                 form.getTitle(), form.getRecurrenceType(), form.getStartDate(), form.getUserIds());
 
-        // Für ONCE: Due Date == Start Date (behandelt als End Date im Service)
+        // For ONCE: Due Date == Start Date (treated as End Date in service)
         LocalDate effectiveEndDate = form.getRecurrenceType() == RecurrenceType.ONCE ? form.getStartDate()
                 : form.getSeriesEndDate();
         taskDefinitionService.createTaskDefinition(form.getTitle(), form.getDescription(),
