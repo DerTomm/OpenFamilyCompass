@@ -50,7 +50,7 @@ export const TaskDefinitionEditScreen: React.FC = () => {
   const [basePoints, setBasePoints] = useState('10');
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('ONCE');
   const [startDate, setStartDate] = useState('');
-  const [deadline, setDeadline] = useState('');
+  const [deadline, setDeadline] = useState<string | null>(null);
   const [weeklyDays, setWeeklyDays] = useState<string[]>([]);
   const [monthlyMode, setMonthlyMode] = useState<MonthlyRecurrenceMode>('WEEKDAY_PATTERN');
   const [monthlyWeekNumber, setMonthlyWeekNumber] = useState('2');
@@ -69,7 +69,7 @@ export const TaskDefinitionEditScreen: React.FC = () => {
       setBasePoints(task.basePoints.toString());
       setRecurrenceType(task.recurrenceType);
       setStartDate(task.startDate ? task.startDate.slice(0, 10) : '');
-      setDeadline(task.deadline ? task.deadline.slice(0, 16) : '');
+      setDeadline(task.deadline ? task.deadline.slice(0, 16) : null);
       setWeeklyDays(task.weeklyDays || []);
       setMonthlyMode(task.monthlyMode || 'WEEKDAY_PATTERN');
       setMonthlyWeekNumber(task.monthlyWeekNumber?.toString() || '2');
@@ -197,7 +197,7 @@ export const TaskDefinitionEditScreen: React.FC = () => {
       return;
     }
 
-    const endAt = recurrenceType === 'ONCE' && deadline ? formatDateTimeForApi(deadline) : undefined;
+    const endAt = recurrenceType === 'ONCE' && deadline ? formatDateTimeForApi(deadline) : null;
 
     if ((recurrenceType === 'WEEKLY' || (recurrenceType === 'MONTHLY' && monthlyMode === 'WEEKDAY_PATTERN')) && weeklyDays.length === 0) {
       showError(t('tasks.error.weekly_days_required'), t('error.title'));
@@ -223,25 +223,25 @@ export const TaskDefinitionEditScreen: React.FC = () => {
       basePoints: parseInt(basePoints, 10),
       recurrenceType,
       assignedUserIds,
-      startDate: startDate || undefined,
+      startDate: startDate || null,
       deadline: endAt,
       weeklyDays:
         recurrenceType === 'ONCE' || (recurrenceType === 'MONTHLY' && monthlyMode === 'DAY_OF_MONTH')
-          ? undefined
+          ? null
           : weeklyDays,
-      monthlyMode: recurrenceType === 'MONTHLY' ? monthlyMode : undefined,
+      monthlyMode: recurrenceType === 'MONTHLY' ? monthlyMode : null,
       monthlyWeekNumber:
         recurrenceType === 'MONTHLY' && monthlyMode === 'WEEKDAY_PATTERN'
           ? parseInt(monthlyWeekNumber, 10)
-          : undefined,
+          : null,
       monthlyDayOfMonth:
         recurrenceType === 'MONTHLY' && monthlyMode === 'DAY_OF_MONTH'
           ? parseInt(monthlyDayOfMonth, 10)
-          : undefined,
+          : null,
       monthlyAdjustToLastDay:
         recurrenceType === 'MONTHLY' && monthlyMode === 'DAY_OF_MONTH'
           ? monthlyAdjustToLastDay
-          : undefined,
+          : null,
     };
 
     if (isEditing) {
@@ -366,42 +366,105 @@ export const TaskDefinitionEditScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.label}>{t('tasks.startDate.optional')}</Text>
           <Text style={styles.hint}>{t('tasks.startDate.hint')}</Text>
-          <TouchableOpacity style={styles.selectButton} onPress={openStartDatePicker}>
-            <Text style={styles.selectButtonText}>
-              {startDate ? startDate : t('tasks.startDate.placeholder')}
-            </Text>
-            <MaterialCommunityIcons name="calendar" size={20} color={theme.colors.onSurfaceVariant} />
-          </TouchableOpacity>
-          {React.createElement('input', {
-            ref: startDateInputRef,
-            type: 'date',
-            value: startDate || '',
-            style: { position: 'fixed', opacity: 0, pointerEvents: 'none', width: 0, height: 0 },
-            onChange: (e: any) => setStartDate(e.target.value),
-          })}
-          {startDate ? (
-            <TouchableOpacity onPress={() => setStartDate('')} style={styles.clearButton}>
-              <Text style={styles.clearButtonText}>✕ Startdatum entfernen</Text>
-            </TouchableOpacity>
-          ) : null}
+          {Platform.OS === 'web' ? (
+            <View style={styles.webInputRow}>
+              {React.createElement('input', {
+                type: 'date',
+                value: startDate || '',
+                style: {
+                  flex: 1,
+                  padding: 10,
+                  fontSize: 16,
+                  borderRadius: 8,
+                  border: `1px solid ${theme.colors.outline}`,
+                  backgroundColor: theme.colors.surface,
+                  color: theme.colors.onSurface,
+                  outline: 'none',
+                },
+                onChange: (e: any) => setStartDate(e.target.value),
+              })}
+              {startDate ? (
+                <TouchableOpacity onPress={() => setStartDate('')} style={styles.webClearBtn}>
+                  <MaterialCommunityIcons name="close-circle" size={22} color={theme.colors.error ?? '#d32f2f'} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.selectButton} onPress={openStartDatePicker}>
+                <Text style={styles.selectButtonText}>
+                  {startDate ? startDate : t('tasks.startDate.placeholder')}
+                </Text>
+                <MaterialCommunityIcons name="calendar" size={20} color={theme.colors.onSurfaceVariant} />
+              </TouchableOpacity>
+              {startDate ? (
+                <TouchableOpacity onPress={() => setStartDate('')} style={styles.clearButton}>
+                  <Text style={styles.clearButtonText}>✕ Startdatum entfernen</Text>
+                </TouchableOpacity>
+              ) : null}
+            </>
+          )}
         </View>
 
         {recurrenceType === 'ONCE' && (
           <View style={styles.section}>
             <Text style={styles.label}>{t('tasks.deadline.optional')}</Text>
-            <TouchableOpacity style={styles.selectButton} onPress={openDeadlinePicker}>
-              <Text style={styles.selectButtonText}>
-                {deadline ? formatDateTimeDisplay(deadline) : t('tasks.deadline.pick_placeholder')}
-              </Text>
-              <MaterialCommunityIcons name="calendar" size={20} color={theme.colors.onSurfaceVariant} />
-            </TouchableOpacity>
-            {React.createElement('input', {
-              ref: deadlineInputRef,
-              type: 'datetime-local',
-              value: deadline || '',
-              style: { position: 'fixed', opacity: 0, pointerEvents: 'none', width: 0, height: 0 },
-              onChange: (e: any) => setDeadline(e.target.value),
-            })}
+            {Platform.OS === 'web' ? (
+              <View style={styles.webDateTimeRow}>
+                {React.createElement('input', {
+                  type: 'date',
+                  value: deadline ? deadline.slice(0, 10) : '',
+                  style: {
+                    flex: 1,
+                    padding: 10,
+                    fontSize: 16,
+                    borderRadius: 8,
+                    border: `1px solid ${theme.colors.outline}`,
+                    backgroundColor: theme.colors.surface,
+                    color: theme.colors.onSurface,
+                    outline: 'none',
+                  },
+                  onChange: (e: any) => {
+                    const date = e.target.value;
+                    const time = deadline ? deadline.slice(11, 16) : '23:59';
+                    setDeadline(date ? `${date}T${time}` : '');
+                  },
+                })}
+                {React.createElement('input', {
+                  type: 'time',
+                  value: deadline ? deadline.slice(11, 16) : '',
+                  style: {
+                    width: 110,
+                    padding: 10,
+                    fontSize: 16,
+                    borderRadius: 8,
+                    border: `1px solid ${theme.colors.outline}`,
+                    backgroundColor: theme.colors.surface,
+                    color: theme.colors.onSurface,
+                    outline: 'none',
+                  },
+                  onChange: (e: any) => {
+                    const time = e.target.value;
+                    const date = deadline ? deadline.slice(0, 10) : new Date().toISOString().slice(0, 10);
+                    setDeadline(date && time ? `${date}T${time}` : '');
+                  },
+                })}
+                {deadline ? (
+                  <TouchableOpacity onPress={() => setDeadline(null)} style={styles.webClearBtn}>
+                    <MaterialCommunityIcons name="close-circle" size={22} color={theme.colors.error ?? '#d32f2f'} />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            ) : (
+              <>
+                <TouchableOpacity style={styles.selectButton} onPress={openDeadlinePicker}>
+                  <Text style={styles.selectButtonText}>
+                    {deadline ? formatDateTimeDisplay(deadline) : t('tasks.deadline.pick_placeholder')}
+                  </Text>
+                  <MaterialCommunityIcons name="calendar" size={20} color={theme.colors.onSurfaceVariant} />
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         )}
 
@@ -740,6 +803,19 @@ const createStyles = (theme: any) => StyleSheet.create({
   clearButtonText: {
     fontSize: 13,
     color: theme.colors.error ?? '#d32f2f',
+  },
+  webInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  webDateTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  webClearBtn: {
+    padding: 4,
   },
   buttonContainer: {
     marginTop: 20,

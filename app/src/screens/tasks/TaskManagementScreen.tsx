@@ -38,16 +38,18 @@ export const TaskManagementScreen: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const filteredTasks = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
-    const activeOnceTaskIds = new Set(
+    const activeTaskIds = new Set(
       (taskInstances ?? [])
-        .filter(
-          (instance) =>
-            instance.taskDefinition.recurrenceType === 'ONCE' &&
-            ['PENDING', 'IN_PROGRESS', 'CHILD_COMPLETED'].includes(instance.status)
-        )
+        .filter((instance) => ['PENDING', 'IN_PROGRESS', 'CHILD_COMPLETED'].includes(instance.status))
+        .map((instance) => instance.taskDefinition.id)
+    );
+    const completedTaskIds = new Set(
+      (taskInstances ?? [])
+        .filter((instance) => ['APPROVED', 'REJECTED', 'EXPIRED'].includes(instance.status))
         .map((instance) => instance.taskDefinition.id)
     );
 
@@ -61,10 +63,14 @@ export const TaskManagementScreen: React.FC = () => {
       const matchesChild = selectedChildId
         ? (task.assignedUsers ?? []).some((user) => user.id === selectedChildId)
         : true;
+      // Hide tasks that only have completed instances and no active ones
+      const isCompleted = completedTaskIds.has(task.id) && !activeTaskIds.has(task.id);
+
+      if (!showCompleted && isCompleted) return false;
 
       return matchesSearch && matchesChild;
     });
-  }, [tasks, taskInstances, searchQuery, selectedChildId]);
+  }, [tasks, taskInstances, searchQuery, selectedChildId, showCompleted]);
 
   const handleCreate = () => {
     navigation.navigate('TaskEdit', { taskId: undefined });
@@ -263,11 +269,19 @@ export const TaskManagementScreen: React.FC = () => {
               onPress={() => setSelectedChildId(child.id)}
               style={styles.filterChip}
               showSelectedOverlay
-
             >
               {child.firstName}
             </Chip>
           ))}
+          <Chip
+            selected={showCompleted}
+            onPress={() => setShowCompleted(!showCompleted)}
+            style={styles.filterChip}
+            showSelectedOverlay
+            icon={showCompleted ? 'check-circle' : 'check-circle-outline'}
+          >
+            {t('tasks.completed')}
+          </Chip>
         </ScrollView>
       </View>
 

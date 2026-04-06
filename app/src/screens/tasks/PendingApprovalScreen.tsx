@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
-import { useApproveTask, usePendingTasks, useRejectTask } from '../../hooks/useApi';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useApproveTask, useRejectTask, useTaskInstances } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { TaskInstanceResponse } from '../../types/api';
 
@@ -111,7 +111,8 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
 };
 
 export const PendingApprovalScreen: React.FC = () => {
-  const { data: tasks, isLoading, refetch, isRefetching } = usePendingTasks();
+  const [filter, setFilter] = useState<'active' | 'completed'>('active');
+  const { data: tasks, isLoading, refetch, isRefetching } = useTaskInstances();
   const approveTask = useApproveTask();
   const rejectTask = useRejectTask();
   const { t } = useI18n();
@@ -119,6 +120,16 @@ export const PendingApprovalScreen: React.FC = () => {
   const styles = createStyles(theme);
 
   const [selectedTask, setSelectedTask] = useState<TaskInstanceResponse | null>(null);
+
+  const filteredTasks = tasks?.filter((task) => {
+    if (filter === 'active') {
+      return ['PENDING', 'IN_PROGRESS', 'CHILD_COMPLETED'].includes(task.status);
+    }
+    if (filter === 'completed') {
+      return ['APPROVED', 'REJECTED', 'EXPIRED'].includes(task.status);
+    }
+    return true;
+  });
 
   const handleApprove = (points: number, notes: string) => {
     if (selectedTask) {
@@ -138,33 +149,67 @@ export const PendingApprovalScreen: React.FC = () => {
     }
   };
 
-  const renderTask = ({ item }: { item: TaskInstanceResponse }) => (
-    <TouchableOpacity style={styles.card} onPress={() => setSelectedTask(item)}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.childName}>{item.assignedUser.firstName}</Text>
-        <Text style={styles.completedDate}>
-          {item.completedAt && new Date(item.completedAt).toLocaleDateString()}
-        </Text>
+  const renderTask = ({ item }: { item: TaskInstanceResponse }) => {
+    const isCompleted = ['APPROVED', 'REJECTED', 'EXPIRED'].includes(item.status);
+    const canApprove = item.status === 'CHILD_COMPLETED';
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.childName}>{item.assignedUser.firstName}</Text>
+          <Text style={styles.completedDate}>
+            {item.completedAt && new Date(item.completedAt).toLocaleDateString()}
+          </Text>
+        </View>
+        <Text style={styles.taskTitle}>{item.taskDefinition.title}</Text>
+        <View style={styles.cardFooter}>
+          <View>
+            <Text style={styles.basePoints}>
+              {t('tasks.base')}: {item.taskDefinition.basePoints} {t('points.label')}
+            </Text>
+            {item.awardedPoints !== undefined && (
+              <Text style={styles.awardedPoints}>
+                {t('tasks.pending.award.points')}: {item.awardedPoints} {t('points.label')}
+              </Text>
+            )}
+          </View>
+          {canApprove ? (
+            <TouchableOpacity onPress={() => setSelectedTask(item)}>
+              <Text style={styles.tapToReview}>{t('tasks.pending.tap.review')} →</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.statusText}>
+              {t(`task.status.${item.status}`)}
+            </Text>
+          )}
+        </View>
       </View>
-      <Text style={styles.taskTitle}>{item.taskDefinition.title}</Text>
-      <View style={styles.cardFooter}>
-        <Text style={styles.basePoints}>
-          {t('tasks.base')}: {item.taskDefinition.basePoints} {t('points.label')}
-        </Text>
-        <Text style={styles.tapToReview}>{t('tasks.pending.tap.review')} →</Text>
-      </View>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <View style={styles.filterContainer}>
+        {(['active', 'completed'] as const).map((f) => (
+          <TouchableOpacity
+            key={f}
+            style={[styles.filterButton, filter === f && styles.filterButtonActive]}
+            onPress={() => setFilter(f)}
+          >
+            <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
+              {f === 'active' ? t('status.active') : t('tasks.completed')}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#2196F3" />
         </View>
       ) : (
         <FlatList
-          data={tasks}
+          data={filteredTasks}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderTask}
           contentContainerStyle={styles.listContent}
@@ -174,15 +219,19 @@ export const PendingApprovalScreen: React.FC = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>✅</Text>
-              <Text style={styles.emptyText}>{t('tasks.pending.empty.title')}</Text>
-              <Text style={styles.emptySubtext}>{t('tasks.pending.empty.subtitle')}</Text>
+              <Text style={styles.emptyText}>
+                {filter === 'active' ? t('tasks.pending.empty.title') : 'Keine abgeschlossenen Aufgaben'}
+              </Text>
+              <Text style={styles.emptySubtext}>
+                {filter === 'active' ? t('tasks.pending.empty.subtitle') : 'Hier erscheinen genehmigte oder abgelehnte Aufgaben'}
+              </Text>
             </View>
           }
         />
       )}
 
       <ApprovalModal
-        visible={!!selectedTask}
+        visible={!!selectedTask && selectedTask.status === 'CHILD_COMPLETED'}
         task={selectedTask}
         onClose={() => setSelectedTask(null)}
         onApprove={handleApprove}
@@ -199,6 +248,30 @@ const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    padding: 12,
+    gap: 8,
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+  },
+  filterButtonActive: {
+    backgroundColor: '#2196F3',
+  },
+  filterText: {
+    color: theme.colors.onSurfaceVariant,
+    fontWeight: '500',
+  },
+  filterTextActive: {
+    color: '#fff',
   },
   loading: {
     flex: 1,
@@ -247,6 +320,15 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   tapToReview: {
     color: '#2196F3',
+    fontWeight: '500',
+  },
+  awardedPoints: {
+    color: theme.colors.onSurfaceVariant,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  statusText: {
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '500',
   },
   emptyContainer: {
