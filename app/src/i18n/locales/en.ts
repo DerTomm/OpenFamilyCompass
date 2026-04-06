@@ -385,8 +385,9 @@ export const en = {
     'admin.users.no_users': 'No users found',
     'admin.users.error.last_admin': 'The last active administrator cannot be deactivated!',
     'admin.users.error.last_admin_delete': 'The last active administrator cannot be deleted!',
-
-    // Common
+    'admin.users.language': 'Language',
+    'admin.users.language.en': 'English',
+    'admin.users.language.de': 'German',
     'common.success': 'Success',
     'common.error': 'Error',
     'error.title': 'Error',

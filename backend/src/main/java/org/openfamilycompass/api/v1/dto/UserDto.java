@@ -86,6 +86,9 @@ public class UserDto {
 
         @NotNull
         private UserRole role;
+
+        /** ISO 639-1 language code, e.g. "en" or "de". Defaults to "en" when null. */
+        private String language;
     }
 
     @Data
@@ -100,6 +103,9 @@ public class UserDto {
         private Boolean active;
 
         private UserRole role;
+
+        /** ISO 639-1 language code, e.g. "en" or "de". */
+        private String language;
     }
 
     @Data

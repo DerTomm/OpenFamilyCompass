@@ -75,6 +75,7 @@ public class UserApiController {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setRole(request.getRole());
+        user.setLanguage(request.getLanguage());
         user.setActive(true);
 
         User saved = userService.save(user);
@@ -111,6 +112,9 @@ public class UserApiController {
         }
         if (request.getRole() != null) {
             user.setRole(request.getRole());
+        }
+        if (request.getLanguage() != null) {
+            user.setLanguage(request.getLanguage());
         }
 
         User saved = userService.save(user);

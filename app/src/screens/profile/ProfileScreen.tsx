@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
@@ -6,9 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
-  Avatar,
   Button,
   Dialog,
   Divider,
@@ -24,14 +23,14 @@ import {
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { profileApi } from '../../api/services';
+import { AvatarPicker, UserAvatar } from '../../components/ui';
+import { Avatar as AvatarType } from '../../constants/avatars';
 import { usePointTransactions } from '../../hooks/useApi';
+import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { useTheme as useAppTheme } from '../../theme/ThemeContext';
 import { spacing } from '../../theme/theme';
-import { useDialogs } from '../../hooks/useDialogs';
-import { AvatarPicker, UserAvatar } from '../../components/ui';
-import { Avatar as AvatarType } from '../../constants/avatars';
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout, fetchUser } = useAuthStore();
@@ -362,6 +361,7 @@ export const ProfileScreen: React.FC = () => {
             <RadioButton.Group
               onValueChange={(value) => {
                 setLanguage(value as any);
+                updateProfileMutation.mutate({ language: value as any });
                 setLanguageDialogVisible(false);
               }}
               value={language}

@@ -1,3 +1,4 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
@@ -14,14 +15,13 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { usersApi } from '../../api/services';
+import { UserAvatar } from '../../components/ui';
+import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { UserResponse, UserRole } from '../../types/api';
-import { useDialogs } from '../../hooks/useDialogs';
-import { UserAvatar } from '../../components/ui';
 
 const ROLE_COLORS: Record<UserRole, string> = {
   ADMIN: '#F44336',
@@ -60,19 +60,19 @@ const UserRow: React.FC<UserRowProps> = ({ user, onEdit, onToggleActive, onDelet
           <TouchableOpacity style={styles.iconButton} onPress={onEdit}>
             <MaterialIcons name="edit" size={20} color="#2196F3" />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.iconButton, isLastActiveAdmin && styles.iconButtonDisabled]} 
+          <TouchableOpacity
+            style={[styles.iconButton, isLastActiveAdmin && styles.iconButtonDisabled]}
             onPress={onToggleActive}
             disabled={isLastActiveAdmin}
           >
-            <MaterialIcons 
-              name={user.active ? "toggle-on" : "toggle-off"} 
-              size={24} 
-              color={isLastActiveAdmin ? "#ccc" : (user.active ? "#4CAF50" : "#999")} 
+            <MaterialIcons
+              name={user.active ? "toggle-on" : "toggle-off"}
+              size={24}
+              color={isLastActiveAdmin ? "#ccc" : (user.active ? "#4CAF50" : "#999")}
             />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.iconButton, isLastActiveAdmin && styles.iconButtonDisabled]} 
+          <TouchableOpacity
+            style={[styles.iconButton, isLastActiveAdmin && styles.iconButtonDisabled]}
             onPress={onDelete}
             disabled={isLastActiveAdmin}
           >
@@ -110,22 +110,22 @@ const UserRow: React.FC<UserRowProps> = ({ user, onEdit, onToggleActive, onDelet
             {t('button.edit')}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.mobileActionButton, isLastActiveAdmin && styles.mobileActionButtonDisabled]} 
+        <TouchableOpacity
+          style={[styles.mobileActionButton, isLastActiveAdmin && styles.mobileActionButtonDisabled]}
           onPress={onToggleActive}
           disabled={isLastActiveAdmin}
         >
-          <MaterialIcons 
-            name={user.active ? "toggle-on" : "toggle-off"} 
-            size={20} 
-            color={isLastActiveAdmin ? "#ccc" : (user.active ? "#4CAF50" : "#999")} 
+          <MaterialIcons
+            name={user.active ? "toggle-on" : "toggle-off"}
+            size={20}
+            color={isLastActiveAdmin ? "#ccc" : (user.active ? "#4CAF50" : "#999")}
           />
           <Text style={[styles.actionButtonText, { color: isLastActiveAdmin ? '#ccc' : (user.active ? '#4CAF50' : '#999') }]}>
             {user.active ? t('admin.users.deactivate') : t('admin.users.activate')}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.mobileActionButton, isLastActiveAdmin && styles.mobileActionButtonDisabled]} 
+        <TouchableOpacity
+          style={[styles.mobileActionButton, isLastActiveAdmin && styles.mobileActionButtonDisabled]}
           onPress={onDelete}
           disabled={isLastActiveAdmin}
         >
@@ -143,22 +143,29 @@ interface EditUserModalProps {
   visible: boolean;
   user: UserResponse | null;
   onClose: () => void;
-  onSubmit: (data: { firstName: string; role: string; password?: string }) => void;
+  onSubmit: (data: { firstName: string; role: string; language: string; password?: string }) => void;
   isLoading: boolean;
   t: (key: string) => string;
   showError: (message: string, title?: string) => void;
   styles: any;
 }
 
+const LANGUAGE_COLORS: Record<string, string> = {
+  en: '#2196F3',
+  de: '#4CAF50',
+};
+
 const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, onSubmit, isLoading, t, showError, styles }) => {
   const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('CHILD');
+  const [language, setLanguage] = useState('en');
 
   React.useEffect(() => {
     if (user) {
       setFirstName(user.firstName);
       setRole(user.role);
+      setLanguage(user.language || 'en');
       setPassword('');
     }
   }, [user]);
@@ -168,17 +175,18 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, o
       showError(t('admin.users.create.error.fields'), t('common.error'));
       return;
     }
-    
-    const data: { firstName: string; role: string; password?: string } = {
+
+    const data: { firstName: string; role: string; language: string; password?: string } = {
       firstName,
       role,
+      language,
     };
-    
+
     // Only include password if it was changed
     if (password) {
       data.password = password;
     }
-    
+
     onSubmit(data);
   };
 
@@ -235,6 +243,23 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, o
             </View>
           </View>
 
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>{t('admin.users.language')}</Text>
+            <View style={styles.roleSelector}>
+              {(['en', 'de'] as const).map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[styles.roleOption, language === lang && { backgroundColor: LANGUAGE_COLORS[lang] }]}
+                  onPress={() => setLanguage(lang)}
+                >
+                  <Text style={[styles.roleOptionText, language === lang && styles.roleOptionTextActive]}>
+                    {t(`admin.users.language.${lang}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}
@@ -259,7 +284,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, o
 interface CreateUserModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: { username: string; password: string; firstName: string; role: string }) => void;
+  onSubmit: (data: { username: string; password: string; firstName: string; role: string; language: string }) => void;
   isLoading: boolean;
   t: (key: string) => string;
   showError: (message: string, title?: string) => void;
@@ -271,13 +296,14 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onS
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [role, setRole] = useState<UserRole>('CHILD');
+  const [language, setLanguage] = useState('en');
 
   const handleSubmit = () => {
     if (!username || !password || !firstName) {
       showError(t('admin.users.create.error.fields'), t('common.error'));
       return;
     }
-    onSubmit({ username, password, firstName, role });
+    onSubmit({ username, password, firstName, role, language });
   };
 
   const resetForm = () => {
@@ -285,6 +311,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onS
     setPassword('');
     setFirstName('');
     setRole('CHILD');
+    setLanguage('en');
   };
 
   React.useEffect(() => {
@@ -339,7 +366,24 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ visible, onClose, onS
                   onPress={() => setRole(r)}
                 >
                   <Text style={[styles.roleOptionText, role === r && styles.roleOptionTextActive]}>
-                    {r}
+                    {t(`role.${r.toLowerCase()}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>{t('admin.users.language')}</Text>
+            <View style={styles.roleSelector}>
+              {(['en', 'de'] as const).map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[styles.roleOption, language === lang && { backgroundColor: LANGUAGE_COLORS[lang] }]}
+                  onPress={() => setLanguage(lang)}
+                >
+                  <Text style={[styles.roleOptionText, language === lang && styles.roleOptionTextActive]}>
+                    {t(`admin.users.language.${lang}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -384,7 +428,7 @@ export const UserListScreen: React.FC = () => {
   const isLastActiveAdmin = (user: UserResponse, allUsers: UserResponse[] | undefined): boolean => {
     if (user.role !== 'ADMIN') return false;
     if (!allUsers) return false;
-    
+
     const activeAdmins = allUsers.filter(u => u.role === 'ADMIN' && u.active);
     return activeAdmins.length === 1 && activeAdmins[0].id === user.id;
   };
@@ -412,7 +456,7 @@ export const UserListScreen: React.FC = () => {
   });
 
   const updateUser = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{ firstName: string; password: string; role: string }> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<{ firstName: string; password: string; role: string; language: string }> }) =>
       usersApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

@@ -90,11 +90,16 @@ public class NotificationService {
         return createNotification(user, type, title, message, referenceId);
     }
 
-    /** Derives a {@link Locale} from the user's stored language preference. */
+    /**
+     * Derives a {@link Locale} from the user's stored language preference.
+     * Returns {@link Locale#ROOT} for null/blank/"en" so that Spring's
+     * {@code MessageSource} falls back to the default {@code messages.properties}
+     * file instead of looking for the non-existent {@code messages_en.properties}.
+     */
     private Locale resolveLocale(User user) {
         String lang = user.getLanguage();
-        if (lang == null || lang.isBlank()) {
-            return Locale.ENGLISH;
+        if (lang == null || lang.isBlank() || "en".equalsIgnoreCase(lang)) {
+            return Locale.ROOT;
         }
         return Locale.forLanguageTag(lang);
     }
