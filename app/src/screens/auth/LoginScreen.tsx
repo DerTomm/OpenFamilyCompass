@@ -162,6 +162,8 @@ export const LoginScreen: React.FC = () => {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
           />
         </View>
 

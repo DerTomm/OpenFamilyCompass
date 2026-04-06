@@ -78,7 +78,27 @@ public class TaskDefinitionService {
                         title, startDate);
             }
         } else {
-            log.info("NOT creating TaskInstances: recurrenceType={}, seriesEndDate={}", recurrenceType, seriesEndDate);
+            // For recurring tasks: if today is a valid due date and the start date is not
+            // in the future, create an instance immediately so the user gets notified right
+            // away.
+            LocalDate today = LocalDate.now();
+            if (startDate == null || !startDate.isAfter(today)) {
+                LocalDate dueDate = calculateNextDueDate(today, savedDefinition);
+                if (dueDate != null
+                        && (seriesEndDate == null || !dueDate.isAfter(seriesEndDate))) {
+                    log.info("Creating initial TaskInstances for recurring task '{}' (due today: {})", title, dueDate);
+                    for (User user : assignedUsers) {
+                        taskInstanceService.createTaskInstance(savedDefinition, user, dueDate.atTime(23, 59, 59));
+                    }
+                } else {
+                    log.info(
+                            "Recurring task '{}': today is not a due date (recurrenceType={}), first instance will be created by scheduler",
+                            title, recurrenceType);
+                }
+            } else {
+                log.info("Recurring task '{}' has a future start date ({}), instances will be created by scheduler",
+                        title, startDate);
+            }
         }
 
         return savedDefinition;

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Crypto from 'expo-crypto';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { notificationsApi } from '../api/services';
 
@@ -24,11 +24,23 @@ const getOrCreateDeviceId = async (): Promise<string> => {
 /**
  * Registers the device with Firebase Cloud Messaging (FCM) and
  * sends the token to the backend as soon as the user is logged in.
+ * Unregisters the token when the user logs out.
  * Works only in Development/Production builds, not in Expo Go.
  */
 export const usePushNotifications = (isAuthenticated: boolean) => {
+    // Keep track of the current FCM token so we can unregister it on logout
+    const currentTokenRef = useRef<string | null>(null);
+
     useEffect(() => {
-        if (!isAuthenticated || Platform.OS === 'web' || isExpoGo) return;
+        if (Platform.OS === 'web' || isExpoGo) return;
+
+        if (!isAuthenticated) {
+            // Token is already unregistered by authStore.logout() before tokens are cleared.
+            // Just clean up the local ref and stored token.
+            currentTokenRef.current = null;
+            AsyncStorage.removeItem('fcm_current_token').catch(() => { });
+            return;
+        }
 
         // Dynamic import – only reached outside of Expo Go
         // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -47,6 +59,8 @@ export const usePushNotifications = (isAuthenticated: boolean) => {
                 const tokenData = await Notifications.getDevicePushTokenAsync();
                 const fcmToken = tokenData.data as string;
 
+                currentTokenRef.current = fcmToken;
+                await AsyncStorage.setItem('fcm_current_token', fcmToken);
                 await notificationsApi.registerDevice(fcmToken, Platform.OS as 'android' | 'ios', deviceId);
                 console.log('[FCM] Gerät erfolgreich registriert');
             } catch (error) {
@@ -59,6 +73,8 @@ export const usePushNotifications = (isAuthenticated: boolean) => {
         subscription = Notifications.addPushTokenListener(async (newToken: { data: string }) => {
             try {
                 const deviceId = await getOrCreateDeviceId();
+                currentTokenRef.current = newToken.data;
+                await AsyncStorage.setItem('fcm_current_token', newToken.data);
                 await notificationsApi.registerDevice(
                     newToken.data,
                     Platform.OS as 'android' | 'ios',

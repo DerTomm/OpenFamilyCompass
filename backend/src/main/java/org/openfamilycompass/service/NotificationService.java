@@ -43,7 +43,7 @@ public class NotificationService {
         // Send push notification to all user's devices
         log.debug("NOTIFICATION: Created notification for user {}, sending push...", user.getId());
         List<String> tokens = userService.getFcmTokensForUser(user.getId());
-        log.debug("NOTIFICATION: Found {} FCM tokens for user", tokens.size());
+        log.debug("NOTIFICATION: Found {} FCM tokens for user {}", tokens.size(), user.getId());
         fcmService.sendPushNotificationToUser(tokens, title, message);
 
         return savedNotification;

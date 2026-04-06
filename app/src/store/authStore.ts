@@ -1,6 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { api } from '../api/client';
 import { getApiBaseUrl, secureStorage, STORAGE_KEYS } from '../api/config';
+import { notificationsApi } from '../api/services';
 import { UserProfileResponse, UserRole } from '../types/api';
 
 interface AuthState {
@@ -55,28 +57,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({ isAuthenticated: false, user: null });
           }
         } else {
-            // Token expired - try to refresh it before giving up
-            try {
-                const refreshToken = await secureStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-                if (refreshToken) {
-                     const baseUrl = await getApiBaseUrl();
-                     const response = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ refreshToken })
-                     });
+          // Token expired - try to refresh it before giving up
+          try {
+            const refreshToken = await secureStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+            if (refreshToken) {
+              const baseUrl = await getApiBaseUrl();
+              const response = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ refreshToken })
+              });
 
-                     if (response.ok) {
-                        const data = await response.json();
-                        await get().setTokens(data.accessToken, data.refreshToken, data.expiresIn);
-                        return; // Successfully refreshed and set tokens (which fetches user)
-                     }
-                }
-            } catch (refreshErr) {
-                console.error('Initial refresh failed', refreshErr);
+              if (response.ok) {
+                const data = await response.json();
+                await get().setTokens(data.accessToken, data.refreshToken, data.expiresIn);
+                return; // Successfully refreshed and set tokens (which fetches user)
+              }
             }
+          } catch (refreshErr) {
+            console.error('Initial refresh failed', refreshErr);
+          }
 
           // Token expired and refresh failed/not possible - clear only auth data (keep SERVER_URL)
           console.warn('Token expired, clearing auth state');
@@ -121,12 +123,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await secureStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
       console.log('[AUTH] Access token stored');
-      
+
       if (refreshToken) {
         await secureStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
         console.log('[AUTH] Refresh token stored');
       }
-      
+
       const expiry = (Date.now() + expiresIn * 1000).toString();
       await secureStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiry);
       console.log('[AUTH] Token expiry stored:', new Date(parseInt(expiry)));
@@ -139,16 +141,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       console.log('[AUTH] Fetching user profile...');
       try {
-          await get().fetchUser();
-          console.log('[AUTH] User profile fetched, setting authenticated=true');
-          set({ isAuthenticated: true });
+        await get().fetchUser();
+        console.log('[AUTH] User profile fetched, setting authenticated=true');
+        set({ isAuthenticated: true });
       } catch (err) {
-          console.error('[AUTH] Failed to fetch user profile after setting tokens:', err);
-          // Don't throw here, otherwise the login screen might show a generic error.
-          // The user might be logged in but the profile fetch failed (e.g. temporary network issue).
-          // However, for consistency, if profile fetch fails, we might want to consider it a failed login
-          // or just proceed with limited info. For now, let's re-throw to be safe so UI handles it.
-          throw err; 
+        console.error('[AUTH] Failed to fetch user profile after setting tokens:', err);
+        // Don't throw here, otherwise the login screen might show a generic error.
+        // The user might be logged in but the profile fetch failed (e.g. temporary network issue).
+        // However, for consistency, if profile fetch fails, we might want to consider it a failed login
+        // or just proceed with limited info. For now, let's re-throw to be safe so UI handles it.
+        throw err;
       }
       console.log('[AUTH] setTokens complete');
     } catch (error) {
@@ -174,7 +176,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       console.log('[LOGOUT] Starting client-side logout...');
 
-      // 1. Clear all tokens from secure storage
+      // 1. Unregister FCM device token while access token is still valid
+      try {
+        const fcmToken = await AsyncStorage.getItem('fcm_current_token');
+        if (fcmToken) {
+          await notificationsApi.unregisterDevice(fcmToken);
+          console.log('[LOGOUT] FCM device token unregistered');
+        }
+      } catch (fcmErr) {
+        console.warn('[LOGOUT] Failed to unregister FCM token:', fcmErr);
+      } finally {
+        // Always clear FCM state so the next user gets a fresh device record
+        await AsyncStorage.removeItem('fcm_current_token');
+        await AsyncStorage.removeItem('fcm_device_id');
+      }
+
+      // 2. Clear all tokens from secure storage
       console.log('[LOGOUT] Clearing tokens and auth data...');
       await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
       await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);

@@ -122,17 +122,14 @@ public class NotificationApiController {
     }
 
     @PostMapping("/unregister-device")
+    @Transactional
     @Operation(summary = "Unregister device from push notifications")
     public ResponseEntity<Void> unregisterDevice(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody NotificationDto.UnregisterDeviceRequest request) {
 
-        // Find device by FCM token in all user's devices
         User currentUser = getCurrentUser(jwt);
-        userDeviceRepository.findByUser(currentUser).stream()
-                .filter(d -> d.getFcmToken().equals(request.getToken()))
-                .findFirst()
-                .ifPresent(userDeviceRepository::delete);
+        userDeviceRepository.deleteByUserAndFcmToken(currentUser, request.getToken());
 
         return ResponseEntity.noContent().build();
     }
