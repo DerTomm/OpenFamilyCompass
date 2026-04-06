@@ -4,9 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
-  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -126,35 +124,8 @@ export const RewardEditScreen: React.FC = () => {
     }
   };
 
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(t('error.title'), t('rewards.image.permission_denied'));
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets.length > 0) {
-      setLocalImageUri(result.assets[0].uri);
-    }
-  };
-
   const handleSelectImage = () => {
-    if (Platform.OS === 'android') {
-      Alert.alert(
-        t('rewards.image.select_title'),
-        undefined,
-        [
-          { text: t('rewards.image.from_gallery'), onPress: pickImage },
-          { text: t('rewards.image.take_photo'), onPress: takePhoto },
-          { text: t('button.cancel'), style: 'cancel' },
-        ]
-      );
-    } else {
-      pickImage();
-    }
+    pickImage();
   };
 
   const handleDelete = () => {

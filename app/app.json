@@ -2,7 +2,7 @@
   "expo": {
     "name": "OpenFamilyCompass",
     "slug": "openfamilycompass",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "org.openfamilycompass.android",
-      "versionCode": 1,
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2196F3"
@@ -26,7 +26,6 @@
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
-        "CAMERA",
         "READ_MEDIA_IMAGES",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
@@ -54,8 +53,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Die App benötigt Zugriff auf deine Fotos, um Belohnungsbilder hinzuzufügen.",
-          "cameraPermission": "Die App benötigt Zugriff auf die Kamera, um Fotos für Belohnungen aufzunehmen."
+          "photosPermission": "Die App benötigt Zugriff auf deine Fotos, um Belohnungsbilder hinzuzufügen."
         }
       ],
       "expo-localization",

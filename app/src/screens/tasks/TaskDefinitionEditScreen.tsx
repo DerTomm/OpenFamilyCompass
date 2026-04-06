@@ -197,7 +197,7 @@ export const TaskDefinitionEditScreen: React.FC = () => {
       return;
     }
 
-    const endAt = recurrenceType === 'ONCE' && deadline ? formatDateTimeForApi(deadline) : null;
+    const endAt = recurrenceType === 'ONCE' && deadline ? formatDateTimeForApi(deadline) : undefined;
 
     if ((recurrenceType === 'WEEKLY' || (recurrenceType === 'MONTHLY' && monthlyMode === 'WEEKDAY_PATTERN')) && weeklyDays.length === 0) {
       showError(t('tasks.error.weekly_days_required'), t('error.title'));
@@ -223,25 +223,25 @@ export const TaskDefinitionEditScreen: React.FC = () => {
       basePoints: parseInt(basePoints, 10),
       recurrenceType,
       assignedUserIds,
-      startDate: startDate || null,
+      startDate: startDate || undefined,
       deadline: endAt,
       weeklyDays:
         recurrenceType === 'ONCE' || (recurrenceType === 'MONTHLY' && monthlyMode === 'DAY_OF_MONTH')
-          ? null
+          ? undefined
           : weeklyDays,
-      monthlyMode: recurrenceType === 'MONTHLY' ? monthlyMode : null,
+      monthlyMode: recurrenceType === 'MONTHLY' ? monthlyMode : undefined,
       monthlyWeekNumber:
         recurrenceType === 'MONTHLY' && monthlyMode === 'WEEKDAY_PATTERN'
           ? parseInt(monthlyWeekNumber, 10)
-          : null,
+          : undefined,
       monthlyDayOfMonth:
         recurrenceType === 'MONTHLY' && monthlyMode === 'DAY_OF_MONTH'
           ? parseInt(monthlyDayOfMonth, 10)
-          : null,
+          : undefined,
       monthlyAdjustToLastDay:
         recurrenceType === 'MONTHLY' && monthlyMode === 'DAY_OF_MONTH'
           ? monthlyAdjustToLastDay
-          : null,
+          : undefined,
     };
 
     if (isEditing) {
