@@ -32,14 +32,15 @@ export const darkTheme: MD3Theme = {
         error: customColors.error,
 
         // Surface colors for dark mode
-        background: '#121212',
-        surface: '#1E1E1E',
-        surfaceVariant: '#2C2C2C',
+        background: '#111111',
+        surface: '#1C1C1C',
+        surfaceVariant: '#484848',
+        outline: '#888888',
 
         // Text colors
         onBackground: '#FFFFFF',
         onSurface: '#FFFFFF',
-        onSurfaceVariant: '#B0B0B0',
+        onSurfaceVariant: '#CCCCCC',
     },
     roundness: 12,
 };

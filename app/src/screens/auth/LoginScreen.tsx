@@ -92,7 +92,7 @@ export const LoginScreen: React.FC = () => {
       <View style={styles.content}>
         {/* Logo Section */}
         <View style={styles.logoContainer}>
-          <Surface style={[styles.logoCircle, { backgroundColor: theme.colors.primary + '20' }]} elevation={2}>
+          <Surface style={[styles.logoCircle, { backgroundColor: '#D0D0D0' }]} elevation={3}>
             <Image
               source={require('../../../assets/icon.png')}
               style={{ width: 100, height: 100 }}
@@ -100,7 +100,7 @@ export const LoginScreen: React.FC = () => {
             />
           </Surface>
 
-          <Text variant="displaySmall" style={[styles.title, { color: theme.colors.onBackground }]}>
+          <Text variant="headlineLarge" style={[styles.title, { color: theme.colors.onBackground }]}>
             {t('app.name')}
           </Text>
 
@@ -300,6 +300,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: '700',
+    textAlign: 'center',
     marginBottom: 4,
   },
   titleAccent: {
@@ -372,6 +373,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 24,
+    width: '100%',
   },
   inputLabel: {
     marginBottom: 8,
@@ -381,6 +383,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+    width: '100%',
   },
   inputHint: {
     marginTop: 4,
