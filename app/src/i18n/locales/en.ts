@@ -124,7 +124,7 @@ export const en = {
     'tasks.error.monthly_day_required': 'Please enter a valid day in month (1-31)',
     'tasks.definitions.empty': 'No tasks created yet.',
     'tasks.complete': 'Complete',
-    'tasks.completed': 'Completed! 🎉',
+    'tasks.completed': 'Completed Tasks',
     'tasks.pending.title': 'Approve Tasks',
     'tasks.pending.none': 'No tasks awaiting approval.',
     'tasks.pending.approve': 'Approve',

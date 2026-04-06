@@ -113,7 +113,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, isCompleting, isC
   );
 };
 
-type FilterStatus = 'all' | 'active' | 'completed';
+type FilterStatus = 'active' | 'completed';
 
 export const TaskListScreen: React.FC = () => {
   const [filter, setFilter] = useState<FilterStatus>('active');
@@ -146,14 +146,14 @@ export const TaskListScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.filterContainer}>
-        {(['active', 'completed', 'all'] as FilterStatus[]).map((f) => (
+        {(['active', 'completed'] as FilterStatus[]).map((f) => (
           <TouchableOpacity
             key={f}
             style={[styles.filterButton, filter === f && styles.filterButtonActive]}
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'active' ? t('status.active') : f === 'completed' ? t('tasks.completed') : t('children.all')}
+              {f === 'active' ? t('status.active') : t('tasks.completed')}
             </Text>
           </TouchableOpacity>
         ))}

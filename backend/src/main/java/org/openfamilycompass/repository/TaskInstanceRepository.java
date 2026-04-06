@@ -30,4 +30,11 @@ public interface TaskInstanceRepository extends JpaRepository<TaskInstance, Long
     List<TaskInstance> findByStatusAndDeadlineBefore(TaskStatus status, LocalDateTime dateTime);
 
     void deleteByTaskDefinition_Id(Long taskDefinitionId);
+
+    @Query("SELECT t FROM TaskInstance t WHERE t.taskDefinition.id = :taskDefinitionId AND t.assignedUser = :user")
+    List<TaskInstance> findByTaskDefinitionIdAndAssignedUser(Long taskDefinitionId, User user);
+
+    @Query("SELECT t FROM TaskInstance t WHERE t.taskDefinition.id = :taskDefinitionId AND t.status IN :statuses AND t.assignedUser = :user")
+    List<TaskInstance> findByTaskDefinitionIdAndStatusInAndAssignedUser(Long taskDefinitionId,
+            List<TaskStatus> statuses, User user);
 }

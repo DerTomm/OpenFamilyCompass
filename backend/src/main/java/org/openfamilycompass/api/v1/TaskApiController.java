@@ -136,39 +136,42 @@ public class TaskApiController {
             @PathVariable Long id,
             @Valid @RequestBody TaskDto.UpdateDefinitionRequest request) {
 
-        TaskDefinition definition = taskDefinitionService.findById(id)
+        TaskDefinition existing = taskDefinitionService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task definition not found"));
 
-        if (request.getTitle() != null) {
-            definition.setTitle(request.getTitle());
+        // Resolve fields, falling back to current values when the request omits them
+        String title = request.getTitle() != null ? request.getTitle() : existing.getTitle();
+        String description = request.getDescription() != null ? request.getDescription() : existing.getDescription();
+        int basePoints = request.getBasePoints() != null ? request.getBasePoints() : existing.getBasePoints();
+        RecurrenceType recurrenceType = request.getRecurrenceType() != null
+                ? request.getRecurrenceType()
+                : existing.getRecurrenceType();
+        LocalDate startDate = request.getStartDate() != null ? request.getStartDate() : existing.getStartDate();
+        LocalDate seriesEndDate = recurrenceType != RecurrenceType.ONCE
+                ? (request.getSeriesEndDate() != null ? request.getSeriesEndDate() : existing.getSeriesEndDate())
+                : null;
+        LocalDateTime deadline = recurrenceType == RecurrenceType.ONCE ? request.getDeadline() : null;
+
+        Set<User> assignedUsers = new HashSet<>();
+        java.util.Collection<Long> userIds = request.getAssignedUserIds() != null
+                ? request.getAssignedUserIds()
+                : existing.getAssignedUsers().stream().map(User::getId).collect(Collectors.toList());
+        for (Long userId : userIds) {
+            User user = userService.findById(userId)
+                    .orElseThrow(
+                            () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found: " + userId));
+            assignedUsers.add(user);
         }
-        if (request.getDescription() != null) {
-            definition.setDescription(request.getDescription());
-        }
-        if (request.getBasePoints() != null) {
-            definition.setBasePoints(request.getBasePoints());
-        }
-        if (request.getRecurrenceType() != null) {
-            definition.setRecurrenceType(request.getRecurrenceType());
-        }
-        if (request.getStartDate() != null) {
-            definition.setStartDate(request.getStartDate());
-        }
-        if (request.getSeriesEndDate() != null) {
-            definition.setSeriesEndDate(request.getSeriesEndDate());
-        }
-        if (request.getDeadline() != null) {
-            definition.setDeadline(request.getDeadline());
-        }
-        RecurrenceType effectiveRecurrence = definition.getRecurrenceType();
-        if (request.getWeeklyDays() != null || request.getMonthlyWeekNumber() != null
-                || request.getMonthlyMode() != null
-                || request.getMonthlyDayOfMonth() != null || request.getMonthlyAdjustToLastDay() != null
-                || request.getRecurrenceType() != null) {
-            String currentSchedule = definition.getWeeklyDays();
+
+        // Build schedule payload from request or keep existing
+        String weeklyDaysPayload;
+        if (request.getWeeklyDays() != null || request.getMonthlyMode() != null
+                || request.getMonthlyWeekNumber() != null || request.getMonthlyDayOfMonth() != null
+                || request.getMonthlyAdjustToLastDay() != null || request.getRecurrenceType() != null) {
+            String currentSchedule = existing.getWeeklyDays();
             List<String> effectiveDays = request.getWeeklyDays() != null
                     ? request.getWeeklyDays()
-                    : extractDaysFromStoredSchedule(currentSchedule, effectiveRecurrence);
+                    : extractDaysFromStoredSchedule(currentSchedule, recurrenceType);
             String effectiveMonthlyMode = request.getMonthlyMode() != null
                     ? request.getMonthlyMode()
                     : extractMonthlyMode(currentSchedule);
@@ -181,66 +184,18 @@ public class TaskApiController {
             Boolean effectiveMonthlyAdjustToLastDay = request.getMonthlyAdjustToLastDay() != null
                     ? request.getMonthlyAdjustToLastDay()
                     : extractMonthlyAdjustToLastDay(currentSchedule);
-
-            validateRecurrenceConfiguration(
-                    effectiveRecurrence,
-                    effectiveDays,
-                    effectiveMonthlyMode,
-                    effectiveMonthlyWeekNumber,
-                    effectiveMonthlyDayOfMonth);
-            definition.setWeeklyDays(buildSchedulePayload(
-                    effectiveRecurrence,
-                    effectiveDays,
-                    effectiveMonthlyMode,
-                    effectiveMonthlyWeekNumber,
-                    effectiveMonthlyDayOfMonth,
-                    effectiveMonthlyAdjustToLastDay));
-        }
-        if (request.getAssignedUserIds() != null) {
-            Set<User> previousUsers = new HashSet<>(definition.getAssignedUsers());
-            Set<User> assignedUsers = new HashSet<>();
-            for (Long userId : request.getAssignedUserIds()) {
-                User user = userService.findById(userId)
-                        .orElseThrow(
-                                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found: " + userId));
-                assignedUsers.add(user);
-            }
-            Set<User> newlyAssigned = assignedUsers.stream()
-                    .filter(u -> previousUsers.stream().noneMatch(p -> p.getId().equals(u.getId())))
-                    .collect(java.util.stream.Collectors.toSet());
-            definition.setAssignedUsers(assignedUsers);
-
-            if (definition.getRecurrenceType() != RecurrenceType.ONCE) {
-                definition.setDeadline(null);
-            }
-
-            TaskDefinition saved = taskDefinitionService.save(definition);
-
-            // For ONCE tasks: create TaskInstances for newly assigned users (after
-            // the save!)
-            // For recurring tasks: create immediately if today is a due date
-            if (saved.getRecurrenceType() == RecurrenceType.ONCE) {
-                // Only create immediately if no future start date is set
-                LocalDate today = LocalDate.now();
-                if (saved.getStartDate() == null || !saved.getStartDate().isAfter(today)) {
-                    for (User newUser : newlyAssigned) {
-                        taskInstanceService.createTaskInstance(saved, newUser, saved.getDeadline());
-                        log.info("Created TaskInstance for newly assigned user '{}' on ONCE task '{}'",
-                                newUser.getUsername(), saved.getTitle());
-                    }
-                }
-            } else {
-                taskDefinitionService.createInstancesForNewUsersIfDueToday(saved, newlyAssigned);
-            }
-
-            return ResponseEntity.ok(TaskDto.DefinitionResponse.fromEntity(saved));
+            validateRecurrenceConfiguration(recurrenceType, effectiveDays, effectiveMonthlyMode,
+                    effectiveMonthlyWeekNumber, effectiveMonthlyDayOfMonth);
+            weeklyDaysPayload = buildSchedulePayload(recurrenceType, effectiveDays, effectiveMonthlyMode,
+                    effectiveMonthlyWeekNumber, effectiveMonthlyDayOfMonth, effectiveMonthlyAdjustToLastDay);
+        } else {
+            weeklyDaysPayload = existing.getWeeklyDays();
         }
 
-        if (definition.getRecurrenceType() != RecurrenceType.ONCE) {
-            definition.setDeadline(null);
-        }
+        TaskDefinition saved = taskDefinitionService.updateTaskDefinition(
+                id, title, description, basePoints, recurrenceType, assignedUsers,
+                startDate, seriesEndDate, deadline, weeklyDaysPayload);
 
-        TaskDefinition saved = taskDefinitionService.save(definition);
         return ResponseEntity.ok(TaskDto.DefinitionResponse.fromEntity(saved));
     }
 

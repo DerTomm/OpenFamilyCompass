@@ -187,12 +187,20 @@ public class TaskDefinitionService {
         definition.setWeeklyDays(weeklyDays);
         TaskDefinition saved = taskDefinitionRepository.save(definition);
 
-        // For ONCE tasks: immediately create a TaskInstance for each newly assigned
-        // user
-        // (if no future start date)
-        // For recurring tasks: create immediately if today is a due date
+        // --- 1. Remove open instances for users who are no longer assigned ---
+        for (User removedUser : previousUsers) {
+            boolean stillAssigned = assignedUsers.stream().anyMatch(u -> u.getId().equals(removedUser.getId()));
+            if (!stillAssigned) {
+                log.info("User '{}' removed from task '{}': deleting open instances", removedUser.getFirstName(),
+                        title);
+                taskInstanceService.deleteOpenInstancesForUser(saved.getId(), removedUser);
+            }
+        }
+
+        // --- 2. Handle instances for currently assigned users ---
+        LocalDate today = LocalDate.now();
+
         if (recurrenceType == RecurrenceType.ONCE) {
-            LocalDate today = LocalDate.now();
             if (startDate == null || !startDate.isAfter(today)) {
                 for (User user : assignedUsers) {
                     boolean isNew = previousUsers.stream().noneMatch(p -> p.getId().equals(user.getId()));
@@ -200,23 +208,40 @@ public class TaskDefinitionService {
                         log.info("Creating TaskInstance for newly assigned user '{}' on ONCE task '{}'",
                                 user.getFirstName(), title);
                         taskInstanceService.createTaskInstance(saved, user, deadline);
+                    } else if (startDate != null) {
+                        // Start date was set/changed: remove instances before the new start date
+                        taskInstanceService.deleteOpenInstancesBeforeDate(saved.getId(), user, startDate);
                     }
+                }
+            } else {
+                // New start date is in the future: remove all open instances for everyone
+                for (User user : assignedUsers) {
+                    taskInstanceService.deleteOpenInstancesBeforeDate(saved.getId(), user, startDate);
                 }
             }
         } else {
-            LocalDate today = LocalDate.now();
-            // Start date not yet reached? Then don't create anything yet.
-            if (saved.getStartDate() == null || !saved.getStartDate().isAfter(today)) {
+            // --- Recurring tasks ---
+            // 2a. If start date moved into the future: remove instances before the new
+            // start date
+            if (startDate != null && startDate.isAfter(today)) {
+                for (User user : assignedUsers) {
+                    taskInstanceService.deleteOpenInstancesBeforeDate(saved.getId(), user, startDate);
+                }
+            } else {
+                // 2b. Check if today is still a valid due date
                 LocalDate dueDate = calculateNextDueDate(today, saved);
-                if (dueDate != null
-                        && (saved.getSeriesEndDate() == null
-                                || !dueDate.isAfter(saved.getSeriesEndDate()))) {
-                    for (User user : assignedUsers) {
-                        boolean isNew = previousUsers.stream().noneMatch(p -> p.getId().equals(user.getId()));
-                        if (!isNew) {
-                            continue;
-                        }
-                        // Only create if no instance for today exists yet
+                boolean todayIsValid = dueDate != null
+                        && (saved.getSeriesEndDate() == null || !dueDate.isAfter(saved.getSeriesEndDate()));
+
+                for (User user : assignedUsers) {
+                    boolean isNew = previousUsers.stream().noneMatch(p -> p.getId().equals(user.getId()));
+                    if (!todayIsValid) {
+                        // Today no longer matches the schedule: remove today's open instances
+                        taskInstanceService.deleteOpenInstancesBeforeDate(saved.getId(), user, today.plusDays(1));
+                        log.debug("Today is no longer a due date for task '{}': removed today's open instance for '{}'",
+                                title, user.getFirstName());
+                    } else if (isNew) {
+                        // New user and today is valid: create instance if none exists yet
                         boolean exists = taskInstanceService.findByUser(user).stream()
                                 .anyMatch(inst -> inst.getTaskDefinition().getId().equals(saved.getId())
                                         && inst.getDeadline() != null

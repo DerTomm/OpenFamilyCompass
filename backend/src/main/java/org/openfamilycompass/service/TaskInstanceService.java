@@ -224,4 +224,39 @@ public class TaskInstanceService {
     public void deleteByTaskDefinitionId(@NonNull Long taskDefinitionId) {
         taskInstanceRepository.deleteByTaskDefinition_Id(taskDefinitionId);
     }
+
+    /**
+     * Deletes all open (PENDING or IN_PROGRESS) instances of a task definition for
+     * a specific user.
+     * Used when a user is removed from a task definition.
+     */
+    @Transactional
+    public void deleteOpenInstancesForUser(@NonNull Long taskDefinitionId, @NonNull User user) {
+        List<TaskInstance> open = taskInstanceRepository.findByTaskDefinitionIdAndStatusInAndAssignedUser(
+                taskDefinitionId, List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS), user);
+        for (TaskInstance inst : open) {
+            log.debug("Removing open TaskInstance id={} for unassigned user '{}'", inst.getId(), user.getFirstName());
+            taskInstanceRepository.delete(inst);
+        }
+    }
+
+    /**
+     * Deletes all open (PENDING or IN_PROGRESS) instances of a task definition for
+     * a specific user
+     * whose deadline falls before the given date. Used when the start date of a
+     * task is moved into the future.
+     */
+    @Transactional
+    public void deleteOpenInstancesBeforeDate(@NonNull Long taskDefinitionId, @NonNull User user,
+            @NonNull java.time.LocalDate cutoff) {
+        List<TaskInstance> instances = taskInstanceRepository.findByTaskDefinitionIdAndStatusInAndAssignedUser(
+                taskDefinitionId, List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS), user);
+        for (TaskInstance inst : instances) {
+            if (inst.getDeadline() == null || inst.getDeadline().toLocalDate().isBefore(cutoff)) {
+                log.debug("Removing early TaskInstance id={} for user '{}' (deadline {} before cutoff {})",
+                        inst.getId(), user.getFirstName(), inst.getDeadline(), cutoff);
+                taskInstanceRepository.delete(inst);
+            }
+        }
+    }
 }

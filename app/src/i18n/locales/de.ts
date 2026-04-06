@@ -130,7 +130,7 @@ export const de = {
     'tasks.error.monthly_day_required': 'Bitte gib einen gültigen Tag im Monat (1-31) ein',
     'tasks.definitions.empty': 'Noch keine Aufgaben vorhanden.',
     'tasks.complete': 'Erledigt',
-    'tasks.completed': 'Erledigt! 🎉',
+    'tasks.completed': 'Abgeschlossene Aufgaben',
     'tasks.pending.title': 'Aufgaben genehmigen',
     'tasks.pending.none': 'Keine Aufgaben warten auf Genehmigung.',
     'tasks.pending.approve': 'Genehmigen',
