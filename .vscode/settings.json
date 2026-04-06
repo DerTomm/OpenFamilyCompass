@@ -6,8 +6,17 @@
         "source.organizeImports": "explicit",
     },
     "editor.formatOnSave": true,
-    "java.saveActions.organizeImports": true,
     "java.format.enabled": true,
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.debug.settings.onBuildFailureProceed": true
+    "java.debug.settings.onBuildFailureProceed": true,
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/node_modules",
+        "app/node_modules",
+        "**/.expo/**"
+    ],
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/.expo": true
+    }
 }
