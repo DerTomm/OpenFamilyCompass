@@ -38,8 +38,12 @@ const createApiClient = (): AxiosInstance => {
       // Add auth token if available
       try {
         const token = await secureStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-        if (token && !config.headers.Authorization) {
+        if (token) {
+          // Always override with the current token from storage to prevent stale
+          // in-memory headers from a previous user session being reused.
           config.headers.Authorization = `Bearer ${token}`;
+        } else {
+          delete config.headers.Authorization;
         }
       } catch (e) {
         console.warn('Error reading token from storage:', e);
@@ -97,8 +101,6 @@ const createApiClient = (): AxiosInstance => {
               (Date.now() + expiresIn * 1000).toString()
             );
 
-            // Update header for future requests
-            client.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
             originalRequest.headers.Authorization = 'Bearer ' + accessToken;
 
             processQueue(null, accessToken);
@@ -107,8 +109,11 @@ const createApiClient = (): AxiosInstance => {
             processQueue(refreshError, null);
             console.error('Token refresh failed:', refreshError);
 
-            // Clear all auth state on any refresh error
-            await secureStorage.clear();
+            // Clear only auth tokens; preserve server URL and other settings
+            await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+            await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+            await secureStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+            await secureStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
 
             // Redirect will be handled by auth state change
             return Promise.reject(refreshError);
@@ -116,8 +121,11 @@ const createApiClient = (): AxiosInstance => {
             isRefreshing = false;
           }
         } else {
-          // No refresh token available - clear state
-          await secureStorage.clear();
+          // No refresh token available - clear only auth tokens
+          await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+          await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+          await secureStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+          await secureStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
           return Promise.reject(error);
         }
       }

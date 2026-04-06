@@ -42,6 +42,14 @@ function AppContent() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   usePushNotifications(isAuthenticated);
 
+  // Clear the React Query cache whenever the user logs out so that a subsequent
+  // login with a different account never sees stale data from the previous session.
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      queryClient.clear();
+    }
+  }, [isAuthenticated]);
+
   return (
     <PaperProvider theme={theme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
