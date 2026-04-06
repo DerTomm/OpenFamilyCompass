@@ -1,1 +1,7 @@
-<resources/>
+<resources>
+    <!-- In dark mode use a white background for the adaptive icon so the dark navy icon remains
+    visible -->
+    <color name="iconBackground">#FFFFFF</color>
+    <!-- Keep the same blue as light mode for the splash screen to ensure icon contrast -->
+    <color name="splashscreen_background">#2196F3</color>
+</resources>
