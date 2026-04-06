@@ -45,7 +45,7 @@ public class FcmService {
         log.debug("FCM: Using projectId: {}", projectId);
 
         if (tokens == null || tokens.isEmpty()) {
-            log.debug("FCM: No tokens provided, skipping push notification");
+            log.warn("FCM: No tokens provided for user, skipping push notification");
             return;
         }
 
@@ -91,6 +91,17 @@ public class FcmService {
         notification.put("title", title);
         notification.put("body", body);
         message.put("notification", notification);
+
+        // Android-specific config: set the notification icon and color explicitly.
+        // The meta-data in AndroidManifest.xml is ignored for FCM notification
+        // messages;
+        // the icon must be specified in the payload itself.
+        Map<String, String> androidNotification = new HashMap<>();
+        androidNotification.put("icon", "ic_notification");
+        androidNotification.put("color", "#023c69");
+        Map<String, Object> androidConfig = new HashMap<>();
+        androidConfig.put("notification", androidNotification);
+        message.put("android", androidConfig);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("message", message);

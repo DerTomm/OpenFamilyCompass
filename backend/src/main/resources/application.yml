@@ -20,7 +20,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -75,7 +75,8 @@ logging:
   level:
     org.openfamilycompass: DEBUG
     org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: INFO
+    org.hibernate.orm.jdbc.bind: INFO
 
 app:
   avatars:
@@ -97,4 +98,3 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     disable-swagger-default-url: true
-
