@@ -57,15 +57,25 @@ services:
       # CORS - Allow frontend
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:19006}
 
-      # JWT Keys - wird durch Volume gemountet
-      JWT_KEYSTORE_PATH: /app/config/jwt-keys.pfx
-      JWT_KEYSTORE_PASSWORD: ${JWT_KEYSTORE_PASSWORD:-}
+      # JWT Keystore - stored in a named volume so the auto-generated key pair survives restarts.
+      # No manual key creation required; the app generates the keystore on first startup.
+      APP_SECURITY_JWT_KEYSTORE_PATH: /app/config/jwt-keys.pfx
+      APP_SECURITY_JWT_KEYSTORE_PASSWORD: ${JWT_KEYSTORE_PASSWORD:-changeit}
+
+      # Firebase Cloud Messaging - optional. Mount the service account JSON to enable push
+      # notifications. If the file is absent, push notifications are silently disabled.
+      FCM_SERVICE_ACCOUNT_PATH: /app/config/firebase-service-account.json
 
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     volumes:
-      # JWT Keys
-      - ./backend/jwt-keys.pfx:/app/config/jwt-keys.pfx:ro
+      # Persists the auto-generated JWT keystore across container restarts.
+      # The app creates jwt-keys.pfx automatically on first startup - no manual setup needed.
+      - backend_config:/app/config
+      # Optional: mount your Firebase service account JSON to enable push notifications.
+      # If this file does not exist on the host the bind-mount line should be removed or
+      # commented out, otherwise Docker Compose will create an empty directory at that path.
+      # - ./firebase-service-account.json:/app/config/firebase-service-account.json:ro
       # Media/Upload Directory (persistent)
       - media_data:/app/media
     networks:
@@ -126,6 +136,9 @@ volumes:
   postgres_data:
     driver: local
   media_data:
+    driver: local
+  # Persists auto-generated credentials (e.g. jwt-keys.pfx) across container restarts.
+  backend_config:
     driver: local
 
 networks:
