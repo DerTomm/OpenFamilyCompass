@@ -5,7 +5,6 @@ uploads/
 ### Backend (Java/Spring Boot) ###
 backend/target/
 !backend/.mvn/wrapper/maven-wrapper.jar
-backend/src/main/resources/firebase-service-account.json
 backend/src/main/resources/data/initial-data.sql
 
 ### App (Expo/React Native) ###
@@ -27,6 +26,7 @@ local.properties
 *.p8
 *.p12
 *.pfx
+firebase-service-account.json
 
 ### Docker ###
 docker-compose.override.yml
