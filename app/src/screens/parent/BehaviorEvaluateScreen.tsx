@@ -17,7 +17,7 @@ import {
   View,
 } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { behaviorsApi, evaluationsApi, usersApi } from '../../api/services';
 import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
@@ -49,6 +49,7 @@ const EvaluationModal: React.FC<EvaluationModalProps> = ({
   styles: modalStyles,
 }) => {
   const styles = modalStyles;
+  const insets = useSafeAreaInsets();
   const [points, setPoints] = useState(0);
   const [remarks, setRemarks] = useState('');
 
@@ -156,7 +157,7 @@ const EvaluationModal: React.FC<EvaluationModalProps> = ({
             </View>
           </ScrollView>
 
-          <View style={styles.modalFooter}>
+          <View style={[styles.modalFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
               <Text style={styles.cancelButtonText}>{t('button.cancel')}</Text>
             </TouchableOpacity>
@@ -1102,6 +1103,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   modalFooter: {
     flexDirection: 'row',
     padding: 16,
+    paddingBottom: 16, // overridden inline with safe-area inset on Android
     gap: 8,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
