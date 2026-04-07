@@ -45,13 +45,16 @@ jobs:
           echo "tags=${{ env.REGISTRY }}/${IMAGE_NAME}:$VERSION,${{ env.REGISTRY }}/${IMAGE_NAME}:latest" >> $GITHUB_OUTPUT
 
       - name: Update pom.xml with version from tag
+        working-directory: backend
         run: |
           mvn -q versions:set -DnewVersion=${{ steps.meta.outputs.version }} -DprocessAllModules
 
       - name: Build application
+        working-directory: backend
         run: mvn clean package -B -DskipTests -Pdocker
 
       - name: Run tests before Docker build
+        working-directory: backend
         run: mvn test -B -DforkCount=1 -DreuseForks=false
 
       - name: Set up Docker Buildx
@@ -67,7 +70,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: backend
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: |
