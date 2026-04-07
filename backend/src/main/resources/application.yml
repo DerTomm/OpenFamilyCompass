@@ -89,7 +89,10 @@ app:
     default-password: "admin" # ⚠️ CHANGE AFTER FIRST LOGIN!
 
 # Firebase Cloud Messaging Configuration
-# Project ID is read from firebase-service-account.json at runtime
+# The service account JSON must be provided at runtime - it is NOT bundled in the JAR.
+# Override the path via env var FCM_SERVICE_ACCOUNT_PATH when deploying with Docker.
+fcm:
+  service-account-path: ${FCM_SERVICE_ACCOUNT_PATH:firebase-service-account.json}
 
 # Swagger UI Configuration (JWT)
 springdoc:

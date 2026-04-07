@@ -135,6 +135,16 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <!-- Never bundle sensitive credentials into the JAR.
+                         Provide these files at runtime via filesystem mount. -->
+                    <exclude>firebase-service-account.json</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

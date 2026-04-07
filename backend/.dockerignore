@@ -28,6 +28,11 @@ mvnw.cmd
 
 # Logs
 *.log
+
+# Sensitive credentials - must be provided at runtime, never baked into the image
+firebase-service-account.json
+src/main/resources/firebase-service-account.json
+jwt-keys.pfx
 logs/
 
 # OS
