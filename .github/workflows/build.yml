@@ -27,9 +27,11 @@ jobs:
           cache: maven
 
       - name: Build with Maven
+        working-directory: backend
         run: mvn clean package -DskipTests -B
 
       - name: Run tests
+        working-directory: backend
         run: mvn test -B -DforkCount=1 -DreuseForks=false
 
       - name: Upload test results
@@ -37,4 +39,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: target/surefire-reports/
+          path: backend/target/surefire-reports/
