@@ -1,6 +1,7 @@
 {
     "cli": {
-        "version": ">= 14.2.1"
+        "version": ">= 14.2.1",
+        "appVersionSource": "local"
     },
     "build": {
         "development": {
@@ -8,23 +9,35 @@
             "distribution": "internal",
             "android": {
                 "gradleCommand": ":app:assembleDebug",
-                "buildType": "apk"
+                "buildType": "apk",
+                "env": {
+                    "GOOGLE_SERVICES_JSON": "@env GOOGLE_SERVICES_JSON"
+                }
             }
         },
         "preview": {
             "distribution": "internal",
             "android": {
-                "buildType": "apk"
+                "buildType": "apk",
+                "env": {
+                    "GOOGLE_SERVICES_JSON": "@env GOOGLE_SERVICES_JSON"
+                }
             }
         },
         "production": {
             "android": {
-                "buildType": "aab"
+                "buildType": "app-bundle",
+                "env": {
+                    "GOOGLE_SERVICES_JSON": "@env GOOGLE_SERVICES_JSON"
+                }
             }
         },
         "production-apk": {
             "android": {
-                "buildType": "apk"
+                "buildType": "apk",
+                "env": {
+                    "GOOGLE_SERVICES_JSON": "@env GOOGLE_SERVICES_JSON"
+                }
             }
         }
     },
