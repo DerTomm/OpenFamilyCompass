@@ -83,7 +83,7 @@ const RewardCard: React.FC<RewardCardProps> = ({
             )}
           </View>
 
-          {reward.description && (
+          {!!reward.description && (
             <Text style={styles.rewardDescription} numberOfLines={2}>
               {reward.description}
             </Text>
@@ -218,6 +218,7 @@ export const RewardListScreen: React.FC = () => {
           <MaterialCommunityIcons name="plus" size={24} color="#fff" />
         </TouchableOpacity>
       )}
+      <Dialogs />
     </SafeAreaView>
   );
 };

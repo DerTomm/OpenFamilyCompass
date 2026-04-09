@@ -9,14 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { redemptionsApi } from '../../api/services';
+import { UserAvatar } from '../../components/ui';
 import { usePendingRedemptions } from '../../hooks/useApi';
+import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { RewardRedemptionResponse } from '../../types/api';
-import { useDialogs } from '../../hooks/useDialogs';
-import { UserAvatar } from '../../components/ui';
 
 interface RedemptionCardProps {
   redemption: RewardRedemptionResponse;
@@ -63,7 +63,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
         <Text style={styles.pointsSpent}>{redemption.pointsSpent} {t('points.label')}</Text>
       </View>
 
-      {redemption.reward.description && (
+      {Boolean(redemption.reward.description) && (
         <Text style={styles.description}>{redemption.reward.description}</Text>
       )}
 
@@ -224,6 +224,7 @@ export const PendingRedemptionsScreen: React.FC = () => {
           }
         />
       )}
+      <Dialogs />
     </SafeAreaView>
   );
 };

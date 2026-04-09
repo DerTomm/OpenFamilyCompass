@@ -11,10 +11,15 @@
     "java.debug.settings.onBuildFailureProceed": true,
     "java.import.exclusions": [
         "**/node_modules/**",
-        "**/node_modules",
-        "app/node_modules",
+        "**/.metadata/**",
+        "**/archetype-resources/**",
+        "**/META-INF/maven/**",
         "**/.expo/**"
     ],
+    "java.project.sourcePaths": [
+        "backend/src/main/java"
+    ],
+    "java.project.outputPath": "backend/target/classes",
     "files.exclude": {
         "**/node_modules": true,
         "**/.expo": true

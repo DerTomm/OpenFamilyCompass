@@ -17,7 +17,7 @@ import { ActivityIndicator, Button, Card, Divider, SegmentedButtons, Text, useTh
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { pointsApi } from '../../api/services';
 import { ErrorDialog, SuccessDialog } from '../../components/ui';
-import { useChildren, usePendingTasks, usePointTransactions } from '../../hooks/useApi';
+import { useChildren, usePendingRedemptions, usePendingTasks, usePointTransactions } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { ActivitiesStackParamList } from '../../navigation/types';
 import { spacing } from '../../theme/theme';
@@ -37,8 +37,10 @@ export const ChildDetailScreen: React.FC = () => {
   const child = children?.find((c) => c.id === childId);
   const { data: transactionsData, isLoading } = usePointTransactions({ userId: childId, limit: 500 });
   const { data: pendingTasks = [] } = usePendingTasks();
+  const { data: pendingRedemptionsData = [] } = usePendingRedemptions();
   const transactions = transactionsData?.transactions || [];
   const pendingApprovalsCount = pendingTasks.filter((task) => task.assignedUser.id === childId).length;
+  const pendingRedemptionsCount = pendingRedemptionsData.filter((r) => r.user.id === childId).length;
 
   // All useState hooks first
   const [showPointsModal, setShowPointsModal] = useState(false);
@@ -410,7 +412,7 @@ export const ChildDetailScreen: React.FC = () => {
               mode="outlined"
               icon="plus-circle"
               onPress={() => setShowPointsModal(true)}
-              style={{ marginBottom: pendingApprovalsCount > 0 ? spacing.sm : 0 }}
+              style={{ marginBottom: (pendingApprovalsCount > 0 || pendingRedemptionsCount > 0) ? spacing.sm : 0 }}
               contentStyle={{ paddingVertical: spacing.xs }}
             >
               Plus-/Minuspunkte vergeben
@@ -421,9 +423,21 @@ export const ChildDetailScreen: React.FC = () => {
                 mode="contained"
                 icon="clipboard-check"
                 onPress={() => navigation.navigate('PendingApproval')}
+                style={{ marginBottom: pendingRedemptionsCount > 0 ? spacing.sm : 0 }}
                 contentStyle={{ paddingVertical: spacing.xs }}
               >
                 Aufgaben freigeben ({pendingApprovalsCount})
+              </Button>
+            )}
+
+            {pendingRedemptionsCount > 0 && (
+              <Button
+                mode="contained"
+                icon="gift"
+                onPress={() => navigation.navigate('PendingRedemptions')}
+                contentStyle={{ paddingVertical: spacing.xs }}
+              >
+                Belohnungen freigeben ({pendingRedemptionsCount})
               </Button>
             )}
           </Card.Content>
