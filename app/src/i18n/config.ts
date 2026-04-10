@@ -25,7 +25,6 @@ i18n
         },
         lng: deviceLanguage, // Will be overridden by user preference if set
         fallbackLng: 'en',
-        compatibilityJSON: 'v4',
         interpolation: {
             escapeValue: false, // React already escapes
             format: (value, format, lng) => {
