@@ -67,7 +67,7 @@ const ActivitiesStackNavigator: React.FC = () => {
       <ActivitiesStack.Screen
         name="ActivitiesHome"
         component={HomeComponent}
-        options={{ title: t('nav.activities') }}
+        options={{ title: t('nav.overview') }}
       />
 
       {/* Child dynamic content */}
@@ -279,7 +279,7 @@ const MainTabsNavigator: React.FC = () => {
         <Tab.Screen
           name="Activities"
           component={ActivitiesStackNavigator}
-          options={{ title: t('nav.activities') }}
+          options={{ title: t('nav.overview') }}
         />
 
         {!isChild && (

@@ -25,7 +25,7 @@ export const de = {
     'admin.users.status': 'Status',
 
     // Navigation
-    'nav.activities': 'Aktivitäten',
+    'nav.overview': 'Übersicht',
     'nav.manage': 'Verwalten',
     'nav.notifications': 'Benachrichtigungen',
     'nav.profile': 'Profil',
@@ -75,6 +75,7 @@ export const de = {
     'dashboard.evaluate.behavior': 'Verhalten bewerten',
     'dashboard.evaluate.behavior.desc': 'Belohne positives Verhalten deiner Kinder',
     'dashboard.children.overview': 'Kinder-Übersicht',
+    'dashboard.activities': 'Letzte Aktivitäten',
     'dashboard.manage.points': 'Bonus- und Minuspunkte',
 
     // Dashboard - Child

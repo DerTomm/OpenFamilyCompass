@@ -115,8 +115,7 @@ public class TaskInstanceService {
         // Credit points
         Long instanceId = Objects.requireNonNull(instance.getId(), "TaskInstance ID must not be null");
         pointService.addPoints(instance.getAssignedUser(), awardedPoints,
-                PointTransactionType.TASK, "Task completed: " + instance.getTaskDefinition().getTitle(),
-                instanceId, approver);
+                PointTransactionType.TASK, instance.getTaskDefinition().getTitle(), instanceId, approver);
 
         // Notify child about approved task
         notificationService.createLocalizedNotification(

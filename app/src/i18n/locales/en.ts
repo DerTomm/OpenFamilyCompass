@@ -25,7 +25,7 @@ export const en = {
     'admin.users.status': 'Status',
 
     // Navigation
-    'nav.activities': 'Activities',
+    'nav.overview': 'Overview',
     'nav.manage': 'Manage',
     'nav.notifications': 'Notifications',
     'nav.profile': 'Profile',
@@ -69,6 +69,7 @@ export const en = {
     'dashboard.evaluate.behavior': 'Evaluate Behavior',
     'dashboard.evaluate.behavior.desc': "Reward your children's positive behavior",
     'dashboard.children.overview': 'Children Overview',
+    'dashboard.activities': 'Recent Activities',
     'dashboard.manage.points': 'Bonus and Penalty Points',
 
     // Dashboard - Child

@@ -191,9 +191,16 @@ export const ChildDashboardScreen: React.FC = () => {
                   <View key={transaction.id}>
                     <View style={styles.transactionRow}>
                       <View style={styles.transactionInfo}>
-                        <Text variant="bodyMedium" style={{ fontWeight: '500' }}>
-                          {transaction.description || t(`point.transaction.type.${transaction.type}`)}
-                        </Text>
+                        <View style={[styles.typeBadge, { backgroundColor: '#E0E0E0' }]}>
+                          <Text variant="bodySmall" style={{ color: '#000', fontWeight: '600' }}>
+                            {t(`point.transaction.type.${transaction.type}`)}
+                          </Text>
+                        </View>
+                        {transaction.description && (
+                          <Text variant="bodyMedium" style={{ fontWeight: '500', marginTop: spacing.xs }}>
+                            {transaction.description}
+                          </Text>
+                        )}
                         <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                           {formatDate(transaction.createdAt)}
                         </Text>
@@ -286,5 +293,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   transactionInfo: {
     flex: 1,
     marginRight: spacing.sm,
+  },
+  typeBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
 });

@@ -19,4 +19,7 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
 
     @Query("SELECT SUM(pt.points) FROM PointTransaction pt WHERE pt.user = :user")
     Integer sumPointsByUser(User user);
+
+    List<PointTransaction> findByReferenceIdAndType(Long referenceId,
+            org.openfamilycompass.model.PointTransactionType type);
 }

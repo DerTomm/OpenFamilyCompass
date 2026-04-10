@@ -2,7 +2,6 @@ package org.openfamilycompass.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import org.openfamilycompass.model.NotificationType;
 import org.openfamilycompass.model.PointTransactionType;
@@ -109,11 +108,10 @@ public class RewardRedemptionService {
         RewardRedemption redemption = redemptionRepository.findById(redemptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Redemption not found"));
 
-        // Return points since they were deducted when the reward was requested
-        Long redemptionId2 = Objects.requireNonNull(redemption.getId(), "Redemption ID must not be null");
-        pointService.addPoints(redemption.getUser(), redemption.getPointsSpent(),
-                PointTransactionType.REWARD, "Reward cancelled: " + redemption.getReward().getTitle(),
-                redemptionId2, cancelledBy);
+        // Delete the original transaction that deducted points when the reward was
+        // requested
+        pointService.deleteTransactionByReferenceIdAndType(redemptionId, PointTransactionType.REWARD,
+                redemption.getUser());
 
         redemption.setStatus(RewardStatus.CANCELLED);
 

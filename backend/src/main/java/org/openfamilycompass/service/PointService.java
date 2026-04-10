@@ -68,6 +68,19 @@ public class PointService {
     }
 
     @Transactional
+    public void deleteTransactionByReferenceIdAndType(@NonNull Long referenceId, @NonNull PointTransactionType type,
+            @NonNull User user) {
+        List<PointTransaction> transactions = pointTransactionRepository.findByReferenceIdAndType(referenceId, type);
+        for (PointTransaction transaction : transactions) {
+            if (transaction.getUser().equals(user)) {
+                pointTransactionRepository.delete(transaction);
+            }
+        }
+        // Update user's points after deletion
+        updateUserPoints(user);
+    }
+
+    @Transactional
     public void updateUserPoints(@NonNull User user) {
         Integer totalPoints = pointTransactionRepository.sumPointsByUser(user);
         if (totalPoints == null) {
