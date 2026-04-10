@@ -210,10 +210,10 @@ class TaskInstanceServiceTest {
         assertThat(taskInstance.getAwardedPoints()).isEqualTo(awardedPoints);
         assertThat(taskInstance.getParentNotes()).isEqualTo(notes);
 
-        verify(pointService).addPoints(
-                eq(child), eq(awardedPoints), eq(PointTransactionType.TASK),
-                argThat(description -> description.contains("Test Task")),
-                eq(1L), eq(parent));
+        verify(pointService).completeTransaction(
+                eq(1L), eq(PointTransactionType.TASK),
+                eq(child), eq(awardedPoints),
+                eq("Test Task"), eq(parent));
 
         verify(notificationService).createLocalizedNotification(
                 eq(child),

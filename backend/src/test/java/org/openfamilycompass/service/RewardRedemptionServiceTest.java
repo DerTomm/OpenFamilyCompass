@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -89,11 +88,11 @@ class RewardRedemptionServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getStatus()).isEqualTo(RewardStatus.REQUESTED);
-        verify(pointService).deductPoints(
+        verify(pointService).deductPointsPending(
                 eq(testChildUser),
                 eq(50),
                 eq(PointTransactionType.REWARD),
-                anyString(),
+                eq("Video Game"),
                 anyLong(),
                 eq(testChildUser));
     }
@@ -163,13 +162,10 @@ class RewardRedemptionServiceTest {
 
         // Then
         assertThat(result.getStatus()).isEqualTo(RewardStatus.CANCELLED);
-        verify(pointService).addPoints(
-                eq(testChildUser),
-                eq(50),
+        verify(pointService).cancelTransactionByReferenceIdAndType(
+                eq(1L),
                 eq(PointTransactionType.REWARD),
-                anyString(),
-                anyLong(),
-                eq(testUser));
+                eq(testChildUser));
     }
 
     @Test
