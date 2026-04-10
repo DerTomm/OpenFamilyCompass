@@ -27,6 +27,8 @@ public class UserDto {
         private boolean active;
         private String theme;
         private String language;
+        private String avatarType;
+        private String avatarIconName;
         private String avatarPath;
         private int totalPoints;
         private LocalDateTime createdAt;
@@ -40,6 +42,8 @@ public class UserDto {
                     .active(user.isActive())
                     .theme(user.getTheme())
                     .language(user.getLanguage())
+                    .avatarType(user.getAvatarType())
+                    .avatarIconName(user.getAvatarIconName())
                     .avatarPath(user.getAvatarPath())
                     .totalPoints(user.getTotalPoints())
                     .createdAt(user.getCreatedAt())
@@ -110,6 +114,10 @@ public class UserDto {
 
         /** ISO 639-1 language code, e.g. "en" or "de". */
         private String language;
+
+        private String avatarType;
+
+        private String avatarIconName;
     }
 
     @Data

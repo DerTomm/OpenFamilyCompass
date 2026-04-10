@@ -22,7 +22,7 @@ import {
   useTheme
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { profileApi } from '../../api/services';
+import { profileApi, usersApi } from '../../api/services';
 import { AvatarPicker, UserAvatar } from '../../components/ui';
 import { Avatar as AvatarType } from '../../constants/avatars';
 import { queryKeys, usePointTransactions } from '../../hooks/useApi';
@@ -35,6 +35,7 @@ import { spacing } from '../../theme/theme';
 export const ProfileScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const { user, logout, fetchUser } = useAuthStore();
+  const bumpAvatarVersion = useAuthStore((state) => state.bumpAvatarVersion);
   const isChild = useAuthStore(selectIsChild);
   const theme = useTheme();
   const { isDark, toggleTheme } = useAppTheme();
@@ -46,6 +47,7 @@ export const ProfileScreen: React.FC = () => {
   const [firstNameDialogVisible, setFirstNameDialogVisible] = useState(false);
   const [passwordDialogVisible, setPasswordDialogVisible] = useState(false);
   const [avatarPickerVisible, setAvatarPickerVisible] = useState(false);
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
@@ -152,6 +154,24 @@ export const ProfileScreen: React.FC = () => {
     },
   });
 
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (uri: string) => usersApi.uploadAvatar(user!.id, uri),
+    onSuccess: async () => {
+      await fetchUser();
+      bumpAvatarVersion();
+      setAvatarRefreshKey(Date.now());
+      setSnackbarMessage(t('profile.avatar.upload.success'));
+      setSnackbarType('success');
+      setSnackbarVisible(true);
+    },
+    onError: (error: any) => {
+      console.error('Avatar upload error:', error);
+      setSnackbarMessage(t('profile.avatar.upload.error'));
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+    },
+  });
+
   const handleUsernameUpdate = () => {
     if (!newUsername || newUsername === user?.username) {
       setUsernameDialogVisible(false);
@@ -210,11 +230,7 @@ export const ProfileScreen: React.FC = () => {
   };
 
   const handleAvatarImageSelect = async (imageUri: string) => {
-    // TODO: Implement image upload to backend
-    console.log('Image selected:', imageUri);
-    setSnackbarMessage('Bild-Upload wird noch implementiert');
-    setSnackbarType('error');
-    setSnackbarVisible(true);
+    uploadAvatarMutation.mutate(imageUri);
   };
 
   const getRoleLabel = (role?: string) => {
@@ -238,6 +254,7 @@ export const ProfileScreen: React.FC = () => {
               avatarPath={user?.avatarPath}
               firstName={user?.firstName}
               size={80}
+              refreshKey={avatarRefreshKey}
             />
             <TouchableOpacity
               style={[styles.avatarEditButton, { backgroundColor: theme.colors.primary }]}

@@ -10,6 +10,7 @@ interface AuthState {
   isLoading: boolean;
   isSetupComplete: boolean;
   user: UserProfileResponse | null;
+  avatarVersion: number;
 
   // Actions
   initialize: () => Promise<void>;
@@ -17,6 +18,7 @@ interface AuthState {
   fetchUser: () => Promise<void>;
   logout: () => Promise<void>;
   completeSetup: () => void;
+  bumpAvatarVersion: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -24,6 +26,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isSetupComplete: false,
   user: null,
+  avatarVersion: 0,
 
   initialize: async () => {
     try {
@@ -214,6 +217,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   completeSetup: () => {
     set({ isSetupComplete: true });
+  },
+
+  bumpAvatarVersion: () => {
+    set((state) => ({ avatarVersion: state.avatarVersion + 1 }));
   },
 }));
 

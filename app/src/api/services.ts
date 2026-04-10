@@ -46,11 +46,18 @@ export const usersApi = {
   getById: (id: number) => api.get<UserResponse>(`/users/${id}`),
   create: (data: { username: string; password: string; firstName: string; role: string }) =>
     api.post<UserResponse>('/users', data),
-  update: (id: number, data: Partial<{ firstName: string; password: string; active: boolean; role: string }>) =>
+  update: (id: number, data: Partial<{ firstName: string; password: string; active: boolean; role: string; avatarType: string; avatarIconName: string }>) =>
     api.put<UserResponse>(`/users/${id}`, data),
   deactivate: (id: number) => api.delete<void>(`/users/${id}`),
   deletePermanent: (id: number) => api.delete<void>(`/users/${id}/permanent`),
   listChildren: () => api.get<ChildResponse[]>('/users/children'),
+  uploadAvatar: (id: number, uri: string, mimeType?: string) => {
+    const formData = new FormData();
+    const ext = uri.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const type = mimeType ?? (ext === 'png' ? 'image/png' : 'image/jpeg');
+    formData.append('file', { uri, name: `avatar.${ext}`, type } as any);
+    return api.upload<UserResponse>(`/users/${id}/avatar`, formData);
+  },
 };
 
 // Task Definitions

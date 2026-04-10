@@ -18,9 +18,11 @@ import {
 import { useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { usersApi } from '../../api/services';
-import { UserAvatar } from '../../components/ui';
+import { AvatarPicker, UserAvatar } from '../../components/ui';
+import { Avatar as AvatarType } from '../../constants/avatars';
 import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
+import { useAuthStore } from '../../store/authStore';
 import { UserResponse, UserRole } from '../../types/api';
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -144,6 +146,9 @@ interface EditUserModalProps {
   user: UserResponse | null;
   onClose: () => void;
   onSubmit: (data: { firstName: string; role: string; language: string; password?: string }) => void;
+  onAvatarEmojiSelect: (userId: number, avatar: AvatarType) => void;
+  onAvatarImageSelect: (userId: number, imageUri: string) => void;
+  onOpenAvatarPicker: () => void;
   isLoading: boolean;
   t: (key: string) => string;
   showError: (message: string, title?: string) => void;
@@ -155,7 +160,7 @@ const LANGUAGE_COLORS: Record<string, string> = {
   de: '#4CAF50',
 };
 
-const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, onSubmit, isLoading, t, showError, styles }) => {
+const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, onSubmit, onAvatarEmojiSelect, onAvatarImageSelect, onOpenAvatarPicker, isLoading, t, showError, styles }) => {
   const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('CHILD');
@@ -195,6 +200,23 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, o
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>{t('admin.users.edit.title')}</Text>
+
+          {/* Avatar Section */}
+          <View style={[styles.inputGroup, { alignItems: 'center' }]}>
+            <UserAvatar
+              avatarType={user?.avatarType}
+              avatarIconName={user?.avatarIconName}
+              avatarPath={user?.avatarPath}
+              firstName={user?.firstName}
+              size={72}
+            />
+            <TouchableOpacity
+              style={[styles.avatarEditButton]}
+              onPress={onOpenAvatarPicker}
+            >
+              <Text style={styles.avatarEditButtonText}>✏️ Avatar ändern</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>{t('admin.users.username')}</Text>
@@ -277,6 +299,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ visible, user, onClose, o
           </TouchableOpacity>
         </View>
       </View>
+
     </Modal>
   );
 };
@@ -415,8 +438,10 @@ export const UserListScreen: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [roleFilter, setRoleFilter] = useState<UserRole | 'ALL'>('ALL');
   const queryClient = useQueryClient();
+  const bumpAvatarVersion = useAuthStore((state) => state.bumpAvatarVersion);
   const { t } = useI18n();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -480,6 +505,37 @@ export const UserListScreen: React.FC = () => {
     mutationFn: usersApi.deletePermanent,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+
+  const uploadUserAvatar = useMutation({
+    mutationFn: ({ id, uri }: { id: number; uri: string }) => usersApi.uploadAvatar(id, uri),
+    onSuccess: (updatedUser) => {
+      // Update the edited user in state so avatar shows immediately in the modal
+      setEditingUser(updatedUser);
+      bumpAvatarVersion();
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['children'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      showSuccess(t('profile.avatar.upload.success'), t('common.success'));
+    },
+    onError: () => {
+      showError(t('profile.avatar.upload.error'), t('common.error'));
+    },
+  });
+
+  const updateUserAvatar = useMutation({
+    mutationFn: ({ id, avatarType, avatarIconName }: { id: number; avatarType: string; avatarIconName: string }) =>
+      usersApi.update(id, { avatarType, avatarIconName }),
+    onSuccess: (updatedUser) => {
+      setEditingUser(updatedUser);
+      bumpAvatarVersion();
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['children'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+    onError: () => {
+      showError(t('profile.avatar.upload.error'), t('common.error'));
     },
   });
 
@@ -645,10 +701,36 @@ export const UserListScreen: React.FC = () => {
           setEditingUser(null);
         }}
         onSubmit={(data) => editingUser && updateUser.mutate({ id: editingUser.id, data })}
+        onAvatarEmojiSelect={(userId, avatar) => updateUserAvatar.mutate({ id: userId, avatarType: 'ICON', avatarIconName: avatar.id })}
+        onAvatarImageSelect={(userId, imageUri) => uploadUserAvatar.mutate({ id: userId, uri: imageUri })}
+        onOpenAvatarPicker={() => {
+          setShowEditModal(false);
+          setShowAvatarPicker(true);
+        }}
         isLoading={updateUser.isPending}
         t={t}
         showError={showError}
         styles={styles}
+      />
+
+      <AvatarPicker
+        visible={showAvatarPicker}
+        onClose={() => {
+          setShowAvatarPicker(false);
+          setShowEditModal(true);
+        }}
+        onSelectEmoji={(avatar) => {
+          if (editingUser) updateUserAvatar.mutate({ id: editingUser.id, avatarType: 'ICON', avatarIconName: avatar.id });
+          setShowAvatarPicker(false);
+          setShowEditModal(true);
+        }}
+        onSelectImage={(imageUri) => {
+          if (editingUser) uploadUserAvatar.mutate({ id: editingUser.id, uri: imageUri });
+          setShowAvatarPicker(false);
+          setShowEditModal(true);
+        }}
+        currentAvatarType={editingUser?.avatarType}
+        currentAvatarIconName={editingUser?.avatarIconName}
       />
 
       <CreateUserModal
@@ -980,5 +1062,17 @@ const createStyles = (theme: any) => StyleSheet.create({
   cancelButtonText: {
     color: theme.colors.onSurfaceVariant,
     fontSize: 16,
+  },
+  avatarEditButton: {
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: '#e3f2fd',
+  },
+  avatarEditButtonText: {
+    color: '#1976d2',
+    fontWeight: '500',
+    fontSize: 14,
   },
 });

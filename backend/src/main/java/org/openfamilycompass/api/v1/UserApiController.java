@@ -1,5 +1,6 @@
 package org.openfamilycompass.api.v1;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,9 +9,12 @@ import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.service.UserService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -116,9 +121,97 @@ public class UserApiController {
         if (request.getLanguage() != null) {
             user.setLanguage(request.getLanguage());
         }
+        if (request.getAvatarType() != null) {
+            user.setAvatarType(request.getAvatarType());
+        }
+        if (request.getAvatarIconName() != null) {
+            user.setAvatarIconName(request.getAvatarIconName());
+        }
 
         User saved = userService.save(user);
         return ResponseEntity.ok(UserDto.Response.fromEntity(saved));
+    }
+
+    @PostMapping(value = "/{id}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload avatar for a user (own or admin for any)")
+    public ResponseEntity<UserDto.Response> uploadUserAvatar(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+
+        String currentUsername = principal.getSubject();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
+        boolean isSelf = currentUser.getId().equals(id);
+
+        if (!isAdmin && !isSelf) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        User user = userService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File size exceeds 5MB limit");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only image files are allowed");
+        }
+
+        try {
+            user.setAvatarData(file.getBytes());
+            user.setAvatarContentType(file.getContentType());
+            user.setAvatarType("PHOTO");
+            User saved = userService.save(user);
+            return ResponseEntity.ok(UserDto.Response.fromEntity(saved));
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload avatar");
+        }
+    }
+
+    @GetMapping(value = "/{id}/avatar", produces = { "image/jpeg", "image/png", "image/gif", "image/webp" })
+    @Operation(summary = "Get avatar image for a user (own or admin/parent for any)")
+    public ResponseEntity<byte[]> getUserAvatar(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable Long id) {
+
+        String currentUsername = principal.getSubject();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        boolean isAdminOrParent = currentUser.getRole() == UserRole.ADMIN
+                || currentUser.getRole() == UserRole.PARENT;
+        boolean isSelf = currentUser.getId().equals(id);
+
+        if (!isAdminOrParent && !isSelf) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        User user = userService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!"PHOTO".equals(user.getAvatarType()) || user.getAvatarData() == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        org.springframework.http.MediaType contentType = org.springframework.http.MediaType.IMAGE_JPEG;
+        if (user.getAvatarContentType() != null) {
+            try {
+                contentType = org.springframework.http.MediaType.parseMediaType(user.getAvatarContentType());
+            } catch (Exception e) {
+                // Fallback to JPEG
+            }
+        }
+        return ResponseEntity.ok()
+                .contentType(contentType)
+                .cacheControl(org.springframework.http.CacheControl.noCache())
+                .body(user.getAvatarData());
     }
 
     @DeleteMapping("/{id}")

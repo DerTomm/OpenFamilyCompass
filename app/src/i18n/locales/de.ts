@@ -81,7 +81,7 @@ export const de = {
     // Dashboard - Child
     'child.dashboard.title': 'Mein Dashboard',
     'child.dashboard.welcome': 'Hallo,',
-    'child.dashboard.points.badge': 'Deine Punkte',
+    'child.dashboard.points.badge': 'Punkte',
     'child.detail': 'Kind-Details',
     'child.dashboard.tasks.available': 'Verfügbare Aufgaben',
     'child.dashboard.shop.title': 'Belohnungs-Shop',

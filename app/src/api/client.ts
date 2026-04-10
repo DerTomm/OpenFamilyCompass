@@ -158,4 +158,22 @@ export const api = {
     apiClient.post<T>(url, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then(res => res.data),
+
+  fetchImageAsBase64: async (path: string): Promise<string | null> => {
+    try {
+      // path starts with /api/v1/... so strip /api/v1 prefix since apiClient adds it via baseURL
+      const url = path.startsWith('/api/v1/') ? path.substring('/api/v1'.length) : path;
+      const response = await apiClient.get(url, { responseType: 'arraybuffer' });
+      const bytes = new Uint8Array(response.data);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      const contentType = response.headers['content-type'] || 'image/jpeg';
+      return `data:${contentType};base64,${base64}`;
+    } catch {
+      return null;
+    }
+  },
 };

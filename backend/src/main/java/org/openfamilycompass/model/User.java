@@ -61,6 +61,9 @@ public class User implements UserDetails {
     @Column(name = "avatar_data", columnDefinition = "BYTEA")
     private byte[] avatarData; // Photo upload as Blob
 
+    @Column(name = "avatar_content_type", length = 50)
+    private String avatarContentType; // MIME type of the uploaded photo
+
     @Column(name = "total_points", nullable = false)
     private int totalPoints = 0;
 
@@ -116,13 +119,13 @@ public class User implements UserDetails {
 
     /**
      * Returns the avatar path/URL for this user, or null if no avatar is set.
-     * For PHOTO type: returns "/avatar/{id}"
+     * For PHOTO type: returns "/api/v1/users/{id}/avatar"
      * For ICON type: returns "/images/avatars/{iconName}.svg"
      * For DEFAULT or null: returns null
      */
     public String getAvatarPath() {
         if ("PHOTO".equals(avatarType) && avatarData != null) {
-            return "/avatar/" + id;
+            return "/api/v1/users/" + id + "/avatar";
         } else if ("ICON".equals(avatarType) && avatarIconName != null) {
             return "/images/avatars/" + avatarIconName + ".svg";
         }

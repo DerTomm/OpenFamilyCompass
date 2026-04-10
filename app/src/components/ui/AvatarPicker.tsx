@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Button, Dialog, Portal, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { PREDEFINED_AVATARS, Avatar } from '../../constants/avatars';
+import React, { useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Button, Text, useTheme } from 'react-native-paper';
+import { Avatar, PREDEFINED_AVATARS } from '../../constants/avatars';
 import { spacing } from '../../theme/theme';
 
 interface AvatarPickerProps {
@@ -35,10 +35,10 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.3,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -53,10 +53,11 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
   };
 
   return (
-    <Portal>
-      <Dialog visible={visible} onDismiss={onClose} style={{ maxHeight: '80%' }}>
-        <Dialog.Title>Avatar auswählen</Dialog.Title>
-        <Dialog.Content>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable style={[styles.dialog, { backgroundColor: theme.colors.surface }]} onPress={() => { }}>
+          <Text style={[styles.dialogTitle, { color: theme.colors.onSurface }]}>Avatar auswählen</Text>
+
           {/* Tabs */}
           <View style={styles.tabs}>
             <TouchableOpacity
@@ -105,8 +106,8 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
                     style={[
                       styles.emojiItem,
                       currentAvatarType === 'ICON' &&
-                        currentAvatarIconName === avatar.id &&
-                        styles.emojiItemSelected,
+                      currentAvatarIconName === avatar.id &&
+                      styles.emojiItemSelected,
                       { backgroundColor: theme.colors.surfaceVariant },
                     ]}
                     onPress={() => handleEmojiSelect(avatar)}
@@ -134,16 +135,40 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
               </TouchableOpacity>
             </View>
           )}
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onClose}>Abbrechen</Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+
+          <View style={styles.actions}>
+            <Button onPress={onClose}>Abbrechen</Button>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  dialog: {
+    width: '100%',
+    maxHeight: '80%',
+    borderRadius: 16,
+    padding: spacing.lg,
+  },
+  dialogTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: spacing.md,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: spacing.sm,
+  },
   tabs: {
     flexDirection: 'row',
     marginBottom: spacing.md,

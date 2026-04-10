@@ -1,3 +1,5 @@
+// TODO: Delete this class. Migrate GET /api/avatar/icons to ProfileApiController or UserApiController
+//       and update WebSecurityConfigTest accordingly. All other endpoints are superseded by UserApiController.
 package org.openfamilycompass.controller;
 
 import java.io.IOException;
@@ -6,10 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openfamilycompass.model.User;
+import org.openfamilycompass.service.UserService;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,9 +23,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import org.openfamilycompass.model.User;
-import org.openfamilycompass.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,26 +140,37 @@ public class AvatarController {
      * GET /avatar/current - Get current avatar image
      */
     @GetMapping("/avatar/current")
-    public ResponseEntity<byte[]> getCurrentAvatar(@AuthenticationPrincipal User currentUser) {
-        if (currentUser == null) {
+    public ResponseEntity<byte[]> getCurrentAvatar(@AuthenticationPrincipal Jwt principal) {
+        if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        User user = userService.findById(currentUser.getId())
+        User user = userService.findByUsername(principal.getSubject())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User freshUser = userService.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // If photo was uploaded
-        if ("PHOTO".equals(user.getAvatarType()) && user.getAvatarData() != null) {
+        if ("PHOTO".equals(freshUser.getAvatarType()) && freshUser.getAvatarData() != null) {
+            MediaType contentType = MediaType.IMAGE_JPEG;
+            if (freshUser.getAvatarContentType() != null) {
+                try {
+                    contentType = MediaType.parseMediaType(freshUser.getAvatarContentType());
+                } catch (Exception e) {
+                    // Fallback to JPEG
+                }
+            }
             return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(user.getAvatarData());
+                    .contentType(contentType)
+                    .cacheControl(CacheControl.noCache())
+                    .body(freshUser.getAvatarData());
         }
 
         // If icon was selected, redirect to SVG
-        if ("ICON".equals(user.getAvatarType()) && user.getAvatarIconName() != null) {
+        if ("ICON".equals(freshUser.getAvatarType()) && freshUser.getAvatarIconName() != null) {
             try {
                 return ResponseEntity.status(HttpStatus.FOUND)
-                        .location(java.net.URI.create("/images/avatars/" + user.getAvatarIconName() + ".svg"))
+                        .location(java.net.URI.create("/images/avatars/" + freshUser.getAvatarIconName() + ".svg"))
                         .build();
             } catch (Exception e) {
                 log.error("Error redirecting to icon", e);
@@ -168,40 +182,56 @@ public class AvatarController {
     }
 
     /**
-     * GET /avatar/{userId} - Get avatar of a specific user (for
-     * Admins/Parents)
+     * GET /avatar/{userId} - Get avatar image for a user (authenticated)
      */
     @GetMapping("/avatar/{userId}")
-    public ResponseEntity<byte[]> getUserAvatar(@PathVariable Long userId) {
-        User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<byte[]> getUserAvatar(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable Long userId) {
 
-        if ("PHOTO".equals(user.getAvatarType()) && user.getAvatarData() != null) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(user.getAvatarData());
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        return ResponseEntity.noContent().build();
+        User user = userService.findById(userId).orElse(null);
+
+        if (user == null || !"PHOTO".equals(user.getAvatarType()) || user.getAvatarData() == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        MediaType contentType = MediaType.IMAGE_JPEG;
+        if (user.getAvatarContentType() != null) {
+            try {
+                contentType = MediaType.parseMediaType(user.getAvatarContentType());
+            } catch (Exception e) {
+                // Fallback to JPEG
+            }
+        }
+        return ResponseEntity.ok()
+                .contentType(contentType)
+                .cacheControl(CacheControl.noCache())
+                .body(user.getAvatarData());
     }
 
     /**
      * DELETE /profile/avatar - Reset avatar to DEFAULT
      */
     @DeleteMapping("/profile/avatar")
-    public ResponseEntity<Map<String, String>> resetAvatar(@AuthenticationPrincipal User currentUser) {
-        User user = userService.findById(currentUser.getId())
+    public ResponseEntity<Map<String, String>> resetAvatar(@AuthenticationPrincipal Jwt principal) {
+        User user = userService.findByUsername(principal.getSubject())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User freshUser = userService.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setAvatarType("DEFAULT");
-        user.setAvatarIconName(null);
-        user.setAvatarData(null);
-        userService.save(user);
+        freshUser.setAvatarType("DEFAULT");
+        freshUser.setAvatarIconName(null);
+        freshUser.setAvatarData(null);
+        userService.save(freshUser);
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Avatar reset");
 
-        log.info("User {} reset avatar to default", user.getUsername());
+        log.info("User {} reset avatar to default", freshUser.getUsername());
         return ResponseEntity.ok(response);
     }
 }
