@@ -55,6 +55,8 @@ public class UserDto {
         private Long id;
         private String username;
         private String firstName;
+        private String avatarType;
+        private String avatarIconName;
         private String avatarPath;
         private int totalPoints;
 
@@ -63,6 +65,8 @@ public class UserDto {
                     .id(user.getId())
                     .username(user.getUsername())
                     .firstName(user.getFirstName())
+                    .avatarType(user.getAvatarType())
+                    .avatarIconName(user.getAvatarIconName())
                     .avatarPath(user.getAvatarPath())
                     .totalPoints(user.getTotalPoints())
                     .build();

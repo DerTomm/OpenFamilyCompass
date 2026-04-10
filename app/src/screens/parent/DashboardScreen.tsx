@@ -1,12 +1,13 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, Badge, Divider, List, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, EmptyState, UserAvatar } from '../../components/ui';
-import { useChildren, usePendingRedemptions, usePendingTasks, usePointTransactions } from '../../hooks/useApi';
+import { queryKeys, useChildren, usePendingRedemptions, usePendingTasks, usePointTransactions } from '../../hooks/useApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { ActivitiesStackParamList } from '../../navigation/types';
 import { spacing } from '../../theme/theme';
@@ -17,12 +18,20 @@ export const ParentDashboardScreen: React.FC = () => {
   const theme = useTheme();
   const { t } = useI18n();
   const navigation = useNavigation<NavigationProp>();
+  const queryClient = useQueryClient();
   const { data: children, isLoading: isChildrenLoading, error: childrenError } = useChildren();
   const { data: transactionsData } = usePointTransactions({ limit: 5 });
   const transactions = transactionsData?.transactions || [];
 
   const { data: pendingTasks } = usePendingTasks();
   const { data: pendingRedemptions } = usePendingRedemptions();
+
+  // Refresh children data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.children });
+    }, [queryClient])
+  );
 
   // Count pending items per child
   const getChildPendingCounts = (childId: number) => {
@@ -157,13 +166,20 @@ export const ParentDashboardScreen: React.FC = () => {
                                 avatarIconName={child.avatarIconName}
                                 avatarPath={child.avatarPath}
                                 firstName={child.firstName}
-                                size={32}
+                                size={48}
                               />
                             </View>
                           )}
                           <View style={styles.transactionInfo}>
                             <View style={styles.typeBadgeRow}>
-                              <View style={[styles.typeBadge, { backgroundColor: '#E0E0E0' }]}>
+                              {child && (
+                                <View style={[styles.typeBadge, { backgroundColor: theme.colors.primaryContainer, marginRight: spacing.xs }]}>
+                                  <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer, fontWeight: '600' }}>
+                                    {child.firstName}
+                                  </Text>
+                                </View>
+                              )}
+                              <View style={[styles.typeBadge, { backgroundColor: '#E0E0E0', marginRight: spacing.xs }]}>
                                 <Text variant="bodySmall" style={{ color: '#000', fontWeight: '600' }}>
                                   {t(`point.transaction.type.${transaction.type}`)}
                                 </Text>
@@ -265,6 +281,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: spacing.sm,
+    paddingVertical: 4,
   },
   childName: {
     marginLeft: spacing.xs,

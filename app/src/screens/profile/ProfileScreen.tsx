@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
   ScrollView,
@@ -25,7 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { profileApi } from '../../api/services';
 import { AvatarPicker, UserAvatar } from '../../components/ui';
 import { Avatar as AvatarType } from '../../constants/avatars';
-import { usePointTransactions } from '../../hooks/useApi';
+import { queryKeys, usePointTransactions } from '../../hooks/useApi';
 import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
@@ -33,6 +33,7 @@ import { useTheme as useAppTheme } from '../../theme/ThemeContext';
 import { spacing } from '../../theme/theme';
 
 export const ProfileScreen: React.FC = () => {
+  const queryClient = useQueryClient();
   const { user, logout, fetchUser } = useAuthStore();
   const isChild = useAuthStore(selectIsChild);
   const theme = useTheme();
@@ -64,6 +65,7 @@ export const ProfileScreen: React.FC = () => {
     mutationFn: profileApi.update,
     onSuccess: async () => {
       await fetchUser();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.children });
       setFirstNameDialogVisible(false);
       setSnackbarMessage(t('profile.update.success'));
       setSnackbarType('success');
