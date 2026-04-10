@@ -104,6 +104,7 @@ export const redemptionsApi = {
   approve: (id: number) => api.post<RewardRedemptionResponse>(`/rewards/redemptions/${id}/approve`),
   reject: (id: number, notes?: string) =>
     api.post<RewardRedemptionResponse>(`/rewards/redemptions/${id}/reject`, { notes }),
+  cancel: (id: number) => api.post<RewardRedemptionResponse>(`/rewards/redemptions/${id}/cancel`),
   deliver: (id: number) => api.post<RewardRedemptionResponse>(`/rewards/redemptions/${id}/deliver`),
   getPending: () => api.get<RewardRedemptionResponse[]>('/rewards/redemptions/pending'),
 };

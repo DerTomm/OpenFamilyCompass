@@ -48,6 +48,10 @@ public class PointTransaction {
     @Column(columnDefinition = "TEXT")
     private String remarks; // Additional remarks (e.g. for behavior rules)
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PointTransactionStatus status = PointTransactionStatus.COMPLETED;
+
     @ManyToOne
     @JoinColumn(name = "created_by")
     private User createdBy;

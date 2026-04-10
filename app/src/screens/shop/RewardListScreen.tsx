@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   RefreshControl,
@@ -133,15 +134,17 @@ export const RewardListScreen: React.FC = () => {
     getApiBaseUrl().then(setServerUrl);
   }, []);
 
-  // If parent, fetch all (active and inactive), if child fetch only active
-  const { data: rewards, isLoading, refetch, isRefetching } = useRewards(isChild ? true : undefined);
+  // Only fetch active rewards for everyone
+  const { data: rewards, isLoading, refetch, isRefetching } = useRewards(true);
   const requestRedemption = useRequestRedemption();
 
   const handleRedeem = (reward: RewardResponse) => {
     showConfirm({
       title: t('rewards.redeem.confirm.title'),
       message: t('rewards.redeem.confirm.message', { 0: reward.title, 1: reward.pointsCost }),
-      onConfirm: () => requestRedemption.mutate(reward.id),
+      onConfirm: () => requestRedemption.mutate(reward.id, {
+        onSuccess: () => navigation.goBack(),
+      }),
       confirmText: t('rewards.redeem'),
       cancelText: t('button.cancel'),
     });
@@ -154,14 +157,18 @@ export const RewardListScreen: React.FC = () => {
   const deactivateMutation = useDeactivateReward();
 
   const handleDelete = (reward: RewardResponse) => {
-    showConfirm({
-      title: t('reward.delete.title'),
-      message: t('reward.delete.confirm'),
-      onConfirm: () => deactivateMutation.mutate(reward.id),
-      confirmText: t('reward.delete'),
-      cancelText: t('button.cancel'),
-      destructive: true,
-    });
+    Alert.alert(
+      t('reward.delete.title'),
+      t('reward.delete.confirm'),
+      [
+        { text: t('button.cancel'), style: 'cancel' },
+        {
+          text: t('reward.delete'),
+          style: 'destructive',
+          onPress: () => deactivateMutation.mutate(reward.id),
+        },
+      ]
+    );
   };
 
   const handleCreate = () => {

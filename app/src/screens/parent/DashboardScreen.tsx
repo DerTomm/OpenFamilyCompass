@@ -148,7 +148,7 @@ export const ParentDashboardScreen: React.FC = () => {
 
                   return (
                     <View key={transaction.id}>
-                      <View style={styles.transactionRow}>
+                      <View style={[styles.transactionRow, transaction.status === 'CANCELLED' && styles.transactionCancelled]}>
                         <View style={styles.transactionLeft}>
                           {child && (
                             <View style={styles.childBadge}>
@@ -162,13 +162,31 @@ export const ParentDashboardScreen: React.FC = () => {
                             </View>
                           )}
                           <View style={styles.transactionInfo}>
-                            <View style={[styles.typeBadge, { backgroundColor: '#E0E0E0' }]}>
-                              <Text variant="bodySmall" style={{ color: '#000', fontWeight: '600' }}>
-                                {t(`point.transaction.type.${transaction.type}`)}
-                              </Text>
+                            <View style={styles.typeBadgeRow}>
+                              <View style={[styles.typeBadge, { backgroundColor: '#E0E0E0' }]}>
+                                <Text variant="bodySmall" style={{ color: '#000', fontWeight: '600' }}>
+                                  {t(`point.transaction.type.${transaction.type}`)}
+                                </Text>
+                              </View>
+                              {transaction.status === 'PENDING' && (
+                                <MaterialCommunityIcons
+                                  name="timer-sand"
+                                  size={16}
+                                  color={theme.colors.outline}
+                                  style={{ marginLeft: spacing.xs }}
+                                />
+                              )}
+                              {transaction.status === 'CANCELLED' && (
+                                <MaterialCommunityIcons
+                                  name="cancel"
+                                  size={16}
+                                  color={theme.colors.outline}
+                                  style={{ marginLeft: spacing.xs }}
+                                />
+                              )}
                             </View>
                             {transaction.description && (
-                              <Text variant="bodyMedium" style={{ fontWeight: '500', marginTop: spacing.xs }}>
+                              <Text variant="bodyMedium" style={[{ fontWeight: '500', marginTop: spacing.xs }, transaction.status === 'CANCELLED' && { textDecorationLine: 'line-through' }]}>
                                 {transaction.description}
                               </Text>
                             )}
@@ -177,15 +195,17 @@ export const ParentDashboardScreen: React.FC = () => {
                             </Text>
                           </View>
                         </View>
-                        <Text
-                          variant="bodyLarge"
-                          style={{
-                            fontWeight: '600',
-                            color: transaction.points > 0 ? '#4CAF50' : transaction.points < 0 ? '#F44336' : theme.colors.onSurface,
-                          }}
-                        >
-                          {formatPoints(transaction.points)}
-                        </Text>
+                        {transaction.status !== 'CANCELLED' && (
+                          <Text
+                            variant="bodyLarge"
+                            style={{
+                              fontWeight: '600',
+                              color: transaction.points > 0 ? '#4CAF50' : transaction.points < 0 ? '#F44336' : theme.colors.onSurface,
+                            }}
+                          >
+                            {formatPoints(transaction.points)}
+                          </Text>
+                        )}
                       </View>
                       {index < transactions.length - 1 && <Divider style={{ marginVertical: 8 }} />}
                     </View>
@@ -258,6 +278,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+  typeBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  transactionCancelled: {
+    opacity: 0.4,
   },
   badgeContainer: {
     flexDirection: 'row',

@@ -335,6 +335,8 @@ export const en = {
     'tasks.pending.empty.subtitle': 'All caught up!',
 
     // Rewards - Additional
+    'rewards.cancel.title': 'Cancel Reward Request',
+    'rewards.cancel.message': 'Do you really want to cancel this reward request? Your points will be refunded.',
     'rewards.redeem': 'Redeem',
     'rewards.not.enough.points': 'Not enough points',
     'rewards.redeem.confirm.title': 'Redeem Reward',

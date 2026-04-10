@@ -42,9 +42,9 @@ public class RewardRedemptionService {
 
         RewardRedemption saved = redemptionRepository.save(redemption);
 
-        // Deduct points immediately when requesting the reward
-        pointService.deductPoints(user, reward.getPointsCost(), PointTransactionType.REWARD,
-                "Reward requested: " + reward.getTitle(), saved.getId(), user);
+        // Deduct points as PENDING – becomes COMPLETED once the parent approves
+        pointService.deductPointsPending(user, reward.getPointsCost(), PointTransactionType.REWARD,
+                reward.getTitle(), saved.getId(), user);
 
         // Notify all parents about reward request
         List<User> parents = userRepository.findByRole(UserRole.PARENT);
@@ -70,7 +70,10 @@ public class RewardRedemptionService {
             throw new IllegalStateException("Redemption not in REQUESTED state");
         }
 
-        // Points are already deducted when requesting, so no need to deduct again
+        // Mark the PENDING transaction as COMPLETED
+        pointService.completeTransaction(redemptionId, PointTransactionType.REWARD,
+                redemption.getUser(), -redemption.getPointsSpent(),
+                redemption.getReward().getTitle(), approver);
 
         redemption.setStatus(RewardStatus.APPROVED);
         redemption.setApprovedAt(LocalDateTime.now());
@@ -105,26 +108,32 @@ public class RewardRedemptionService {
 
     @Transactional
     public RewardRedemption cancelRedemption(@NonNull Long redemptionId, @NonNull User cancelledBy) {
+        return cancelRedemption(redemptionId, cancelledBy, true);
+    }
+
+    @Transactional
+    public RewardRedemption cancelRedemption(@NonNull Long redemptionId, @NonNull User cancelledBy,
+            boolean sendNotification) {
         RewardRedemption redemption = redemptionRepository.findById(redemptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Redemption not found"));
 
-        // Delete the original transaction that deducted points when the reward was
-        // requested
-        pointService.deleteTransactionByReferenceIdAndType(redemptionId, PointTransactionType.REWARD,
+        // Cancel the PENDING transaction (keeps history, sets points to 0)
+        pointService.cancelTransactionByReferenceIdAndType(redemptionId, PointTransactionType.REWARD,
                 redemption.getUser());
 
         redemption.setStatus(RewardStatus.CANCELLED);
 
         RewardRedemption saved = redemptionRepository.save(redemption);
 
-        // Notify child about rejected reward
-        notificationService.createLocalizedNotification(
-                redemption.getUser(),
-                NotificationType.REWARD_REJECTED,
-                "notification.reward.rejected.title",
-                "notification.reward.rejected.message",
-                new Object[] { redemption.getReward().getTitle() },
-                redemption.getId());
+        if (sendNotification) {
+            notificationService.createLocalizedNotification(
+                    redemption.getUser(),
+                    NotificationType.REWARD_REJECTED,
+                    "notification.reward.rejected.title",
+                    "notification.reward.rejected.message",
+                    new Object[] { redemption.getReward().getTitle() },
+                    redemption.getId());
+        }
 
         return saved;
     }

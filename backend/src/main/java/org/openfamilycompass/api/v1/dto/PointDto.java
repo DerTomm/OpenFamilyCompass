@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.openfamilycompass.model.PointTransaction;
+import org.openfamilycompass.model.PointTransactionStatus;
 import org.openfamilycompass.model.PointTransactionType;
 
 import jakarta.validation.constraints.Min;
@@ -37,6 +38,7 @@ public class PointDto {
         private String description;
         private Long referenceId;
         private String remarks;
+        private PointTransactionStatus status;
         private UserDto.Response createdBy;
         private LocalDateTime createdAt;
         private Integer balanceAfter;
@@ -50,6 +52,7 @@ public class PointDto {
                     .description(tx.getDescription())
                     .referenceId(tx.getReferenceId())
                     .remarks(tx.getRemarks())
+                    .status(tx.getStatus())
                     .createdBy(tx.getCreatedBy() != null ? UserDto.Response.fromEntity(tx.getCreatedBy()) : null)
                     .createdAt(tx.getCreatedAt())
                     .build();

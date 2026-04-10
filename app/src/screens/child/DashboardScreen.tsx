@@ -7,7 +7,8 @@ import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from '
 import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, EmptyState, QuickActionCard, UserAvatar } from '../../components/ui';
-import { usePointTransactions, useTaskInstances } from '../../hooks/useApi';
+import { useCancelRedemption, usePointTransactions, useTaskInstances } from '../../hooks/useApi';
+import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
 import { ActivitiesStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../store/authStore';
@@ -17,12 +18,13 @@ type NavigationProp = NativeStackNavigationProp<ActivitiesStackParamList>;
 
 export const ChildDashboardScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
+  const fetchUser = useAuthStore((state) => state.fetchUser);
   const theme = useTheme();
   const { t } = useI18n();
   const navigation = useNavigation<NavigationProp>();
   const styles = createStyles(theme);
-
-  // Load recent transactions
+  const cancelRedemption = useCancelRedemption();
+  const { showConfirm, showError, Dialogs } = useDialogs();
   const { data: transactionsData, refetch: refetchTransactions } = usePointTransactions({ userId: user?.id, limit: 5 });
   const transactions = transactionsData?.transactions || [];
   const { data: tasks = [], refetch: refetchTasks, isRefetching } = useTaskInstances(user?.id ? { assignedUserId: user.id } : undefined);
@@ -33,7 +35,8 @@ export const ChildDashboardScreen: React.FC = () => {
     useCallback(() => {
       refetchTasks();
       refetchTransactions();
-    }, [refetchTasks, refetchTransactions])
+      fetchUser();
+    }, [refetchTasks, refetchTransactions, fetchUser])
   );
 
   // Total points
@@ -48,13 +51,29 @@ export const ChildDashboardScreen: React.FC = () => {
     return points > 0 ? `+${points}` : String(points);
   };
 
+  const handleCancelRedemption = (referenceId: number) => {
+    showConfirm({
+      title: t('rewards.cancel.title'),
+      message: t('rewards.cancel.message'),
+      confirmText: t('button.confirm'),
+      cancelText: t('button.cancel'),
+      destructive: true,
+      onConfirm: () => {
+        cancelRedemption.mutate(referenceId, {
+          onSuccess: () => refetchTransactions(),
+          onError: () => showError(t('common.error')),
+        });
+      },
+    });
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={() => { refetchTasks(); refetchTransactions(); }} />
+          <RefreshControl refreshing={isRefetching} onRefresh={() => { refetchTasks(); refetchTransactions(); fetchUser(); }} />
         }
       >
         {/* Points Card */}
@@ -187,37 +206,71 @@ export const ChildDashboardScreen: React.FC = () => {
           <Card elevation={1}>
             {transactions.length > 0 ? (
               <View style={{ padding: 12 }}>
-                {transactions.map((transaction, index) => (
-                  <View key={transaction.id}>
-                    <View style={styles.transactionRow}>
-                      <View style={styles.transactionInfo}>
-                        <View style={[styles.typeBadge, { backgroundColor: '#E0E0E0' }]}>
-                          <Text variant="bodySmall" style={{ color: '#000', fontWeight: '600' }}>
-                            {t(`point.transaction.type.${transaction.type}`)}
-                          </Text>
-                        </View>
-                        {transaction.description && (
-                          <Text variant="bodyMedium" style={{ fontWeight: '500', marginTop: spacing.xs }}>
-                            {transaction.description}
-                          </Text>
-                        )}
-                        <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                          {formatDate(transaction.createdAt)}
-                        </Text>
-                      </View>
-                      <Text
-                        variant="bodyLarge"
-                        style={{
-                          fontWeight: '600',
-                          color: transaction.points > 0 ? '#4CAF50' : transaction.points < 0 ? '#F44336' : theme.colors.onSurface,
-                        }}
+                {transactions.map((transaction, index) => {
+                  const isCancellable = transaction.status === 'PENDING' && transaction.type === 'REWARD' && transaction.referenceId != null;
+                  return (
+                    <View key={transaction.id}>
+                      <TouchableOpacity
+                        disabled={!isCancellable}
+                        onPress={() => isCancellable && handleCancelRedemption(transaction.referenceId!)}
+                        activeOpacity={isCancellable ? 0.6 : 1}
                       >
-                        {formatPoints(transaction.points)}
-                      </Text>
+                        <View style={[styles.transactionRow, transaction.status === 'CANCELLED' && styles.transactionCancelled]}>
+                          <View style={styles.transactionInfo}>
+                            <View style={styles.typeBadgeRow}>
+                              <View style={[styles.typeBadge, { backgroundColor: '#E0E0E0' }]}>
+                                <Text variant="bodySmall" style={{ color: '#000', fontWeight: '600' }}>
+                                  {t(`point.transaction.type.${transaction.type}`)}
+                                </Text>
+                              </View>
+                              {transaction.status === 'PENDING' && (
+                                <MaterialCommunityIcons
+                                  name="timer-sand"
+                                  size={16}
+                                  color={theme.colors.outline}
+                                  style={{ marginLeft: spacing.xs }}
+                                />
+                              )}
+                              {transaction.status === 'CANCELLED' && (
+                                <MaterialCommunityIcons
+                                  name="cancel"
+                                  size={16}
+                                  color={theme.colors.outline}
+                                  style={{ marginLeft: spacing.xs }}
+                                />
+                              )}
+                            </View>
+                            {transaction.description && (
+                              <Text variant="bodyMedium" style={[{ fontWeight: '500', marginTop: spacing.xs }, transaction.status === 'CANCELLED' && { textDecorationLine: 'line-through' }]}>
+                                {transaction.description}
+                              </Text>
+                            )}
+                            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                              {formatDate(transaction.createdAt)}
+                            </Text>
+                          </View>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                            {isCancellable && (
+                              <MaterialCommunityIcons name="close-circle-outline" size={18} color={theme.colors.outline} />
+                            )}
+                            {transaction.status !== 'CANCELLED' && (
+                              <Text
+                                variant="bodyLarge"
+                                style={{
+                                  fontWeight: '600',
+                                  color: transaction.points > 0 ? '#4CAF50' : transaction.points < 0 ? '#F44336' : theme.colors.onSurface,
+                                }}
+                              >
+                                {formatPoints(transaction.points)}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                      {index < transactions.length - 1 && <Divider style={{ marginVertical: 8 }} />}
                     </View>
-                    {index < transactions.length - 1 && <Divider style={{ marginVertical: 8 }} />}
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             ) : (
               <EmptyState
@@ -229,6 +282,7 @@ export const ChildDashboardScreen: React.FC = () => {
           </Card>
         </View>
       </ScrollView>
+      <Dialogs />
     </SafeAreaView>
   );
 };
@@ -299,5 +353,12 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: spacing.xs,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+  typeBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  transactionCancelled: {
+    opacity: 0.4,
   },
 });

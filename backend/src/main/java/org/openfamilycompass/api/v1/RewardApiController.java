@@ -153,11 +153,11 @@ public class RewardApiController {
     @PreAuthorize("hasAnyRole('ADMIN', 'PARENT')")
     @Operation(summary = "Deactivate reward")
     public ResponseEntity<Void> deactivateReward(@PathVariable Long id) {
-        Reward reward = rewardService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reward not found"));
+        if (rewardService.findById(id).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reward not found");
+        }
 
-        reward.setActive(false);
-        rewardService.save(reward);
+        rewardService.deactivateReward(id);
 
         return ResponseEntity.noContent().build();
     }
@@ -304,6 +304,29 @@ public class RewardApiController {
 
         RewardRedemption rejected = redemptionService.cancelRedemption(redemption.getId(), currentUser);
         return ResponseEntity.ok(RewardDto.RedemptionResponse.fromEntity(rejected));
+    }
+
+    @PostMapping("/redemptions/{id}/cancel")
+    @PreAuthorize("hasRole('CHILD')")
+    @Operation(summary = "Cancel own pending redemption")
+    public ResponseEntity<RewardDto.RedemptionResponse> cancelRedemption(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id) {
+
+        User currentUser = getCurrentUser(jwt);
+        RewardRedemption redemption = redemptionService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Redemption not found"));
+
+        if (!redemption.getUser().getId().equals(currentUser.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your redemption");
+        }
+
+        if (redemption.getStatus() != RewardStatus.REQUESTED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Redemption cannot be cancelled");
+        }
+
+        RewardRedemption cancelled = redemptionService.cancelRedemption(redemption.getId(), currentUser, false);
+        return ResponseEntity.ok(RewardDto.RedemptionResponse.fromEntity(cancelled));
     }
 
     @PostMapping("/redemptions/{id}/deliver")

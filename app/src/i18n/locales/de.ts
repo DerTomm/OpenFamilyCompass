@@ -334,6 +334,8 @@ export const de = {
     'tasks.pending.empty.subtitle': 'Alles erledigt!',
 
     // Rewards - Additional
+    'rewards.cancel.title': 'Belohnungsanfrage widerrufen',
+    'rewards.cancel.message': 'Möchtest du diese Belohnungsanfrage wirklich widerrufen? Deine Punkte werden zurückerstattet.',
     'rewards.redeem': 'Einlösen',
     'rewards.not.enough.points': 'Nicht genug Punkte',
     'rewards.redeem.confirm.title': 'Belohnung einlösen',

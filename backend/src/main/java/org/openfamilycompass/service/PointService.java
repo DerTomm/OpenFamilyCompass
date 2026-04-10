@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.openfamilycompass.model.PointTransaction;
+import org.openfamilycompass.model.PointTransactionStatus;
 import org.openfamilycompass.model.PointTransactionType;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.repository.PointTransactionRepository;
@@ -44,6 +45,63 @@ public class PointService {
     public PointTransaction deductPoints(@NonNull User user, int points, @NonNull PointTransactionType type,
             @NonNull String description, Long referenceId, User createdBy) {
         return addPoints(user, -points, type, description, referenceId, createdBy);
+    }
+
+    @Transactional
+    public PointTransaction deductPointsPending(@NonNull User user, int points, @NonNull PointTransactionType type,
+            @NonNull String description, Long referenceId, User createdBy) {
+        PointTransaction transaction = new PointTransaction();
+        transaction.setUser(user);
+        transaction.setPoints(-points);
+        transaction.setType(type);
+        transaction.setDescription(description);
+        transaction.setReferenceId(referenceId);
+        transaction.setCreatedBy(createdBy);
+        transaction.setStatus(PointTransactionStatus.PENDING);
+
+        PointTransaction saved = pointTransactionRepository.save(transaction);
+        updateUserPoints(user);
+        return saved;
+    }
+
+    @Transactional
+    public PointTransaction addPointsPending(@NonNull User user, int points, @NonNull PointTransactionType type,
+            @NonNull String description, Long referenceId, User createdBy) {
+        PointTransaction transaction = new PointTransaction();
+        transaction.setUser(user);
+        transaction.setPoints(points);
+        transaction.setType(type);
+        transaction.setDescription(description);
+        transaction.setReferenceId(referenceId);
+        transaction.setCreatedBy(createdBy);
+        transaction.setStatus(PointTransactionStatus.PENDING);
+
+        PointTransaction saved = pointTransactionRepository.save(transaction);
+        updateUserPoints(user);
+        return saved;
+    }
+
+    @Transactional
+    public void completeTransaction(@NonNull Long referenceId, @NonNull PointTransactionType type,
+            @NonNull User user, int actualPoints, @NonNull String description, User completedBy) {
+        // Delete the PENDING transaction
+        deleteTransactionByReferenceIdAndType(referenceId, type, user);
+        // Create new COMPLETED transaction with actual points
+        addPoints(user, actualPoints, type, description, referenceId, completedBy);
+    }
+
+    @Transactional
+    public void cancelTransactionByReferenceIdAndType(@NonNull Long referenceId, @NonNull PointTransactionType type,
+            @NonNull User user) {
+        List<PointTransaction> transactions = pointTransactionRepository.findByReferenceIdAndType(referenceId, type);
+        for (PointTransaction transaction : transactions) {
+            if (transaction.getUser().equals(user)) {
+                transaction.setPoints(0);
+                transaction.setStatus(PointTransactionStatus.CANCELLED);
+                pointTransactionRepository.save(transaction);
+            }
+        }
+        updateUserPoints(user);
     }
 
     @Transactional

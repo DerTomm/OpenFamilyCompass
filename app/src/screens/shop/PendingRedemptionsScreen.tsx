@@ -16,6 +16,7 @@ import { UserAvatar } from '../../components/ui';
 import { usePendingRedemptions } from '../../hooks/useApi';
 import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
+import { useAuthStore } from '../../store/authStore';
 import { RewardRedemptionResponse } from '../../types/api';
 
 interface RedemptionCardProps {
@@ -111,6 +112,7 @@ const RedemptionCard: React.FC<RedemptionCardProps> = ({
 export const PendingRedemptionsScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const { data: redemptions, isLoading, refetch, isRefetching } = usePendingRedemptions();
+  const fetchUser = useAuthStore((state) => state.fetchUser);
   const { t } = useI18n();
   const { showConfirm, Dialogs } = useDialogs();
   const theme = useTheme();
@@ -121,6 +123,8 @@ export const PendingRedemptionsScreen: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['redemptions'] });
       queryClient.invalidateQueries({ queryKey: ['pendingRedemptions'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      fetchUser();
     },
   });
 
@@ -130,6 +134,8 @@ export const PendingRedemptionsScreen: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['redemptions'] });
       queryClient.invalidateQueries({ queryKey: ['pendingRedemptions'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      fetchUser();
     },
   });
 

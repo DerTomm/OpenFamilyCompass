@@ -79,6 +79,12 @@ public class TaskInstanceService {
 
         TaskInstance savedInstance = taskInstanceRepository.save(instance);
 
+        // Create a PENDING transaction as estimate – becomes COMPLETED once the parent
+        // approves
+        Long instanceId = Objects.requireNonNull(savedInstance.getId(), "TaskInstance ID must not be null");
+        pointService.addPointsPending(child, instance.getTaskDefinition().getBasePoints(),
+                PointTransactionType.TASK, instance.getTaskDefinition().getTitle(), instanceId, child);
+
         User parentToNotify = instance.getTaskDefinition().getCreatedBy() != null
                 ? instance.getTaskDefinition().getCreatedBy()
                 : instance.getAssignedUser();
@@ -112,10 +118,11 @@ public class TaskInstanceService {
 
         TaskInstance savedInstance = taskInstanceRepository.save(instance);
 
-        // Credit points
+        // Replace PENDING estimate with actual COMPLETED transaction
         Long instanceId = Objects.requireNonNull(instance.getId(), "TaskInstance ID must not be null");
-        pointService.addPoints(instance.getAssignedUser(), awardedPoints,
-                PointTransactionType.TASK, instance.getTaskDefinition().getTitle(), instanceId, approver);
+        pointService.completeTransaction(instanceId, PointTransactionType.TASK,
+                instance.getAssignedUser(), awardedPoints,
+                instance.getTaskDefinition().getTitle(), approver);
 
         // Notify child about approved task
         notificationService.createLocalizedNotification(
@@ -139,6 +146,11 @@ public class TaskInstanceService {
         instance.setParentNotes(notes);
 
         TaskInstance savedInstance = taskInstanceRepository.save(instance);
+
+        // Cancel the PENDING estimate transaction (keeps history, sets points to 0)
+        Long instanceId = Objects.requireNonNull(instance.getId(), "TaskInstance ID must not be null");
+        pointService.cancelTransactionByReferenceIdAndType(instanceId, PointTransactionType.TASK,
+                instance.getAssignedUser());
 
         // Notify child about rejected task
         notificationService.createLocalizedNotification(

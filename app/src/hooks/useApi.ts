@@ -203,11 +203,26 @@ export const usePendingRedemptions = () => {
 
 export const useRequestRedemption = () => {
   const queryClient = useQueryClient();
+  const fetchUser = useAuthStore((state) => state.fetchUser);
   return useMutation({
     mutationFn: (rewardId: number) => redemptionsApi.request(rewardId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['redemptions'] });
-      queryClient.invalidateQueries({ queryKey: queryKeys.points() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions() });
+      fetchUser();
+    },
+  });
+};
+
+export const useCancelRedemption = () => {
+  const queryClient = useQueryClient();
+  const fetchUser = useAuthStore((state) => state.fetchUser);
+  return useMutation({
+    mutationFn: (redemptionId: number) => redemptionsApi.cancel(redemptionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['redemptions'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions() });
+      fetchUser();
     },
   });
 };

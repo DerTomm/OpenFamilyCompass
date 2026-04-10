@@ -6,6 +6,7 @@ export type RecurrenceType = 'ONCE' | 'WEEKLY' | 'MONTHLY';
 export type MonthlyRecurrenceMode = 'DAY_OF_MONTH' | 'WEEKDAY_PATTERN';
 export type RewardStatus = 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'DELIVERED';
 export type PointTransactionType = 'TASK' | 'REWARD' | 'BEHAVIOR' | 'PENALTY' | 'BONUS';
+export type PointTransactionStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 export type NotificationType = 'TASK_ASSIGNED' | 'TASK_COMPLETED' | 'TASK_APPROVED' | 'TASK_REJECTED' | 'TASK_EXPIRED' | 'REWARD_REQUESTED' | 'REWARD_APPROVED' | 'REWARD_REJECTED' | 'POINTS_EARNED';
 
 // User
@@ -206,6 +207,7 @@ export interface PointTransactionResponse {
   userId: number;
   points: number;
   type: PointTransactionType;
+  status?: PointTransactionStatus;
   description?: string;
   referenceId?: number;
   remarks?: string;
