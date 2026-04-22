@@ -154,7 +154,6 @@ public class SecurityConfig {
                                                 // Auth Endpoints (LOGIN)
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/api/v1/auth/**").permitAll()
-                                                .requestMatchers("/api/avatar/icons").permitAll()
                                                 // Reward images are public (not sensitive)
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/v1/rewards/*/image")

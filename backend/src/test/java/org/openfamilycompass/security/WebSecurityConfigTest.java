@@ -60,13 +60,6 @@ public class WebSecurityConfigTest {
                 .andExpect(status().is3xxRedirection()); // Redirects to /swagger-ui/index.html
     }
 
-    @Test
-    @DisplayName("Avatar icons are public")
-    void testAvatarIconsArePublic() throws Exception {
-        mockMvc.perform(get("/api/avatar/icons"))
-                .andExpect(status().isOk());
-    }
-
     // ===== PROTECTED ENDPOINTS =====
 
     @Test
