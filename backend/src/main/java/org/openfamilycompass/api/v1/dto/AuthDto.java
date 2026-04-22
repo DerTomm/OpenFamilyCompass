@@ -48,7 +48,8 @@ public class AuthDto {
         private String currentPassword;
 
         @NotBlank
-        @Size(min = 4)
+        @Size(min = PasswordConstraints.MIN_LENGTH, max = PasswordConstraints.MAX_LENGTH,
+                message = PasswordConstraints.SIZE_MESSAGE)
         private String newPassword;
     }
 }

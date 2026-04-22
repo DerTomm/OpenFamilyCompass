@@ -86,7 +86,8 @@ public class UserDto {
         private String username;
 
         @NotBlank
-        @Size(min = 4)
+        @Size(min = PasswordConstraints.MIN_LENGTH, max = PasswordConstraints.MAX_LENGTH,
+                message = PasswordConstraints.SIZE_MESSAGE)
         private String password;
 
         @NotBlank
@@ -105,7 +106,8 @@ public class UserDto {
     public static class UpdateRequest {
         private String firstName;
 
-        @Size(min = 4)
+        @Size(min = PasswordConstraints.MIN_LENGTH, max = PasswordConstraints.MAX_LENGTH,
+                message = PasswordConstraints.SIZE_MESSAGE)
         private String password;
 
         private Boolean active;
@@ -172,7 +174,8 @@ public class UserDto {
         private String currentPassword;
 
         @NotBlank(message = "New password is required")
-        @Size(min = 6, message = "Password must be at least 6 characters")
+        @Size(min = PasswordConstraints.MIN_LENGTH, max = PasswordConstraints.MAX_LENGTH,
+                message = PasswordConstraints.SIZE_MESSAGE)
         private String newPassword;
     }
 
