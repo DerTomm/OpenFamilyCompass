@@ -1,11 +1,13 @@
 package org.openfamilycompass.config;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.openfamilycompass.security.RateLimitingFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -29,15 +31,28 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
 @Profile("!test")
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
         private final RateLimitingFilter rateLimitingFilter;
+
+        /**
+         * Comma-separated list of allowed CORS origins (exact URLs or patterns
+         * such as {@code https://*.example.com}). Configure via the
+         * {@code CORS_ALLOWED_ORIGINS} environment variable. Empty by default,
+         * which disables CORS entirely for browser clients. Native mobile
+         * clients (React Native / Expo) are unaffected because they do not
+         * send an {@code Origin} header.
+         */
+        @Value("${cors.allowed-origins:}")
+        private String allowedOriginsRaw;
 
         @Bean
         public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -86,14 +101,36 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOriginPatterns(java.util.List.of("*")); // Allow all origins for WebView
+
+                List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
+                                .collect(Collectors.toList());
+
+                if (origins.isEmpty()) {
+                        log.info("CORS disabled: no allowed origins configured. "
+                                        + "Native mobile clients are unaffected. "
+                                        + "Set CORS_ALLOWED_ORIGINS to enable browser clients.");
+                } else {
+                        if (origins.contains("*")) {
+                                log.warn("CORS configured with wildcard '*' and credentials=true. "
+                                                + "This echoes any Origin back to the browser and defeats "
+                                                + "cross-origin isolation. Use explicit origins in production.");
+                        }
+                        log.info("CORS allowed origins: {}", origins);
+                        // setAllowedOriginPatterns supports both exact URLs and wildcard patterns
+                        // (e.g. https://*.example.com) and is required when allowCredentials=true.
+                        configuration.setAllowedOriginPatterns(origins);
+                }
+
                 configuration.setAllowedMethods(
-                                java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
-                configuration.setAllowedHeaders(java.util.List.of("*"));
-                configuration.setExposedHeaders(java.util.List.of("Authorization"));
+                                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+                configuration.setAllowedHeaders(List.of("*"));
+                configuration.setExposedHeaders(List.of("Authorization"));
                 configuration.setAllowCredentials(true);
+
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", configuration); // Apply to all endpoints
+                source.registerCorsConfiguration("/**", configuration);
                 return source;
         }
 

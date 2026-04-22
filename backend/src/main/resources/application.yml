@@ -78,6 +78,15 @@ logging:
     org.hibernate.SQL: INFO
     org.hibernate.orm.jdbc.bind: INFO
 
+cors:
+  # Comma-separated list of origins (or wildcard patterns such as
+  # https://*.example.com) that are allowed to make authenticated
+  # cross-origin requests. Empty by default, which disables CORS for browser
+  # clients. Native mobile clients (React Native / Expo) do not send an
+  # Origin header and are unaffected.
+  # Configure via env var: CORS_ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
+  allowed-origins: ""
+
 app:
   avatars:
     upload-dir: uploads/avatars
