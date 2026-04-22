@@ -28,10 +28,17 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -46,6 +53,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JwtConfig {
 
+    /** Claim name used to distinguish access tokens from refresh tokens. */
+    public static final String TOKEN_TYPE_CLAIM = "type";
+    /** Claim value for access tokens. */
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    /** Claim value for refresh tokens. */
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+
     private final KeyPair keyPair;
 
     public JwtConfig(
@@ -58,9 +72,49 @@ public class JwtConfig {
         this.keyPair = loadOrGenerateKeyPair(keystorePath, keystorePassword, keyAlias);
     }
 
+    /**
+     * Primary {@link JwtDecoder} used by Spring Security's OAuth2 Resource Server
+     * for access-token validation. In addition to the standard validators
+     * (signature + expiration), it rejects tokens that were issued as refresh
+     * tokens (i.e. carry {@code "type": "refresh"}) so refresh tokens cannot be
+     * used to authenticate API requests.
+     */
     @Bean
+    @Primary
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withPublicKey((RSAPublicKey) keyPair.getPublic()).build();
+        NimbusJwtDecoder decoder = NimbusJwtDecoder
+                .withPublicKey((RSAPublicKey) keyPair.getPublic())
+                .build();
+
+        OAuth2TokenValidator<Jwt> defaults = JwtValidators.createDefault();
+        OAuth2TokenValidator<Jwt> notRefreshToken = jwt -> {
+            String type = jwt.getClaimAsString(TOKEN_TYPE_CLAIM);
+            if (TOKEN_TYPE_REFRESH.equals(type)) {
+                OAuth2Error err = new OAuth2Error(
+                        "invalid_token",
+                        "Refresh tokens must not be used for API access",
+                        null);
+                return OAuth2TokenValidatorResult.failure(err);
+            }
+            return OAuth2TokenValidatorResult.success();
+        };
+
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(defaults, notRefreshToken));
+        return decoder;
+    }
+
+    /**
+     * Plain {@link JwtDecoder} used by
+     * {@link org.openfamilycompass.security.TokenService} to validate refresh
+     * tokens. It applies the default validators (signature + expiration) but
+     * does not reject refresh tokens - the caller is expected to verify the
+     * {@link #TOKEN_TYPE_CLAIM} claim explicitly.
+     */
+    @Bean(name = "refreshTokenJwtDecoder")
+    public JwtDecoder refreshTokenJwtDecoder() {
+        return NimbusJwtDecoder
+                .withPublicKey((RSAPublicKey) keyPair.getPublic())
+                .build();
     }
 
     @Bean

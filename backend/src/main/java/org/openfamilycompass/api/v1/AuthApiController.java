@@ -74,36 +74,29 @@ public class AuthApiController {
     public ResponseEntity<AuthDto.TokenResponse> refresh(@RequestBody @Valid AuthDto.RefreshTokenRequest request) {
         log.info("Token refresh attempt");
         try {
-            // Validate refresh token logic here (in a real app, you'd check DB or verify signature/expiration manually if it's a JWT)
-            // For now, let's assume we can decode it and if valid, issue a new one.
-            // CAUTION: Simplified for this example. Ideally, TokenService should verify the refresh token.
-            
-            // Assuming the refresh token is also a JWT signed by us:
-            if (!tokenService.validateToken(request.getRefreshToken())) {
-                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            // Validate signature, expiration and that the token was actually issued
+            // as a refresh token (carries "type": "refresh"). This prevents access
+            // tokens from being accepted here.
+            if (!tokenService.validateRefreshToken(request.getRefreshToken())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            String username = tokenService.getUsernameFromToken(request.getRefreshToken());
-            // In a real scenario, you might want to reload the user/authorities from DB to ensure they are still valid
-            // But if we trust the refresh token's content (and it's not revoked), we can just issue a new access token.
-            
-            // Re-create an Authentication object to generate a new token
-             // Note: We need a way to get authorities. The simplest is to load the user.
+            String username = tokenService.getUsernameFromRefreshToken(request.getRefreshToken());
+
+            // Reload the user from the database so the freshly issued access token
+            // reflects the current role and active state.
             User user = userService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            // Create a dummy authentication to pass to generateToken (which likely pulls name/authorities)
-             // We can use UsernamePasswordAuthenticationToken or similar
+
             Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user.getUsername(),
-                null,
-                user.getAuthorities()
-            );
-            
+                    user.getUsername(),
+                    null,
+                    user.getAuthorities());
+
             String newToken = tokenService.generateToken(authentication);
-            // Optionally rotate refresh token
+            // Rotate the refresh token on every refresh.
             String newRefreshToken = tokenService.generateRefreshToken(authentication);
-            
+
             return ResponseEntity.ok(AuthDto.TokenResponse.builder()
                     .accessToken(newToken)
                     .refreshToken(newRefreshToken)
