@@ -141,10 +141,6 @@ public class SecurityConfig {
                                 .cors(Customizer.withDefaults()) // CORS aktivieren
                                 .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                                 .authorizeHttpRequests(auth -> auth
-                                                // Public static resources
-                                                .requestMatchers("/css/**", "/js/**", "/images/**", "/avatar/**",
-                                                                "/favicon.png", "/favicon.ico")
-                                                .permitAll()
                                                 // Swagger UI
                                                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                                                                 "/v3/api-docs/**")

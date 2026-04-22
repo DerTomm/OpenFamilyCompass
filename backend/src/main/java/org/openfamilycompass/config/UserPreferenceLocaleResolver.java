@@ -3,19 +3,25 @@ package org.openfamilycompass.config;
 import java.util.List;
 import java.util.Locale;
 
-import org.openfamilycompass.model.User;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.LocaleResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Custom LocaleResolver that:
- * 1. Uses browser's Accept-Language header as primary source
- * 2. Allows authenticated users to override with their preference
- * 3. Falls back to English if no preference is found
+ * LocaleResolver used for backend-generated messages (e.g. validation errors).
+ *
+ * Resolution order:
+ * 1. Browser's Accept-Language header (if among the supported locales)
+ * 2. English as default fallback
+ *
+ * A previous implementation attempted to read the authenticated user's
+ * language preference from the Spring Security principal. That path is no
+ * longer reachable since the app uses a JWT resource server (the principal is
+ * a {@link org.springframework.security.oauth2.jwt.Jwt}, not a domain User).
+ * The mobile client sends its own locale via Accept-Language, so the
+ * browser-locale path is sufficient for backend messages. User-level language
+ * preferences are applied client-side.
  */
 public class UserPreferenceLocaleResolver implements LocaleResolver {
 
@@ -24,23 +30,9 @@ public class UserPreferenceLocaleResolver implements LocaleResolver {
 
     @Override
     public Locale resolveLocale(HttpServletRequest request) {
-        // Check if user is authenticated and has a language preference
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof User user) {
-            String userLanguage = user.getLanguage();
-            if (userLanguage != null) {
-                Locale userLocale = Locale.forLanguageTag(userLanguage);
-                if (SUPPORTED_LOCALES.contains(userLocale)) {
-                    return userLocale;
-                }
-            }
-        }
-
-        // Fall back to browser's Accept-Language header
         String acceptLanguage = request.getHeader("Accept-Language");
         if (acceptLanguage != null && !acceptLanguage.trim().isEmpty()) {
             Locale browserLocale = request.getLocale();
-            // Check if browser locale is supported
             for (Locale supported : SUPPORTED_LOCALES) {
                 if (supported.getLanguage().equals(browserLocale.getLanguage())) {
                     return supported;
@@ -48,7 +40,6 @@ public class UserPreferenceLocaleResolver implements LocaleResolver {
             }
         }
 
-        // Default fallback
         return DEFAULT_LOCALE;
     }
 

@@ -118,17 +118,21 @@ public class User implements UserDetails {
     }
 
     /**
-     * Returns the avatar path/URL for this user, or null if no avatar is set.
-     * For PHOTO type: returns "/api/v1/users/{id}/avatar"
-     * For ICON type: returns "/images/avatars/{iconName}.svg"
-     * For DEFAULT or null: returns null
+     * Returns the avatar path/URL for this user, or {@code null} if no avatar is
+     * set or the avatar is rendered client-side.
+     *
+     * <ul>
+     *   <li>PHOTO: returns {@code "/api/v1/users/{id}/avatar"} - fetched by the
+     *   client.</li>
+     *   <li>ICON / DEFAULT / null: returns {@code null}. Icon avatars are
+     *   resolved client-side from {@code avatarIconName} against a bundled
+     *   emoji/icon set; no server-side asset path is exposed.</li>
+     * </ul>
      */
     public String getAvatarPath() {
         if ("PHOTO".equals(avatarType) && avatarData != null) {
             return "/api/v1/users/" + id + "/avatar";
-        } else if ("ICON".equals(avatarType) && avatarIconName != null) {
-            return "/images/avatars/" + avatarIconName + ".svg";
         }
-        return null; // DEFAULT or no avatar
+        return null;
     }
 }
