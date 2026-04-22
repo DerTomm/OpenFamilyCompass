@@ -1,6 +1,5 @@
 package org.openfamilycompass.init;
 
-import org.openfamilycompass.backup.BackupService;
 import org.openfamilycompass.model.User;
 import org.openfamilycompass.model.UserRole;
 import org.openfamilycompass.repository.UserRepository;
@@ -21,7 +20,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final BackupService backupService;
 
     @Value("${app.admin.default-username}")
     private String adminUsername;
@@ -31,16 +29,6 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Apply any pending backup restore FIRST, before other initializations
-        try {
-            backupService.applyPendingRestore();
-        } catch (Exception e) {
-            log.error("Failed to apply pending backup restore during startup", e);
-            throw new RuntimeException(
-                    "Critical: Pending backup restore failed. Check logs and manual intervention may be required.", e);
-        }
-
-        // Then proceed with normal initialization
         initializeAdminUser();
         initializeAvatarDirectory();
     }
