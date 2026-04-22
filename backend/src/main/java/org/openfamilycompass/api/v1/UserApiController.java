@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 @Tag(name = "Users", description = "User management (Admin only)")
 public class UserApiController {
 

@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/behaviors")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 @Tag(name = "Behaviors", description = "Behavior rules and evaluations")
 public class BehaviorApiController {
 
@@ -173,11 +174,18 @@ public class BehaviorApiController {
     @GetMapping("/evaluations")
     @Operation(summary = "List behavior evaluations")
     public ResponseEntity<List<BehaviorDto.EvaluationResponse>> listEvaluations(
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Boolean committed) {
 
+        User currentUser = getCurrentUser(jwt);
         List<BehaviorEvaluation> evaluations;
-        if (userId != null) {
+
+        if (currentUser.getRole() == org.openfamilycompass.model.UserRole.CHILD) {
+            // Children may only see their own evaluations, regardless of the
+            // userId query parameter.
+            evaluations = evaluationService.findByUser(currentUser);
+        } else if (userId != null) {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
             evaluations = evaluationService.findByUser(user);

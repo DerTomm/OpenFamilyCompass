@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/v1/tasks")
 @RequiredArgsConstructor
 @Slf4j
+@PreAuthorize("isAuthenticated()")
 @Tag(name = "Tasks", description = "Task definitions and instances")
 public class TaskApiController {
 
@@ -275,9 +276,20 @@ public class TaskApiController {
 
     @GetMapping("/instances/{id}")
     @Operation(summary = "Get task instance by ID")
-    public ResponseEntity<TaskDto.InstanceResponse> getTaskInstanceById(@PathVariable Long id) {
+    public ResponseEntity<TaskDto.InstanceResponse> getTaskInstanceById(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id) {
         TaskInstance instance = taskInstanceService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task instance not found"));
+
+        // Children may only see their own task instances. Return 404 instead of
+        // 403 to avoid disclosing the existence of siblings' tasks.
+        User currentUser = getCurrentUser(jwt);
+        if (currentUser.getRole() == UserRole.CHILD
+                && !instance.getAssignedUser().getId().equals(currentUser.getId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task instance not found");
+        }
+
         return ResponseEntity.ok(TaskDto.InstanceResponse.fromEntity(instance));
     }
 

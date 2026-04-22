@@ -39,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/rewards")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 @Tag(name = "Rewards", description = "Rewards and redemptions")
 public class RewardApiController {
 
@@ -194,6 +195,7 @@ public class RewardApiController {
     }
 
     @GetMapping("/{id}/image")
+    @PreAuthorize("permitAll()")
     @Operation(summary = "Get reward image")
     public ResponseEntity<byte[]> getRewardImage(@PathVariable Long id) {
         Reward reward = rewardService.findById(id)

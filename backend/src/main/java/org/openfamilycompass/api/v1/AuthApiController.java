@@ -8,6 +8,7 @@ import org.openfamilycompass.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -110,6 +111,7 @@ public class AuthApiController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get current user info")
     public ResponseEntity<UserDto.Response> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         if (jwt == null) {
@@ -122,6 +124,7 @@ public class AuthApiController {
     }
 
     @PostMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Change current user's password")
     public ResponseEntity<Void> changePassword(
             @AuthenticationPrincipal Jwt jwt,
