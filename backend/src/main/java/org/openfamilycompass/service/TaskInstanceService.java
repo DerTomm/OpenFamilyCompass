@@ -147,7 +147,8 @@ public class TaskInstanceService {
 
         TaskInstance savedInstance = taskInstanceRepository.save(instance);
 
-        // Cancel the PENDING estimate transaction (keeps history, sets points to 0)
+        // Cancel the PENDING estimate transaction (keeps the original points
+        // in the history; CANCELLED rows are excluded from the balance).
         Long instanceId = Objects.requireNonNull(instance.getId(), "TaskInstance ID must not be null");
         pointService.cancelTransactionByReferenceIdAndType(instanceId, PointTransactionType.TASK,
                 instance.getAssignedUser());

@@ -115,12 +115,16 @@ public class PointApiController {
                 .limit(limit)
                 .collect(Collectors.toList());
 
-        // Calculate running balance
+        // Calculate running balance. Transactions are sorted newest-first, so we
+        // start from the user's current balance and walk backwards. Only rows that
+        // actually affect the balance (PointTransaction#affectsBalance) shift it.
         int balance = targetUser != null ? targetUser.getTotalPoints() : 0;
         List<PointDto.TransactionResponse> responseList = new java.util.ArrayList<>();
         for (PointTransaction tx : transactions) {
             responseList.add(PointDto.TransactionResponse.fromEntityWithBalance(tx, balance));
-            balance -= tx.getPoints();
+            if (tx.affectsBalance()) {
+                balance -= tx.getPoints();
+            }
         }
 
         return ResponseEntity.ok(PointDto.TransactionsResponse.builder()

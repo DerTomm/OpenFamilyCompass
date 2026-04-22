@@ -117,7 +117,8 @@ public class RewardRedemptionService {
         RewardRedemption redemption = redemptionRepository.findById(redemptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Redemption not found"));
 
-        // Cancel the PENDING transaction (keeps history, sets points to 0)
+        // Cancel the PENDING transaction (keeps the original points in the
+        // history; CANCELLED rows are excluded from the balance).
         pointService.cancelTransactionByReferenceIdAndType(redemptionId, PointTransactionType.REWARD,
                 redemption.getUser());
 

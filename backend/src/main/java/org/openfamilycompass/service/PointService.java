@@ -93,10 +93,14 @@ public class PointService {
     @Transactional
     public void cancelTransactionByReferenceIdAndType(@NonNull Long referenceId, @NonNull PointTransactionType type,
             @NonNull User user) {
+        // Flip to CANCELLED and keep the original points untouched so the
+        // history still shows what was originally requested / submitted.
+        // CANCELLED rows are excluded from the balance by sumPointsByUser and
+        // PointTransaction#affectsBalance, so the points value has no effect
+        // on the visible balance anymore.
         List<PointTransaction> transactions = pointTransactionRepository.findByReferenceIdAndType(referenceId, type);
         for (PointTransaction transaction : transactions) {
             if (transaction.getUser().equals(user)) {
-                transaction.setPoints(0);
                 transaction.setStatus(PointTransactionStatus.CANCELLED);
                 pointTransactionRepository.save(transaction);
             }
@@ -157,8 +161,13 @@ public class PointService {
         List<PointTransactionWithBalance> result = new ArrayList<>();
         int runningBalance = 0;
 
+        // Keep the running balance in sync with PointTransaction#affectsBalance so
+        // pending credits (e.g. task awaiting approval) and cancelled rows are shown
+        // in the history without shifting the reported balance.
         for (PointTransaction transaction : transactions) {
-            runningBalance += transaction.getPoints();
+            if (transaction.affectsBalance()) {
+                runningBalance += transaction.getPoints();
+            }
             result.add(new PointTransactionWithBalance(transaction, runningBalance));
         }
 

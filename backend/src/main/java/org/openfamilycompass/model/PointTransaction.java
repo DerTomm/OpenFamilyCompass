@@ -63,4 +63,24 @@ public class PointTransaction {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    /**
+     * Whether this transaction counts towards the user's visible balance.
+     * Mirrors the filter in
+     * {@code PointTransactionRepository#sumPointsByUser(User)}.
+     *
+     * <p>COMPLETED transactions always count. PENDING transactions only count
+     * when they reduce the balance (reservation for a requested reward).
+     * PENDING credits (e.g. a task awaiting parent approval) and CANCELLED
+     * transactions do not affect the balance.
+     */
+    public boolean affectsBalance() {
+        if (status == PointTransactionStatus.COMPLETED) {
+            return true;
+        }
+        if (status == PointTransactionStatus.PENDING && points < 0) {
+            return true;
+        }
+        return false;
+    }
 }
