@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -116,12 +117,17 @@ class TaskDefinitionServiceTest {
     }
 
     @Test
-    void createTaskDefinition_ShouldCreateWeeklyTaskWithoutTaskInstances() {
-        // Given
+    void createTaskDefinition_ShouldNotCreateInstance_WhenWeeklyTaskHasNoDueDayToday() {
+        // Given: a weekly task whose due days are deliberately chosen to exclude
+        // today's day of week. The service is expected to create an initial
+        // instance only when today IS a due day (see TaskDefinitionService);
+        // otherwise the scheduler takes over later.
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        String weeklyDays = today.plus(1).name() + "," + today.plus(3).name();
+
         String title = "Weekly Task";
         RecurrenceType recurrenceType = RecurrenceType.WEEKLY;
         Set<User> assignedUsers = Set.of(child1);
-        String weeklyDays = "MONDAY,WEDNESDAY";
 
         TaskDefinition savedDefinition = new TaskDefinition();
         savedDefinition.setId(1L);
@@ -141,7 +147,7 @@ class TaskDefinitionServiceTest {
         assertThat(result.getRecurrenceType()).isEqualTo(RecurrenceType.WEEKLY);
         assertThat(result.getWeeklyDays()).isEqualTo(weeklyDays);
 
-        // Verify NO TaskInstances were created for WEEKLY tasks
+        // No instance should be created today because today is not a due day.
         verify(taskInstanceService, never()).createTaskInstance(any(), any(), any());
     }
 
