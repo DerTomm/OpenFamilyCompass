@@ -1,339 +1,287 @@
-# OpenFamilyCompass 🧭
+# OpenFamilyCompass
 
 **Guiding children's behavior and family routines — together.**
 
-An open-source web application for organizing family tasks, behavior rules, and rewards.
+An open-source family management application for organizing chores, behaviors and rewards.
+The project is community-driven, in an early stage, and feedback, ideas and contributions are highly appreciated.
 
-## 📋 Overview
+## Overview
 
-OpenFamilyCompass is an open-source solution designed for parents to manage kids chores and promote good behavior and habbits. It combines task management, behavior points, and a plus/minus system in a child-friendly, intuitive interface. The development is transparent and community-driven.
-
-This project is in a very early stage. User experiences, feature and process ideas and collaboration is highly appreciated.
+OpenFamilyCompass helps parents organize daily chores, track positive and negative behaviors, and motivate children through a point-based reward shop.
 
 ### Key Features
 
-- 👨‍👩‍👧‍👦 **Multi-User System** with three roles: Admin, Parents, Children
-- 📝 **Task Management** with one-time and recurring tasks (daily, weekly, monthly)
-- ⭐ **Points System** with flexible point allocation by parents
-- 🛍️ **Reward Shop** for children to redeem their points
-- 💚 **Habit Tracking** for positive behaviors
-- ⚠️ **Penalty Points** for negative behavior
-- 📊 **Points History** for accountability
-- 👤 **Avatar System** (predefined + upload option)
+- Multi-user system with three roles: **Admin**, **Parent**, **Child**
+- Task management with one-time and recurring tasks (daily, weekly, monthly)
+- Point system with flexible point allocation by parents
+- Reward shop with parent approval workflow
+- Habit / behavior tracking (positive and negative)
+- Transaction history for full accountability
+- Avatar system (predefined icons + custom upload)
+- Push notifications via Firebase Cloud Messaging
+- Internationalization: English + German (i18n/i18next)
 
-## 🛠️ Technology Stack
+## Architecture
 
-- **Backend:** Java + Spring
-- **Frontend:** Thymeleaf, Bootstrap
-- **Security:** Spring Security with password-based authentication
-- **Database:** PostgreSQL 16
-- **Build Tool:** Maven
-- **Containerization:** Docker (PostgreSQL)
+OpenFamilyCompass is split into two independent applications in a single monorepo:
 
-## 📦 Prerequisites
+| Module       | Path        | Stack                                                               |
+| ------------ | ----------- | ------------------------------------------------------------------- |
+| Backend      | `/backend`  | Java 21, Spring Boot 3.5, Spring Security (JWT), JPA, Flyway, Maven |
+| Mobile App   | `/app`      | React Native 0.83, Expo SDK 55, React Navigation, React Query       |
 
-- Java 21 or higher (LTS)
-- Maven 3.6+
-- Docker & Docker Compose
-- Optional: IDE (IntelliJ IDEA, Eclipse, VS Code)
+The backend exposes a REST API under `/api/v1/**` that the Expo app consumes. A Swagger UI is available at `/swagger-ui.html`.
 
-## 🚀 Installation & Startup
-
-### Option 1: Using Docker (Recommended for Production)
-
-**Prerequisites:** Docker & Docker Compose
-
-```bash
-# Clone repository
-git clone https://github.com/openfamilycompass/openfamilycompass.git
-cd openfamilycompass
-
-# Copy environment template (optional, for custom credentials)
-cp .env.example .env
-
-# Start services
-docker-compose up -d
-```
-
-The application will be available at: **http://localhost:8080**
-
-**Latest Release Image:** `ghcr.io/openfamilycompass/openfamilycompass:latest`
-
-To use a specific version:
-```yaml
-# In docker-compose.yml
-image: ghcr.io/openfamilycompass/openfamilycompass:1.0.0-alpha
-```
-
-### Option 2: Local Development
-
-**Prerequisites:** Java 21+, Maven 3.6+, Docker (for PostgreSQL)
-
-```bash
-# Clone repository
-git clone https://github.com/openfamilycompass/openfamilycompass.git
-cd openfamilycompass
-
-# Start PostgreSQL
-docker-compose up -d postgres
-
-# Build application
-mvn clean install
-
-# Run application
-mvn spring-boot:run
-```
-
-The application will be available at: **http://localhost:8080**
-
-## 🔐 Default Login
-
-After the first startup, an admin account is automatically created:
-
-- **Username:** `admin`
-- **Password:** `admin`
-
-⚠️ **Important:** Please change the admin password after the first login!
-
-## � Push Notifications
-
-The application supports push notifications to Android devices for real-time updates. See [PUSH_NOTIFICATIONS_README.md](PUSH_NOTIFICATIONS_README.md) for setup instructions.
-
-**Quick Setup:**
-1. Create a Firebase project
-2. Download `google-services.json` → `android-app/app/`
-3. Download `firebase-service-account.json` → `src/main/resources/`
-4. Restart the server
-
-## �🐳 Docker Image
-
-Official Docker images are available at GitHub Container Registry (GHCR):
-
-```bash
-# Pull latest image
-docker pull ghcr.io/openfamilycompass/openfamilycompass:latest
-
-# Pull specific version
-docker pull ghcr.io/openfamilycompass/openfamilycompass:1.0.0-alpha
-```
-
-Docker images are built automatically for each release with:
-- ✅ Full Maven build & test suite
-- ✅ Docker health checks
-- ✅ Multi-layer caching for fast builds
-
-## 🔄 CI/CD Pipeline
-
-This project uses GitHub Actions for:
-
-- **Build & Test**: Runs on every push to detect issues early
-- **Docker Build & Push**: Automatically builds and pushes images on release tags
-- **Health Checks**: Verifies Docker container startup and basic functionality
-
-### Creating a Release
-
-To create a new release and build Docker image:
-
-1. Go to **Actions** → **Create Release** (or trigger manually)
-2. Enter version in semantic format (e.g., `1.0.0-alpha`, `1.0.0`)
-3. Workflow will:
-   - Create git tag
-   - Build & test application
-   - Build & push Docker image to GHCR
-   - Create GitHub Release
-
-```bash
-# Or create tag manually
-git tag -a v1.0.0-alpha -m "Release version 1.0.0-alpha"
-git push origin v1.0.0-alpha
-```
-
-## 👥 User Roles
-
-### Admin
-- User management
-
-### Parents
-- Task, reward, and habit management
-- Approve/reject tasks
-- Approve reward requests
-- Record positive habits
-- Assign bonus and penalty points
-
-### Children
-- View tasks and mark as completed
-- View points balance
-- Redeem rewards in shop
-- View points history
-
-## 📁 Project Structure
+### Repository Layout
 
 ```
 OpenFamilyCompass/
-├── src/
-│   ├── main/
-│   │   ├── java/com/family/kidschores/
-│   │   │   ├── config/              # Configuration (Security, Web)
-│   │   │   ├── controller/          # Web Controllers
-│   │   │   ├── init/                # Data Initialization
-│   │   │   ├── model/               # Domain Models
-│   │   │   ├── repository/          # JPA Repositories
-│   │   │   ├── service/             # Business Logic
-│   │   │   └── KidsChoresApplication.java
-│   │   └── resources/
-│   │       ├── static/              # CSS, JS, Images
-│   │       ├── templates/           # Thymeleaf Templates
-│   │       └── application.yml      # Configuration
-│   └── test/                        # Tests
-├── docker-compose.yml               # PostgreSQL Setup
-├── pom.xml                          # Maven Dependencies
-└── README.md
+├── backend/                     # Spring Boot REST server
+│   ├── src/main/java/org/openfamilycompass/
+│   │   ├── api/v1/              # REST controllers (JSON, for the mobile app)
+│   │   ├── config/              # Security, JWT, FCM, OpenAPI, Web
+│   │   ├── security/            # TokenService, RateLimitingFilter
+│   │   ├── service/             # Business logic
+│   │   ├── repository/          # Spring Data JPA
+│   │   ├── model/               # JPA entities
+│   │   ├── dto/                 # API DTOs
+│   │   └── OpenFamilyCompassApplication.java
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│   │   ├── db/migration/        # Flyway SQL migrations (V1 … V16)
+│   │   ├── messages*.properties # i18n message bundles
+│   │   └── static/              # Served static assets
+│   ├── pom.xml
+│   └── Dockerfile
+├── app/                         # Expo / React Native client
+│   ├── src/
+│   │   ├── api/                 # axios client, API services, config
+│   │   ├── navigation/          # React Navigation (tabs + stacks)
+│   │   ├── screens/             # auth, admin, parent, child, tasks, shop, …
+│   │   ├── components/          # Reusable UI
+│   │   ├── hooks/               # e.g. usePushNotifications
+│   │   ├── store/               # Zustand stores (authStore)
+│   │   ├── theme/               # Light/Dark theme context
+│   │   ├── i18n/                # i18next config + translations
+│   │   └── utils/
+│   ├── android/                 # Native Android project (Gradle)
+│   ├── app.json                 # Expo configuration
+│   ├── eas.json                 # EAS Build profiles
+│   ├── package.json
+│   └── Dockerfile               # Optional: dev container for Expo Metro
+├── docker-compose.yml           # Postgres + Backend + (optional) Expo
+├── .env.example
+└── start.sh / start.bat         # Convenience start scripts
 ```
 
-## 💾 Database Schema
+## Technology Stack
 
-### Main Entities
+### Backend
 
-- **User:** User accounts (Admin, Parent, Child)
-- **Child:** Child profiles with avatar and points balance
-- **Task:** Tasks (one-time or recurring)
-- **Reward:** Rewards in shop
-- **RewardRedemption:** Redeemed rewards
-- **Habit:** Positive habits
-- **Penalty:** Penalty points
-- **PointTransaction:** History of all point movements
+- **Java 21** (LTS), **Maven 3.6+**
+- **Spring Boot 3.5** (Web, Data JPA, Validation, Actuator, DevTools)
+- **Spring Security** + **OAuth2 Resource Server** (JWT validation)
+- **JWT**: RSA-signed (RS256) with an auto-generated PKCS#12 keystore (`jwt-keys.pfx`), persisted in a Docker volume
+- **PostgreSQL 16** (runtime) + **H2** (tests)
+- **Flyway** for database migrations
+- **Firebase Admin (google-auth-library)** for Cloud Messaging
+- **springdoc-openapi** — Swagger UI at `/swagger-ui.html`
+- **Lombok**, **BouncyCastle** (keystore generation)
 
-## 🎯 Typical Workflow
+### Mobile App
 
-### For Parents/Admin:
+- **Expo SDK 55** / **React Native 0.83** / **React 19**
+- **TypeScript 5.9**
+- **React Navigation 7** (native-stack + bottom-tabs + drawer)
+- **TanStack React Query 5** for server state
+- **Zustand** for client state (auth, setup)
+- **axios** for HTTP + JWT token refresh
+- **React Native Paper** (Material Design UI)
+- **i18next / react-i18next** — English + German
+- **expo-secure-store** for token storage (native), `localStorage` fallback on web
+- **expo-notifications** + FCM for push
+- **expo-image-picker** for avatar/reward uploads
 
-1. Create new children (Admin)
-2. Define tasks (one-time or recurring)
-3. Set up rewards in shop
-4. Define positive habits
-5. Approve/reject tasks from children
-6. Process reward requests
-7. Assign penalty points when needed
+## Prerequisites
 
-### For Children:
+- **Docker & Docker Compose** (recommended path)
+- Or for local development:
+  - **Java 21+**, **Maven 3.6+**
+  - **Node.js 20+**, **npm**
+  - **Android Studio / Xcode** (only for native builds; Expo Go works without them)
 
-1. Log in with first name and password
-2. View task overview
-3. Mark tasks as completed
-4. Wait for parental approval
-5. Redeem points for rewards in shop
-6. View points history
-
-## 🔄 Recurring Tasks
-
-The system automatically creates recurring tasks:
-
-- **Daily:** Every day at midnight
-- **Weekly:** Weekly on the same day of the week
-- **Monthly:** Monthly on the same day
-
-A scheduler job runs daily at 0:00 and creates due tasks.
-
-## 🎨 Avatar System
-
-Children can choose an avatar from:
-
-- **Predefined Avatars:** cat, dog, bear, lion, elephant, giraffe, panda, unicorn
-- **Custom Uploads:** Images can be uploaded (max. 5MB)
-
-Avatars are stored under: `uploads/avatars/`
-
-## 🔧 Configuration
-
-The most important settings in `application.yml`:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/openfamilycompass_db
-    username: openfamilycompass_user
-    password: openfamilycompass_password
-
-server:
-  port: 8080
-
-app:
-  admin:
-    default-username: admin
-    default-password: "admin"
-  avatars:
-    upload-dir: uploads/avatars
-```
-
-## 🧪 Running Tests
+## Quick Start with Docker Compose
 
 ```bash
+git clone https://github.com/dertomm/OpenFamilyCompass.git
+cd openfamilycompass
+
+# Copy the environment template and edit credentials
+cp .env.example .env
+
+# Start everything: Postgres + Backend + Expo Metro (optional)
+docker-compose up -d
+```
+
+Services:
+
+| Service    | Container       | Port(s)            | Purpose                                   |
+| ---------- | --------------- | ------------------ | ----------------------------------------- |
+| `postgres` | `ofc-postgres`  | 5432               | PostgreSQL 16                             |
+| `backend`  | `ofc-backend`   | 8080               | Spring Boot REST API + Swagger UI         |
+| `frontend` | `ofc-frontend`  | 8081, 19000, 19001 | Expo Metro bundler (for Expo Go)          |
+
+After startup:
+
+- REST API: http://localhost:8080/api/v1
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- Actuator health: http://localhost:8080/actuator/health
+- Expo Metro: http://localhost:8081 (scan QR code with Expo Go)
+
+Default admin credentials (set via `.env` → `APP_ADMIN_DEFAULT_PASSWORD`):
+
+- Username: `admin`
+- Password: the value of `APP_ADMIN_DEFAULT_PASSWORD`
+
+Change the admin password after the first login.
+
+## Local Development
+
+### Backend
+
+```bash
+# Start Postgres only
+docker-compose up -d postgres
+
+cd backend
+mvn clean package
+mvn spring-boot:run
+```
+
+The backend is reachable at http://localhost:8080. Flyway applies database migrations automatically on every startup.
+
+Running tests:
+
+```bash
+cd backend
 mvn test
 ```
 
-## 📝 Next Steps / Extensions
+### Mobile App
 
-Possible future features:
+```bash
+cd app
+npm install
 
-- [ ] Mobile App (React Native / Flutter)
-- [ ] Calendar view for tasks
-- [ ] Push notifications
-- [ ] Statistics and reports
-- [ ] Family leaderboard
-- [ ] Task templates
-- [ ] Export points history (PDF/Excel)
-- [ ] Multi-tenancy (multiple families)
-- [ ] Gamification (Badges, Achievements)
+# Expo Dev Server (scan QR with Expo Go on your phone)
+npx expo start
+```
 
-## 🐛 Known Limitations
+On first launch the app shows a **Server Setup** screen. Enter the URL of the backend (e.g. `http://192.168.x.x:8080` if you run it on your local network).
 
-- Image upload for rewards not yet implemented
-- No email notifications
+For native builds, EAS cloud builds and Play Store distribution see the consolidated [`app/BUILD.md`](app/BUILD.md) guide.
 
-## � Security
+## Authentication
 
-For security considerations, deployment guidelines, and best practices, please refer to [SECURITY.md](SECURITY.md).
+The REST API is fully stateless and uses JWT bearer tokens (RS256).
 
-**Important:** Before deploying to production, ensure you have read and implemented all security recommendations.
+- `POST /api/v1/auth/login` → `{ accessToken, refreshToken, expiresIn }`
+- `POST /api/v1/auth/refresh` → new token pair
+- `GET  /api/v1/auth/me` → current user profile
+- `POST /api/v1/auth/change-password`
 
-## 📄 License
+Access tokens are valid for 1 hour, refresh tokens for 30 days. The signing key pair is auto-generated at first startup, stored in `jwt-keys.pfx` and kept in a named Docker volume so it survives restarts. See [TOKEN_AUTH_README.md](TOKEN_AUTH_README.md).
 
-This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See [LICENSE](LICENSE) for details.
+## Push Notifications
 
-### What does AGPL mean?
+Firebase Cloud Messaging is used to notify Android devices about relevant events (task approvals, reward redemptions, behavior evaluations). Setup is documented in [PUSH_NOTIFICATIONS_README.md](PUSH_NOTIFICATIONS_README.md).
 
-The AGPL is a **strong copyleft license** that ensures this software remains free and open source:
+If no `firebase-service-account.json` is present on the backend, push is silently disabled.
 
-- ✅ **Free to use** - for personal, educational, and non-profit use
-- ✅ **Modification allowed** - you can adapt it to your needs
-- ✅ **Distribution allowed** - share it with others
-- ⚠️ **Network use = distribution** - if you run a modified version on a server, you must share the source code
-- ⚠️ **Share-alike** - derivatives must use the same license
-- ⚠️ **No proprietary forks** - you cannot make closed-source versions
+## Internationalization
 
-### Why AGPL?
+- Backend (API messages): Spring `MessageSource` + `messages.properties` / `messages_de.properties`, locale derived from `Accept-Language` and the user's profile.
+- Mobile app: `i18next` + `react-i18next`, language follows `expo-localization`.
 
-We chose AGPL to ensure that:
-1. **Open Source stays open** - improvements benefit everyone
-2. **No proprietary SaaS** - companies can't create closed commercial products without sharing back
-3. **Community collaboration** - all users can see and improve the code
-4. **Fair use** - if you use it, you contribute back
+Supported languages: **English** (default) and **German**. See [I18N_README.md](I18N_README.md) for how to add another language.
 
-### Commercial Use
+## User Roles & Typical Workflows
 
-If you want to use OpenFamilyCompass in a commercial product **without** releasing your source code, please contact us about a commercial license.
+### Admin
 
-## 👥 Contributing
+- Manage users and roles
 
-We welcome contributions! Please see [AUTHORS](AUTHORS) for guidelines on how to contribute to this project.
+### Parents
 
-### Development
+- Define tasks (one-time and recurring), rewards, behaviors
+- Approve/reject completed tasks
+- Approve reward redemptions
+- Record behaviors (positive or negative)
+- Assign bonus or penalty points
 
-This project follows these principles:
-- **Transparent development** - all changes are tracked in git history
-- **Security first** - especially for data handling
-- **Community-driven** - your feedback and ideas are welcome
+### Children
+
+- View open tasks and mark them as done
+- Check their point balance and transaction history
+- Redeem points in the reward shop
+
+## Recurring Tasks
+
+A scheduled job creates due recurring task instances:
+
+- **Daily** tasks: every day
+- **Weekly** tasks: every week on the same weekday
+- **Monthly** tasks: every month on the same day
+
+## Avatars
+
+- Predefined icons: cat, dog, bear, lion, elephant, giraffe, panda, unicorn
+- Custom uploads (images up to 5 MB), stored under `uploads/avatars/`
+
+## CI/CD
+
+GitHub Actions runs:
+
+- Build & test on every push
+- Docker image build & push to GHCR on release tags
+- Smoke test against the running container
+
+Creating a release:
+
+1. Go to **Actions** → **Create Release** (or push a git tag `vX.Y.Z-…`)
+2. The workflow creates the tag, builds + tests, builds the Docker image and publishes a GitHub release.
+
+Released images: `ghcr.io/DerTomm/openfamilycompass:<version>`.
+
+## Security
+
+Before deploying to production, read [SECURITY.md](SECURITY.md) and in particular:
+
+- Change the default admin password
+- Change PostgreSQL credentials
+- Rotate / protect `jwt-keys.pfx` and `firebase-service-account.json`
+- Use HTTPS in front of the backend
+- Restrict CORS (`CORS_ALLOWED_ORIGINS`) to your own domains
+
+## Documentation Index
+
+- [DEPLOYMENT.md](DEPLOYMENT.md) — Docker deployment, reverse proxy, backups
+- [SECURITY.md](SECURITY.md) — security best practices and checklist
+- [TOKEN_AUTH_README.md](TOKEN_AUTH_README.md) — JWT auth flow
+- [PUSH_NOTIFICATIONS_README.md](PUSH_NOTIFICATIONS_README.md) — FCM setup
+- [I18N_README.md](I18N_README.md) — Internationalization
+- [`app/BUILD.md`](app/BUILD.md) — mobile app build & distribution (Expo Go, EAS, local Gradle, Play Store)
+
+## License
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See [LICENSE](LICENSE).
+
+The AGPL is a strong copyleft license: you are free to use, modify and distribute the software, but any modifications — including those deployed as a network service — must be made available under the same license. If you need a proprietary/commercial license, please contact us.
+
+## Contributing
+
+Contributions are welcome! See [AUTHORS](AUTHORS) for guidelines. This project follows the principles of transparent, security-first, community-driven development.
 
 ---
 
-**Good luck motivating your children! 🌟**
+**Good luck motivating your children!**

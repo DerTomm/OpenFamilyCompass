@@ -2,7 +2,7 @@
   "expo": {
     "name": "OpenFamilyCompass",
     "slug": "openfamilycompass",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -64,6 +64,10 @@
       "eas": {
         "projectId": "6bd8db1b-fb7c-4f67-af32-26df3c7ea4a5"
       }
+    },
+    "devClient": {
+      "silentLaunch": true,
+      "fallbackToCacheTimeout": 0
     }
   }
 }

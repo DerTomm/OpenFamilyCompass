@@ -2,172 +2,140 @@
 
 ## Overview
 
-OpenFamilyCompass now supports multiple languages! The application is available in **English** (default) and **German**, with the ability to easily add more languages in the future.
+OpenFamilyCompass is available in **English** (default) and **German**. The Expo mobile app owns all user-facing text; the Spring Boot backend keeps a small message bundle for API-level responses (e.g. validation errors). Additional languages can be added with minimal effort.
 
-## Webapp (Spring Boot)
-
-### Configuration
-
-The webapp uses Spring Boot's standard i18n support with the following configuration:
-
-- **LocaleResolver**: Uses `CookieLocaleResolver` to store the user's language preference in a cookie
-- **Default Language**: English (`en`)
-- **Message Files Location**: `src/main/resources/`
-  - `messages.properties` - English (default)
-  - `messages_de.properties` - German
-
-### Changing Language
-
-Users can change the language by:
-1. Using the language switcher (🌐 globe icon) in the navigation bar
-2. Adding `?lang=de` or `?lang=en` to any URL
-
-The selected language is stored in a cookie and persists across sessions.
-
-### Message Keys
-
-All text in the webapp is now internationalized using message keys. In Thymeleaf templates, use:
-
-```html
-<span th:text="#{message.key}">Default Text</span>
-```
-
-For messages with parameters:
-```html
-<span th:text="#{message.key(${variable})}">Default Text</span>
-```
-
-### Adding a New Language
-
-To add a new language (e.g., French):
-
-1. Create a new message file: `src/main/resources/messages_fr.properties`
-2. Copy the content from `messages.properties`
-3. Translate all values to French
-4. Add the language option to the language switcher in templates:
-   ```html
-   <li><a class="dropdown-item" href="?lang=fr">🇫🇷 Français</a></li>
-   ```
-
-### Available Message Categories
-
-- **Login**: Login page text
-- **Navigation**: Menu items and navigation
-- **Dashboard**: Dashboard content
-- **Tasks**: Task management
-- **Rewards**: Reward system
-- **Behavior**: Behavior evaluation
-- **Points**: Point system
-- **Children**: Child management
-- **Profile**: User settings
-- **Common**: Buttons, status messages, validation
-
-## Android App
+## Backend (API messages)
 
 ### Configuration
 
-The Android app uses Android's standard resource system for internationalization:
+The backend uses Spring's standard `MessageSource` for any server-produced strings:
 
-- **Default Language**: English
-- **Resource Files**:
-  - `app/src/main/res/values/strings.xml` - English (default)
-  - `app/src/main/res/values-de/strings.xml` - German
+- **LocaleResolver**: `UserPreferenceLocaleResolver` (see `backend/src/main/java/org/openfamilycompass/config/UserPreferenceLocaleResolver.java`) — reads the caller's preferred locale from the `Accept-Language` header and the authenticated user's profile.
+- **Default language**: English (`en`)
+- **Message files**: `backend/src/main/resources/`
+  - `messages.properties` — English (default)
+  - `messages_de.properties` — German
 
-### Language Selection
+These bundles drive validation messages, error responses and any other backend-generated text returned through the REST API.
 
-The Android app automatically uses the device's system language. If the system language is German, the German strings are used; otherwise, English is used as the default.
+### Adding a new language (backend)
 
-Users can change the app language by changing their device's system language settings.
+1. Create a new file `backend/src/main/resources/messages_fr.properties`.
+2. Copy the content from `messages.properties` and translate all values.
+3. Restart the backend — Spring picks up the new bundle automatically; clients that send `Accept-Language: fr` will now receive French responses.
 
-### Using String Resources in Code
+## Mobile app (Expo / React Native)
 
-In Kotlin code:
-```kotlin
-getString(R.string.message_key)
+### Configuration
+
+The mobile app uses **i18next** + **react-i18next** together with **expo-localization**:
+
+- **Default language**: detected from the device locale; falls back to English (`en`).
+- **Configuration**: `app/src/i18n/config.ts`
+- **Translations**: `app/src/i18n/locales/`
+  - `en.ts` — English (default)
+  - `de.ts` — German
+- **Context provider**: `app/src/i18n/I18nContext.tsx` exposes a `useI18n()` hook that wraps the i18next `t` function and the current language.
+
+Initialization happens once in `App.tsx` via `import './src/i18n/config'`.
+
+### Language selection
+
+On first launch, the app picks the device language via `expo-localization`. Users can override this in the profile screen; the choice is persisted (and a reload re-initializes i18next with the stored value).
+
+### Using translations in components
+
+```tsx
+import { useI18n } from '../i18n/I18nContext';
+
+export const MyScreen = () => {
+  const { t } = useI18n();
+  return <Text>{t('nav.overview')}</Text>;
+};
 ```
 
 With parameters:
-```kotlin
-getString(R.string.message_key, parameter1, parameter2)
+
+```tsx
+t('points.balance', { count: 42 })
 ```
 
-In XML layouts:
-```xml
-<TextView
-    android:text="@string/message_key" />
-```
+### Adding a new language (mobile app)
 
-### Adding a New Language
+1. Create a new file `app/src/i18n/locales/fr.ts` and translate every key from `en.ts`.
+2. Register it in `app/src/i18n/config.ts`:
 
-To add a new language (e.g., French):
+   ```ts
+   import { fr } from './locales/fr';
 
-1. Create a new directory: `app/src/main/res/values-fr/`
-2. Copy `strings.xml` from `values/` to `values-fr/`
-3. Translate all string values to French
-4. The app will automatically use French strings when the device language is set to French
+   export const SUPPORTED_LANGUAGES = {
+     en: { name: 'English', nativeName: 'English' },
+     de: { name: 'German',  nativeName: 'Deutsch' },
+     fr: { name: 'French',  nativeName: 'Français' },
+   } as const;
 
-### Available String Categories
+   i18n.init({
+     resources: {
+       en: { translation: en },
+       de: { translation: de },
+       fr: { translation: fr },
+     },
+     // …
+   });
+   ```
 
-- **Menu**: App menu items
-- **Settings**: Settings screen
-- **Buttons**: Common button labels
-- **Dialogs**: Dialog messages
-- **Error Messages**: Error text
-- **Toast Messages**: Notification messages
+3. The language picker in the profile screen picks up new entries automatically.
 
-## Contributing Translations
+## Contributing translations
 
-We welcome contributions for additional language support! If you'd like to add a new language:
+Contributions for additional languages are very welcome:
 
-1. Fork the repository
-2. Add the new language files (both webapp and Android)
-3. Ensure all keys are translated
-4. Test the translations
-5. Submit a pull request
+1. Fork the repository.
+2. Add the new language files both in the backend (`messages_xx.properties`) and in the mobile app (`app/src/i18n/locales/xx.ts`).
+3. Translate all keys — keep the wording natural and contextually appropriate.
+4. Test the translations in the mobile app (UI layouts, truncation, plural forms) and by calling the API with `Accept-Language: xx`.
+5. Submit a pull request.
 
-### Translation Guidelines
+### Translation guidelines
 
-- Keep translations natural and contextually appropriate
-- Maintain consistent terminology across the application
-- Test translations in the actual UI to ensure they fit properly
-- Include cultural considerations (date formats, icons, etc.)
+- Keep translations natural and culturally appropriate.
+- Use consistent terminology across backend and mobile app.
+- Consider date / number formats and RTL rendering if applicable.
+- Prefer short phrasing where UI space is tight (tab labels, buttons).
 
-## Technical Details
+## Technical details
 
-### Webapp Stack
-- **Framework**: Spring Boot 3.x
-- **Template Engine**: Thymeleaf
-- **i18n Support**: Spring MessageSource
-- **Locale Storage**: Cookie-based (1 year expiry)
+### Backend
 
-### Android Stack
-- **Platform**: Android
-- **Language**: Kotlin
-- **i18n Support**: Android Resources System
-- **Locale Source**: Device system language
+- **Framework**: Spring Boot 3.5 (REST API)
+- **i18n**: Spring `MessageSource` (`messages*.properties`) — used for API-side messages only
+- **Locale resolution**: `Accept-Language` header + user profile preference via `UserPreferenceLocaleResolver`
 
-## Future Enhancements
+### Mobile app
 
-Potential improvements for the i18n system:
+- **Platform**: Expo SDK 55 / React Native 0.83
+- **i18n**: `i18next` + `react-i18next`
+- **Locale source**: `expo-localization` (device language) + user preference via `expo-secure-store`
 
-- Database-driven translations for dynamic content
-- User preference for language (independent of system/browser language)
-- Translation management interface for administrators
-- Automatic translation suggestions using AI
-- RTL (Right-to-Left) language support
-- Date and number format localization
-- Plural forms handling
-- Gender-specific translations where applicable
+## Future enhancements
 
-## Supported Languages
+Possible improvements:
 
-| Language | Code | Webapp | Android | Status |
-|----------|------|--------|---------|--------|
-| English  | en   | ✅     | ✅      | Complete |
-| German   | de   | ✅     | ✅      | Complete |
-| French   | fr   | ❌     | ❌      | Planned |
-| Spanish  | es   | ❌     | ❌      | Planned |
+- Database-driven translations for dynamic content (task titles, reward names)
+- Explicit user preference independent of device language
+- Admin UI for translation management
+- RTL language support
+- Pluralization + gender-specific translations
+
+## Supported languages
+
+| Language | Code | Backend | Mobile App | Status   |
+| -------- | ---- | ------- | ---------- | -------- |
+| English  | en   | ✔      | ✔         | Complete |
+| German   | de   | ✔      | ✔         | Complete |
+| French   | fr   | —       | —          | Planned  |
+| Spanish  | es   | —       | —          | Planned  |
 
 ---
 
-**Note**: This implementation follows industry-standard i18n practices and can be easily extended to support additional languages as the community grows.
+**Note**: This implementation follows standard i18n practices and is easily extended as the community grows.

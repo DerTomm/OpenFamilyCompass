@@ -3,13 +3,13 @@ info:
   title: OpenFamilyCompass API
   description: |
     REST API for OpenFamilyCompass - A family task management application.
-    
+
     ## Authentication
     This API uses OAuth2/OIDC with PKCE flow for authentication.
     - Authorization endpoint: `/oauth2/authorize`
     - Token endpoint: `/oauth2/token`
     - JWKS endpoint: `/.well-known/jwks.json`
-    
+
     ## Roles
     - **ADMIN**: Full access to user management
     - **PARENT**: Manage tasks, rewards, behaviors; approve/reject child actions
@@ -17,36 +17,36 @@ info:
   version: 1.0.0
   contact:
     name: OpenFamilyCompass
-    url: https://github.com/openfamilycompass/openfamilycompass
+    url: https://github.com/DerTomm/OpenFamilyCompass
   license:
     name: AGPL-3.0
     url: https://www.gnu.org/licenses/agpl-3.0.html
 
 servers:
-  - url: http://localhost:8080/api/v1
-    description: Development server
+- url: http://localhost:8080/api/v1
+  description: Development server
 
 tags:
-  - name: Auth
-    description: Authentication and token management
-  - name: Users
-    description: User management (Admin only)
-  - name: Tasks
-    description: Task definitions and instances
-  - name: Rewards
-    description: Rewards and redemptions
-  - name: Behaviors
-    description: Behavior rules and evaluations
-  - name: Points
-    description: Points and transactions
-  - name: Notifications
-    description: Push notifications management
+- name: Auth
+  description: Authentication and token management
+- name: Users
+  description: User management (Admin only)
+- name: Tasks
+  description: Task definitions and instances
+- name: Rewards
+  description: Rewards and redemptions
+- name: Behaviors
+  description: Behavior rules and evaluations
+- name: Points
+  description: Points and transactions
+- name: Notifications
+  description: Push notifications management
 
 paths:
   # ============ AUTH ============
   /auth/login:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Login with username and password
       description: Returns access and refresh tokens
       operationId: login
@@ -72,7 +72,7 @@ paths:
 
   /auth/refresh:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Refresh access token
       operationId: refreshToken
       requestBody:
@@ -93,22 +93,22 @@ paths:
 
   /auth/logout:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Logout and invalidate tokens
       operationId: logout
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '204':
           description: Successfully logged out
 
   /auth/me:
     get:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Get current user info
       operationId: getCurrentUser
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           description: Current user
@@ -119,11 +119,11 @@ paths:
 
   /auth/change-password:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Change current user's password
       operationId: changePassword
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -139,20 +139,20 @@ paths:
   # ============ USERS (Admin) ============
   /users:
     get:
-      tags: [Users]
+      tags: [ Users ]
       summary: List all users
       operationId: listUsers
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: role
-          in: query
-          schema:
-            $ref: '#/components/schemas/UserRole'
-        - name: active
-          in: query
-          schema:
-            type: boolean
+      - name: role
+        in: query
+        schema:
+          $ref: '#/components/schemas/UserRole'
+      - name: active
+        in: query
+        schema:
+          type: boolean
       responses:
         '200':
           description: List of users
@@ -166,11 +166,11 @@ paths:
           description: Admin access required
 
     post:
-      tags: [Users]
+      tags: [ Users ]
       summary: Create a new user
       operationId: createUser
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -193,18 +193,18 @@ paths:
 
   /users/{id}:
     get:
-      tags: [Users]
+      tags: [ Users ]
       summary: Get user by ID
       operationId: getUserById
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: User details
@@ -216,18 +216,18 @@ paths:
           description: User not found
 
     put:
-      tags: [Users]
+      tags: [ Users ]
       summary: Update user
       operationId: updateUser
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         required: true
         content:
@@ -247,18 +247,18 @@ paths:
           description: User not found
 
     delete:
-      tags: [Users]
+      tags: [ Users ]
       summary: Deactivate user
       operationId: deactivateUser
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '204':
           description: User deactivated
@@ -269,11 +269,11 @@ paths:
 
   /users/children:
     get:
-      tags: [Users]
+      tags: [ Users ]
       summary: List all children (for parents/admins)
       operationId: listChildren
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           description: List of children
@@ -287,18 +287,18 @@ paths:
   # ============ TASK DEFINITIONS ============
   /tasks/definitions:
     get:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: List task definitions
       operationId: listTaskDefinitions
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: assignedUserId
-          in: query
-          schema:
-            type: integer
-            format: int64
-          description: Filter by assigned user
+      - name: assignedUserId
+        in: query
+        schema:
+          type: integer
+          format: int64
+        description: Filter by assigned user
       responses:
         '200':
           description: List of task definitions
@@ -310,11 +310,11 @@ paths:
                   $ref: '#/components/schemas/TaskDefinitionResponse'
 
     post:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Create a new task definition
       operationId: createTaskDefinition
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -333,18 +333,18 @@ paths:
 
   /tasks/definitions/{id}:
     get:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Get task definition by ID
       operationId: getTaskDefinitionById
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: Task definition details
@@ -356,18 +356,18 @@ paths:
           description: Task definition not found
 
     put:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Update task definition
       operationId: updateTaskDefinition
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         required: true
         content:
@@ -387,18 +387,18 @@ paths:
           description: Task definition not found
 
     delete:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Delete task definition
       operationId: deleteTaskDefinition
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '204':
           description: Task definition deleted
@@ -410,31 +410,31 @@ paths:
   # ============ TASK INSTANCES ============
   /tasks/instances:
     get:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: List task instances
       operationId: listTaskInstances
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: assignedUserId
-          in: query
-          schema:
-            type: integer
-            format: int64
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/TaskStatus'
-        - name: dueDateFrom
-          in: query
-          schema:
-            type: string
-            format: date
-        - name: dueDateTo
-          in: query
-          schema:
-            type: string
-            format: date
+      - name: assignedUserId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/TaskStatus'
+      - name: dueDateFrom
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: dueDateTo
+        in: query
+        schema:
+          type: string
+          format: date
       responses:
         '200':
           description: List of task instances
@@ -447,18 +447,18 @@ paths:
 
   /tasks/instances/{id}:
     get:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Get task instance by ID
       operationId: getTaskInstanceById
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: Task instance details
@@ -471,18 +471,18 @@ paths:
 
   /tasks/instances/{id}/complete:
     post:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Mark task as completed (Child)
       operationId: completeTask
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: Task marked as completed
@@ -497,18 +497,18 @@ paths:
 
   /tasks/instances/{id}/approve:
     post:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Approve completed task (Parent)
       operationId: approveTask
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -528,18 +528,18 @@ paths:
 
   /tasks/instances/{id}/reject:
     post:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Reject completed task (Parent)
       operationId: rejectTask
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -559,11 +559,11 @@ paths:
 
   /tasks/pending:
     get:
-      tags: [Tasks]
+      tags: [ Tasks ]
       summary: Get pending tasks for approval (Parent)
       operationId: getPendingTasks
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           description: List of pending tasks
@@ -577,16 +577,16 @@ paths:
   # ============ REWARDS ============
   /rewards:
     get:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: List all rewards
       operationId: listRewards
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: active
-          in: query
-          schema:
-            type: boolean
+      - name: active
+        in: query
+        schema:
+          type: boolean
       responses:
         '200':
           description: List of rewards
@@ -598,11 +598,11 @@ paths:
                   $ref: '#/components/schemas/RewardResponse'
 
     post:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Create a new reward
       operationId: createReward
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -621,18 +621,18 @@ paths:
 
   /rewards/{id}:
     get:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Get reward by ID
       operationId: getRewardById
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: Reward details
@@ -644,18 +644,18 @@ paths:
           description: Reward not found
 
     put:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Update reward
       operationId: updateReward
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         required: true
         content:
@@ -675,18 +675,18 @@ paths:
           description: Reward not found
 
     delete:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Deactivate reward
       operationId: deactivateReward
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '204':
           description: Reward deactivated
@@ -698,21 +698,21 @@ paths:
   # ============ REWARD REDEMPTIONS ============
   /rewards/redemptions:
     get:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: List redemptions
       operationId: listRedemptions
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: userId
-          in: query
-          schema:
-            type: integer
-            format: int64
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/RewardStatus'
+      - name: userId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/RewardStatus'
       responses:
         '200':
           description: List of redemptions
@@ -724,11 +724,11 @@ paths:
                   $ref: '#/components/schemas/RewardRedemptionResponse'
 
     post:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Request reward redemption (Child)
       operationId: requestRedemption
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -747,18 +747,18 @@ paths:
 
   /rewards/redemptions/{id}/approve:
     post:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Approve redemption (Parent)
       operationId: approveRedemption
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: Redemption approved
@@ -771,18 +771,18 @@ paths:
 
   /rewards/redemptions/{id}/reject:
     post:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Reject redemption (Parent)
       operationId: rejectRedemption
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -800,18 +800,18 @@ paths:
 
   /rewards/redemptions/{id}/deliver:
     post:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Mark redemption as delivered (Parent)
       operationId: deliverRedemption
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: Redemption marked as delivered
@@ -824,11 +824,11 @@ paths:
 
   /rewards/redemptions/pending:
     get:
-      tags: [Rewards]
+      tags: [ Rewards ]
       summary: Get pending redemptions (Parent)
       operationId: getPendingRedemptions
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           description: List of pending redemptions
@@ -842,22 +842,22 @@ paths:
   # ============ BEHAVIORS ============
   /behaviors:
     get:
-      tags: [Behaviors]
+      tags: [ Behaviors ]
       summary: List behaviors
       operationId: listBehaviors
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: userId
-          in: query
-          schema:
-            type: integer
-            format: int64
-          description: Filter by user (null = global behaviors)
-        - name: active
-          in: query
-          schema:
-            type: boolean
+      - name: userId
+        in: query
+        schema:
+          type: integer
+          format: int64
+        description: Filter by user (null = global behaviors)
+      - name: active
+        in: query
+        schema:
+          type: boolean
       responses:
         '200':
           description: List of behaviors
@@ -869,11 +869,11 @@ paths:
                   $ref: '#/components/schemas/BehaviorResponse'
 
     post:
-      tags: [Behaviors]
+      tags: [ Behaviors ]
       summary: Create a new behavior
       operationId: createBehavior
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -892,18 +892,18 @@ paths:
 
   /behaviors/{id}:
     get:
-      tags: [Behaviors]
+      tags: [ Behaviors ]
       summary: Get behavior by ID
       operationId: getBehaviorById
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: Behavior details
@@ -915,18 +915,18 @@ paths:
           description: Behavior not found
 
     put:
-      tags: [Behaviors]
+      tags: [ Behaviors ]
       summary: Update behavior
       operationId: updateBehavior
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         required: true
         content:
@@ -946,18 +946,18 @@ paths:
           description: Behavior not found
 
     delete:
-      tags: [Behaviors]
+      tags: [ Behaviors ]
       summary: Deactivate behavior
       operationId: deactivateBehavior
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '204':
           description: Behavior deactivated
@@ -969,21 +969,21 @@ paths:
   # ============ BEHAVIOR EVALUATIONS ============
   /behaviors/evaluations:
     get:
-      tags: [Behaviors]
+      tags: [ Behaviors ]
       summary: List behavior evaluations
       operationId: listBehaviorEvaluations
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: userId
-          in: query
-          schema:
-            type: integer
-            format: int64
-        - name: committed
-          in: query
-          schema:
-            type: boolean
+      - name: userId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: committed
+        in: query
+        schema:
+          type: boolean
       responses:
         '200':
           description: List of evaluations
@@ -995,11 +995,11 @@ paths:
                   $ref: '#/components/schemas/BehaviorEvaluationResponse'
 
     post:
-      tags: [Behaviors]
+      tags: [ Behaviors ]
       summary: Create or update behavior evaluation
       operationId: saveBehaviorEvaluation
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1018,11 +1018,11 @@ paths:
 
   /behaviors/evaluations/commit:
     post:
-      tags: [Behaviors]
+      tags: [ Behaviors ]
       summary: Commit all pending evaluations for a user
       operationId: commitBehaviorEvaluations
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1042,11 +1042,11 @@ paths:
   # ============ POINTS ============
   /points/balance:
     get:
-      tags: [Points]
+      tags: [ Points ]
       summary: Get current user's point balance
       operationId: getPointBalance
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           description: Point balance
@@ -1057,18 +1057,18 @@ paths:
 
   /points/balance/{userId}:
     get:
-      tags: [Points]
+      tags: [ Points ]
       summary: Get point balance for a user (Parent/Admin)
       operationId: getPointBalanceForUser
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '200':
           description: Point balance
@@ -1081,41 +1081,41 @@ paths:
 
   /points/transactions:
     get:
-      tags: [Points]
+      tags: [ Points ]
       summary: Get point transactions
       operationId: getPointTransactions
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: userId
-          in: query
-          schema:
-            type: integer
-            format: int64
-        - name: type
-          in: query
-          schema:
-            $ref: '#/components/schemas/PointTransactionType'
-        - name: from
-          in: query
-          schema:
-            type: string
-            format: date-time
-        - name: to
-          in: query
-          schema:
-            type: string
-            format: date-time
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 50
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            default: 0
+      - name: userId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: type
+        in: query
+        schema:
+          $ref: '#/components/schemas/PointTransactionType'
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 50
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          default: 0
       responses:
         '200':
           description: List of transactions
@@ -1126,11 +1126,11 @@ paths:
 
   /points/bonus:
     post:
-      tags: [Points]
+      tags: [ Points ]
       summary: Award bonus points (Parent)
       operationId: awardBonusPoints
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1149,11 +1149,11 @@ paths:
 
   /points/penalty:
     post:
-      tags: [Points]
+      tags: [ Points ]
       summary: Deduct penalty points (Parent)
       operationId: deductPenaltyPoints
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1173,22 +1173,22 @@ paths:
   # ============ NOTIFICATIONS ============
   /notifications:
     get:
-      tags: [Notifications]
+      tags: [ Notifications ]
       summary: Get notifications for current user
       operationId: getNotifications
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: unreadOnly
-          in: query
-          schema:
-            type: boolean
-            default: false
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 20
+      - name: unreadOnly
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
       responses:
         '200':
           description: List of notifications
@@ -1201,40 +1201,40 @@ paths:
 
   /notifications/{id}/read:
     post:
-      tags: [Notifications]
+      tags: [ Notifications ]
       summary: Mark notification as read
       operationId: markNotificationAsRead
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         '204':
           description: Notification marked as read
 
   /notifications/read-all:
     post:
-      tags: [Notifications]
+      tags: [ Notifications ]
       summary: Mark all notifications as read
       operationId: markAllNotificationsAsRead
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '204':
           description: All notifications marked as read
 
   /notifications/unread-count:
     get:
-      tags: [Notifications]
+      tags: [ Notifications ]
       summary: Get unread notification count
       operationId: getUnreadNotificationCount
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           description: Unread count
@@ -1248,11 +1248,11 @@ paths:
 
   /notifications/register-device:
     post:
-      tags: [Notifications]
+      tags: [ Notifications ]
       summary: Register device for push notifications
       operationId: registerDevice
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1265,11 +1265,11 @@ paths:
 
   /notifications/unregister-device:
     post:
-      tags: [Notifications]
+      tags: [ Notifications ]
       summary: Unregister device from push notifications
       operationId: unregisterDevice
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1283,11 +1283,11 @@ paths:
   # ============ PROFILE ============
   /profile:
     get:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Get current user profile
       operationId: getProfile
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           description: User profile
@@ -1297,11 +1297,11 @@ paths:
                 $ref: '#/components/schemas/UserProfileResponse'
 
     put:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Update current user profile
       operationId: updateProfile
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1318,11 +1318,11 @@ paths:
 
   /profile/avatar:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Upload avatar image
       operationId: uploadAvatar
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1343,7 +1343,7 @@ paths:
 
   /avatar/icons:
     get:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Get available avatar icons
       operationId: getAvatarIcons
       responses:
@@ -1367,32 +1367,32 @@ components:
     # ============ ENUMS ============
     UserRole:
       type: string
-      enum: [ADMIN, PARENT, CHILD]
+      enum: [ ADMIN, PARENT, CHILD ]
 
     TaskStatus:
       type: string
-      enum: [PENDING, IN_PROGRESS, CHILD_COMPLETED, APPROVED, REJECTED, EXPIRED]
+      enum: [ PENDING, IN_PROGRESS, CHILD_COMPLETED, APPROVED, REJECTED, EXPIRED ]
 
     RecurrenceType:
       type: string
-      enum: [ONCE, DAILY, WEEKLY, MONTHLY]
+      enum: [ ONCE, DAILY, WEEKLY, MONTHLY ]
 
     RewardStatus:
       type: string
-      enum: [REQUESTED, APPROVED, REJECTED, DELIVERED]
+      enum: [ REQUESTED, APPROVED, REJECTED, DELIVERED ]
 
     PointTransactionType:
       type: string
-      enum: [TASK, REWARD, BEHAVIOR, PENALTY, BONUS]
+      enum: [ TASK, REWARD, BEHAVIOR, PENALTY, BONUS ]
 
     NotificationType:
       type: string
-      enum: [TASK_COMPLETED, TASK_APPROVED, TASK_REJECTED, TASK_EXPIRED, REWARD_REQUESTED, REWARD_APPROVED, REWARD_REJECTED, POINTS_EARNED]
+      enum: [ TASK_COMPLETED, TASK_APPROVED, TASK_REJECTED, TASK_EXPIRED, REWARD_REQUESTED, REWARD_APPROVED, REWARD_REJECTED, POINTS_EARNED ]
 
     # ============ AUTH ============
     LoginRequest:
       type: object
-      required: [username, password]
+      required: [ username, password ]
       properties:
         username:
           type: string
@@ -1401,7 +1401,7 @@ components:
 
     RefreshTokenRequest:
       type: object
-      required: [refreshToken]
+      required: [ refreshToken ]
       properties:
         refreshToken:
           type: string
@@ -1422,7 +1422,7 @@ components:
 
     ChangePasswordRequest:
       type: object
-      required: [currentPassword, newPassword]
+      required: [ currentPassword, newPassword ]
       properties:
         currentPassword:
           type: string
@@ -1485,7 +1485,7 @@ components:
 
     CreateUserRequest:
       type: object
-      required: [username, password, firstName, role]
+      required: [ username, password, firstName, role ]
       properties:
         username:
           type: string
@@ -1543,13 +1543,13 @@ components:
           type: string
         theme:
           type: string
-          enum: [LIGHT, DARK]
+          enum: [ LIGHT, DARK ]
         language:
           type: string
-          enum: [en, de]
+          enum: [ en, de ]
         avatarType:
           type: string
-          enum: [DEFAULT, ICON, PHOTO]
+          enum: [ DEFAULT, ICON, PHOTO ]
         avatarIconName:
           type: string
 
@@ -1590,7 +1590,7 @@ components:
 
     CreateTaskDefinitionRequest:
       type: object
-      required: [title, basePoints, recurrenceType, assignedUserIds]
+      required: [ title, basePoints, recurrenceType, assignedUserIds ]
       properties:
         title:
           type: string
@@ -1616,7 +1616,7 @@ components:
           type: array
           items:
             type: string
-            enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+            enum: [ MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY ]
 
     UpdateTaskDefinitionRequest:
       type: object
@@ -1716,7 +1716,7 @@ components:
 
     CreateRewardRequest:
       type: object
-      required: [title, pointsCost]
+      required: [ title, pointsCost ]
       properties:
         title:
           type: string
@@ -1770,7 +1770,7 @@ components:
 
     RequestRedemptionRequest:
       type: object
-      required: [rewardId]
+      required: [ rewardId ]
       properties:
         rewardId:
           type: integer
@@ -1807,7 +1807,7 @@ components:
 
     CreateBehaviorRequest:
       type: object
-      required: [title, guideline, points]
+      required: [ title, guideline, points ]
       properties:
         title:
           type: string
@@ -1866,7 +1866,7 @@ components:
 
     SaveBehaviorEvaluationRequest:
       type: object
-      required: [behaviorId, userId, currentPoints]
+      required: [ behaviorId, userId, currentPoints ]
       properties:
         behaviorId:
           type: integer
@@ -1882,7 +1882,7 @@ components:
 
     CommitEvaluationsRequest:
       type: object
-      required: [userId]
+      required: [ userId ]
       properties:
         userId:
           type: integer
@@ -1951,7 +1951,7 @@ components:
 
     AwardPointsRequest:
       type: object
-      required: [userId, points, description]
+      required: [ userId, points, description ]
       properties:
         userId:
           type: integer
@@ -1989,20 +1989,20 @@ components:
 
     RegisterDeviceRequest:
       type: object
-      required: [token, platform]
+      required: [ token, platform ]
       properties:
         token:
           type: string
         platform:
           type: string
-          enum: [android, ios, web]
+          enum: [ android, ios, web ]
 
     UnregisterDeviceRequest:
       type: object
-      required: [token]
+      required: [ token ]
       properties:
         token:
           type: string
 
 security:
-  - bearerAuth: []
+- bearerAuth: []

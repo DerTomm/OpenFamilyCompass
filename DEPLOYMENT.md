@@ -49,14 +49,14 @@ This guide describes the deployment of OpenFamilyCompass using Docker Compose.
 
 ### Services
 
-The Docker Compose configuration starts 3 services:
+The Docker Compose configuration starts three services:
 
-| Service | Port | Description |
-|---------|------|-------------|
-| `postgres` | 5432 | PostgreSQL 16 database |
-| `backend` | 8080 | Spring Boot REST API |
-| `frontend` | 8081 | Expo Metro Bundler (for Expo Go) |
-| `frontend` | 19000/19001 | Expo Dev Server |
+| Service    | Port          | Description                                                  |
+| ---------- | ------------- | ------------------------------------------------------------ |
+| `postgres` | 5432          | PostgreSQL 16 database                                       |
+| `backend`  | 8080          | Spring Boot REST API + Swagger UI                            |
+| `frontend` | 8081          | Expo Metro bundler (for Expo Go)                             |
+| `frontend` | 19000 / 19001 | Expo dev server (legacy / current)                           |
 
 ### Configuration
 
@@ -67,7 +67,9 @@ Change the ports in the `.env` file:
 ```env
 POSTGRES_PORT=5432
 BACKEND_PORT=8080
-FRONTEND_PORT=3000
+METRO_PORT=8081
+EXPO_PORT=19000
+EXPO_PORT2=19001
 ```
 
 #### Backend API URL for mobile app
@@ -180,20 +182,17 @@ cat backup.sql | docker exec -i ofc-postgres psql -U openfamilycompass_user -d o
 server {
     listen 80;
     server_name example.com;
-    
+
+    # Backend: REST API + Swagger UI
     location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-    
-    location /api {
         proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
 }
 ```
+
+The mobile app is distributed via the Play Store / EAS builds and does not need to be served through the reverse proxy. The Expo Metro bundler (port 8081) is only intended for local development with Expo Go.
 
 ### Updates
 
@@ -216,8 +215,9 @@ server {
 #### Frontend shows "Network Error"
 
 - Check `EXPO_PUBLIC_API_URL` in `.env`
-- Backend must be reachable
-- Check CORS settings
+- Check the server URL stored in the app (Server Setup screen on first launch)
+- Backend must be reachable from the device (use the host IP, not `localhost`, when testing on a real phone)
+- Check `CORS_ALLOWED_ORIGINS` in `.env` / the backend configuration
 
 #### Backend does not start
 
@@ -256,17 +256,17 @@ All services have healthchecks configured:
 
 ```bash
 # Postgres
-curl http://localhost:5432
+docker-compose exec postgres pg_isready -U openfamilycompass_user
 
-# Backend
+# Backend (Spring Boot Actuator)
 curl http://localhost:8080/actuator/health
 
-# Frontend
-curl http://localhost:3000/health
+# Frontend (Expo Metro bundler)
+curl http://localhost:8081/status
 ```
 
 ### Resources
 
 - **GitHub**: https://github.com/dertomm/OpenFamilyCompass
-- **Documentation**: See README.md
+- **Documentation**: See [README.md](README.md)
 - **Issues**: https://github.com/dertomm/OpenFamilyCompass/issues

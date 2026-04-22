@@ -65,8 +65,4 @@ Thumbs.db
 
 ### Others ###
 .github/copilot-instructions.md
-app/EXPO_GO_GUIDE.md
-app/LOCAL_BUILD_GUIDE.md
-app/QUICK_BUILD.md
-app/BUILD_ANDROID.md
 app/android/app/google-services.json

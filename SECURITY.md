@@ -10,12 +10,12 @@ OpenFamilyCompass ships with **default credentials for development purposes only
 
 ### Default Credentials Included in Repository
 
-| Component | Username/ID | Password/Secret | Location |
-|-----------|-------------|-----------------|----------|
-| Database | `openfamilycompass_user` | `openfamilycompass_password` | `application.yml`, `docker-compose.yml` |
-| Admin User | `admin` | `admin` | `application.yml` |
-| OAuth Client | `openfamilycompass-client` | `change-me-in-production` | `application.yml` |
-| Android Keystore | - | **Must be configured separately** | `keystore.properties` |
+| Component         | Username/ID              | Password/Secret              | Location                                          |
+| ----------------- | ------------------------ | ---------------------------- | ------------------------------------------------- |
+| Database          | `openfamilycompass_user` | `openfamilycompass_password` | `backend/src/main/resources/application.yml`, `docker-compose.yml` |
+| Admin User        | `admin`                  | `admin`                      | `backend/src/main/resources/application.yml`      |
+| JWT Keystore      | alias `jwt-key`          | `changeit`                   | `backend/src/main/resources/application.yml` (auto-generated at `jwt-keys.pfx`) |
+| Android Keystore  | —                        | **Must be configured separately** | `app/android/keystore.properties`              |
 
 ## 🛡️ Production Deployment Checklist
 
@@ -44,7 +44,7 @@ SPRING_DATASOURCE_PASSWORD=your_very_strong_password_here
 
 - [ ] Change default admin password immediately after first login
 - [ ] Use a strong password (minimum 12 characters, mixed case, numbers, symbols)
-- [ ] Consider disabling default admin creation in production (modify `DataInitializer.java`)
+- [ ] Consider disabling default admin creation in production (modify `backend/src/main/java/org/openfamilycompass/init/DataInitializer.java`)
 - [ ] Set custom admin credentials via environment variables:
 
 ```bash
@@ -52,13 +52,17 @@ export APP_ADMIN_DEFAULT_USERNAME="your_admin_username"
 export APP_ADMIN_DEFAULT_PASSWORD="your_very_strong_password"
 ```
 
-### 3. OAuth2 Security
+### 3. JWT Keystore Security
 
-- [ ] Generate a strong, random OAuth2 client secret
-- [ ] Use environment variable for OAuth2 client secret
-- [ ] Never commit the actual secret to version control
+The backend signs JWT access / refresh tokens with an RSA key pair stored in a PKCS#12 keystore (`jwt-keys.pfx`). On first startup the keystore is auto-generated; it must be protected as a secret.
 
-**Generate a secure secret:**
+- [ ] Change the default keystore password from `changeit`
+- [ ] Use a strong, random password (at least 32 characters)
+- [ ] Persist the keystore in a secure volume (Docker volume `backend_config` in the default compose setup)
+- [ ] Rotate the keystore periodically — simply delete the file and restart the backend to force a new key pair (this invalidates all existing tokens)
+
+**Generate a secure password:**
+
 ```bash
 # Linux/macOS
 openssl rand -base64 32
@@ -67,39 +71,48 @@ openssl rand -base64 32
 [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
 ```
 
-**Set via environment variable:**
+**Set via environment variables:**
+
 ```bash
-export SPRING_SECURITY_OAUTH2_CLIENT_SECRET="your_generated_secret_here"
+export APP_SECURITY_JWT_KEYSTORE_PASSWORD="your_generated_password_here"
+export APP_SECURITY_JWT_KEYSTORE_PATH="/app/config/jwt-keys.pfx"
 ```
 
-### 4. Android App Security
+### 4. Firebase / Push Notifications
 
-- [ ] **CRITICAL**: Create your own release keystore (DO NOT use example keystore)
-- [ ] Copy `keystore.properties.example` to `keystore.properties`
-- [ ] Fill in your actual keystore details
-- [ ] Ensure `keystore.properties` is NOT committed to version control (check `.gitignore`)
+- [ ] Do **not** commit `firebase-service-account.json` — the `pom.xml` already excludes it from the built JAR
+- [ ] Mount the file at runtime (`FCM_SERVICE_ACCOUNT_PATH`) and keep it readable only by the backend process
+- [ ] Use separate Firebase projects for development, staging and production
+
+### 5. Android App Security
+
+- [ ] **CRITICAL**: Create your own release keystore for the mobile app (DO NOT publish with an example keystore)
+- [ ] Store keystore credentials in `app/android/keystore.properties` (or pass them via `GOOGLE_SERVICES_JSON` / EAS secrets for cloud builds)
+- [ ] Ensure `app/android/keystore.properties` and `*.keystore` are in `.gitignore`
+- [ ] Keep a secure backup of the keystore — losing it means you can no longer publish updates to the Play Store
 
 **Generate a new keystore:**
+
 ```bash
-keytool -genkey -v -keystore my-release-key.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias my-key-alias
+keytool -genkeypair -v -keystore release.keystore -alias openfamilycompass \
+  -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-### 5. Network Security
+See `app/BUILD.md` for the full local release build workflow.
 
-- [ ] Use HTTPS in production (configure reverse proxy like nginx)
-- [ ] Update OAuth2 redirect URIs from localhost to your production domain
-- [ ] Configure CORS appropriately (don't use `*` in production)
-- [ ] Enable firewall rules to restrict access
+### 6. Network Security
 
-### 6. Application Configuration
+- [ ] Use HTTPS in production (configure a reverse proxy like nginx / Traefik)
+- [ ] Restrict `CORS_ALLOWED_ORIGINS` to your own domains — do not use `*`
+- [ ] Enable firewall rules to restrict access to PostgreSQL (port 5432) and the Metro bundler (8081)
 
-- [ ] Review and adjust session timeout settings
-- [ ] Enable Spring Security's CSRF protection for web endpoints
-- [ ] Configure secure cookie settings (`HttpOnly`, `Secure`, `SameSite`)
-- [ ] Set up proper logging (but avoid logging sensitive data)
-- [ ] Configure rate limiting for authentication endpoints
+### 7. Application Configuration
 
-### 7. Docker Security
+- [ ] Review JWT access-/refresh-token lifetimes in `TokenService` (1 h / 30 d by default)
+- [ ] Set up proper logging (but avoid logging tokens, passwords or personal data)
+- [ ] Rate limiting is enabled via `RateLimitingFilter`; review the thresholds for your environment
+
+### 8. Docker Security
 
 - [ ] Do not expose PostgreSQL port (5432) to the internet
 - [ ] Run containers as non-root user (already configured in Dockerfile)
@@ -107,12 +120,12 @@ keytool -genkey -v -keystore my-release-key.keystore -keyalg RSA -keysize 2048 -
 - [ ] Regularly update base images for security patches
 - [ ] Use specific version tags instead of `latest`
 
-### 8. File System Security
+### 9. File System Security
 
 - [ ] Ensure upload directories have appropriate permissions
-- [ ] Validate file uploads (size, type, content)
+- [ ] Validate file uploads (size, type, content); the backend already enforces a 5 MB limit
 - [ ] Consider using external storage (S3, etc.) instead of local filesystem
-- [ ] Regularly backup database and uploads
+- [ ] Regularly backup the database and the `media_data` / `backend_config` volumes
 
 ## 🔐 Environment Variables for Production
 
@@ -123,11 +136,14 @@ Create a `.env` file based on `.env.example` and configure:
 POSTGRES_PASSWORD=<strong-random-password>
 SPRING_DATASOURCE_PASSWORD=<same-as-postgres-password>
 
-# OAuth2
-SPRING_SECURITY_OAUTH2_CLIENT_SECRET=<strong-random-secret>
-
 # Admin
 APP_ADMIN_DEFAULT_PASSWORD=<strong-initial-password>
+
+# JWT keystore (backend)
+APP_SECURITY_JWT_KEYSTORE_PASSWORD=<strong-random-password>
+
+# CORS
+CORS_ALLOWED_ORIGINS=https://your-domain.example.com
 
 # Optional: Override defaults
 SERVER_PORT=8080

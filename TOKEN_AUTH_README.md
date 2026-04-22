@@ -1,189 +1,193 @@
-# Token Authentication Implementation
+# Token Authentication
 
 ## Overview
 
-The application now supports JWT token-based authentication for the Android app, while maintaining form-based authentication for the web interface.
+The REST API of OpenFamilyCompass is **fully stateless** and authenticates every request via a **JWT bearer token** (RS256, signed with an RSA key). The Expo/React Native mobile app uses this API exclusively.
 
 ## Architecture
 
 ### Backend (Spring Boot)
 
-#### Token Configuration
-- **Access Token**: 15 minutes validity
-- **Refresh Token**: 30 days validity
-- **Algorithm**: HMAC SHA-256
-- **Secret**: Configured in `application.properties` (jwt.secret)
+#### Token characteristics
 
-#### Key Components
+- **Algorithm**: `RS256` (RSA + SHA-256)
+- **Access token lifetime**: 1 hour
+- **Refresh token lifetime**: 30 days
+- **Claims**: `sub` (username), `iss: self`, `iat`, `exp`, `scope`, `roles`, plus `type: refresh` on refresh tokens
+- **Role hierarchy**: an `ADMIN` role implicitly also grants `PARENT` (see `SecurityConfig.jwtAuthenticationConverter`).
 
-1. **JwtTokenService** (`src/main/java/com/family/kidschores/security/JwtTokenService.java`)
-   - Generates access and refresh tokens
-   - Validates tokens
-   - Extracts user information from tokens
+#### Key management
 
-2. **JwtAuthenticationFilter** (`src/main/java/com/family/kidschores/security/JwtAuthenticationFilter.java`)
-   - Intercepts requests with `Authorization: Bearer <token>` header
-   - Validates token and sets SecurityContext
-   - Positioned before UsernamePasswordAuthenticationFilter
+JWT signing keys are auto-generated on first startup:
 
-3. **AuthApiController** (`src/main/java/com/family/kidschores/controller/AuthApiController.java`)
-   - `POST /api/auth/login` - Authenticates user and returns tokens
-   - `POST /api/auth/refresh` - Refreshes expired access token using refresh token
-   - `POST /api/auth/logout` - Client-side logout (JWT is stateless)
+- Generated with BouncyCastle (2048-bit RSA, self-signed cert, valid one year).
+- Stored in a PKCS#12 keystore — default `jwt-keys.pfx` in the working directory.
+- Persisted in a Docker-named volume (`backend_config`) so tokens survive restarts.
 
-#### Security Configuration
-- `/api/auth/**` endpoints are public (no authentication required)
-- API requests use stateless sessions (`SessionCreationPolicy.STATELESS`)
-- CSRF protection disabled for `/api/**` endpoints
-- Form-based authentication still active for web UI
+Relevant configuration properties (with defaults):
 
-### Android App
+```yaml
+app:
+  security:
+    jwt:
+      keystore-path: jwt-keys.pfx         # APP_SECURITY_JWT_KEYSTORE_PATH
+      keystore-password: changeit          # APP_SECURITY_JWT_KEYSTORE_PASSWORD
+      key-alias: jwt-key                   # APP_SECURITY_JWT_KEY_ALIAS
+```
 
-#### Key Components
+If the keystore file does not exist, `JwtConfig#loadOrGenerateKeyPair` creates it. No manual `keytool` step is required.
 
-1. **AuthApiClient** (`android-app/app/src/main/java/com/family/kidschores/AuthApiClient.kt`)
-   - HTTP client for authentication API calls
-   - Coroutine-based async operations
-   - Methods:
-     - `suspend fun login(username: String, password: String): Result<TokenResponse>`
-     - `suspend fun refreshToken(refreshToken: String): Result<TokenResponse>`
+#### Key components
 
-2. **SessionManager** (`android-app/app/src/main/java/com/family/kidschores/SessionManager.kt`)
-   - Stores tokens in SharedPreferences
-   - Methods:
-     - `saveTokens(accessToken, refreshToken, expiresIn, username, role)`
-     - `getAccessToken()`, `getRefreshToken()`
-     - `isAccessTokenValid()` - Checks if access token is still valid (with 1-minute buffer)
-     - `hasValidSession()` - Checks if refresh token exists
-     - `getUserRole()` - Returns stored user role
-     - `clearSession()` - Removes all authentication data
+- **`config/JwtConfig`** — loads/generates the keystore, exposes `JwtEncoder` and `JwtDecoder` beans (Nimbus).
+- **`security/TokenService`** — `generateToken(Authentication)`, `generateRefreshToken(Authentication)`, `validateToken(String)`, `getUsernameFromToken(String)`.
+- **`config/SecurityConfig`** — stateless `SecurityFilterChain` using Spring Security's `oauth2ResourceServer().jwt(...)` with a custom `JwtAuthenticationConverter` (reads the `roles` claim).
+- **`security/RateLimitingFilter`** — simple in-memory rate limiting placed before `UsernamePasswordAuthenticationFilter`.
+- **`api/v1/AuthApiController`** — public auth endpoints.
 
-3. **MainActivity** (`android-app/app/src/main/java/com/family/kidschores/MainActivity.kt`)
-   - Automatically refreshes tokens on app start if access token expired
-   - Injects `Authorization: Bearer <token>` header into WebView requests
-   - Handles 401 errors by attempting token refresh
-   - Falls back to login page if refresh token expired
+#### Endpoints
 
-## Authentication Flow
+All endpoints are public (do not require authentication) unless stated otherwise.
 
-### Initial Login (Form-based in WebView)
-1. User opens app
-2. If no valid session, loads `/login` page
-3. User submits login form
-4. Web app authenticates via Spring Security
-5. User is redirected to `/dashboard`
+| Method | Path                              | Description                                                       |
+| ------ | --------------------------------- | ----------------------------------------------------------------- |
+| POST   | `/api/v1/auth/login`              | Authenticate with username/password, return token pair            |
+| POST   | `/api/v1/auth/refresh`            | Exchange a refresh token for a new token pair (rotated)           |
+| GET    | `/api/v1/auth/me`                 | Current user's profile (requires a valid access token)            |
+| POST   | `/api/v1/auth/change-password`    | Change the current user's password (requires a valid access token)|
 
-### Token-based Authentication (API)
-1. App can call `/api/auth/login` with username/password
-2. Backend validates credentials
-3. Backend generates access token (15 min) and refresh token (30 days)
-4. App stores tokens in SharedPreferences
-5. All subsequent requests include `Authorization: Bearer <accessToken>` header
+Public static resources, Swagger UI (`/swagger-ui.html`, `/v3/api-docs/**`), Spring Actuator (`/actuator/**`) and reward images (`GET /api/v1/rewards/*/image`) are also whitelisted.
 
-### Token Refresh
-1. On app start or when access token expires (< 1 minute remaining):
-   - App calls `/api/auth/refresh` with refresh token
-   - Backend validates refresh token
-   - Backend issues new access token and refresh token
-   - App stores new tokens
-2. If refresh fails (expired/invalid):
-   - App redirects to login page
-   - User must re-authenticate
+### Mobile app (Expo / React Native)
 
-### Automatic Session Persistence
-- Tokens are stored locally in SharedPreferences
-- On app restart:
-  - If refresh token exists and is valid → auto-login
-  - If access token expired → automatic refresh
-  - If refresh token expired (after 30 days) → require new login
+#### Key components
+
+- **`app/src/api/config.ts`** — stores the server URL, access token, refresh token and token expiry. On native devices the values are stored in **expo-secure-store**; on web they fall back to `localStorage`.
+- **`app/src/api/client.ts`** — single axios instance with two interceptors:
+  - **Request interceptor**: attaches `Authorization: Bearer <accessToken>` from secure storage.
+  - **Response interceptor**: on `401` or `403` (to also recover from tokens lacking role claims), transparently calls `POST /api/v1/auth/refresh`, stores the rotated tokens, retries the original request, and serializes concurrent failures through a shared queue.
+- **`app/src/store/authStore.ts`** — Zustand store that exposes `initialize`, `login`, `logout`, `completeSetup`, etc., and the derived selectors `selectIsAdmin` / `selectIsChild`.
+- **`app/src/navigation/AppNavigator.tsx`** — renders the Auth stack, the Server Setup screen or the authenticated tab navigator depending on the store state.
+
+Tokens are never stored in component state or React Query caches. On logout the React Query cache is cleared in `App.tsx` to prevent cross-account data leakage.
+
+## Authentication flow
+
+### Initial login (mobile app)
+
+1. On first launch the user enters the backend URL on the **Server Setup** screen (persisted via `expo-secure-store`).
+2. The user submits username/password on the **Login** screen.
+3. The app calls `POST /api/v1/auth/login`.
+4. The backend authenticates via `AuthenticationManager` and returns:
+   ```json
+   {
+     "accessToken":  "eyJhbGciOi…",
+     "refreshToken": "eyJhbGciOi…",
+     "tokenType":    "Bearer",
+     "expiresIn":    3600
+   }
+   ```
+5. The app stores both tokens plus `Date.now() + expiresIn*1000` as expiry.
+
+### Authenticated requests
+
+Every API call is issued through `apiClient` (axios) which automatically:
+
+- sets the `baseURL` to `<server>/api/v1`,
+- reads the current access token from secure storage and adds `Authorization: Bearer …`.
+
+### Automatic token refresh
+
+On any `401`/`403` response, the client:
+
+1. Calls `POST /api/v1/auth/refresh` with the stored refresh token.
+2. On success: persists the rotated tokens and retries the original request (and any queued parallel requests).
+3. On failure: clears `ACCESS_TOKEN`, `REFRESH_TOKEN`, `TOKEN_EXPIRY`, `USER_PROFILE` and lets the `authStore` move back to the login screen.
+
+### Session persistence
+
+- Tokens live in `expo-secure-store` (Keystore / Keychain on device) and survive app restarts.
+- On startup `authStore.initialize()` reads the stored tokens; if only the refresh token is still valid, the first API call silently refreshes the pair.
+- After 30 days of inactivity the refresh token expires and a new login is required.
 
 ## Configuration
 
-### Backend (`src/main/resources/application.properties`)
-```properties
-# JWT Configuration
-jwt.secret=your-very-long-secret-key-at-least-256-bits-change-this-in-production
-jwt.access-token-validity=900000    # 15 minutes in milliseconds
-jwt.refresh-token-validity=2592000000  # 30 days in milliseconds
+### Backend
+
+`backend/src/main/resources/application.yml` ships sensible defaults; override via environment variables or a `.env` file when using Docker:
+
+```env
+APP_SECURITY_JWT_KEYSTORE_PATH=/app/config/jwt-keys.pfx
+APP_SECURITY_JWT_KEYSTORE_PASSWORD=<strong-password>
+APP_SECURITY_JWT_KEY_ALIAS=jwt-key
 ```
 
-**Important**: Change `jwt.secret` in production to a secure random string!
+The default Docker-compose setup mounts the `backend_config` named volume at `/app/config` so the keystore persists across restarts.
 
-### Android App
-No configuration needed - tokens are automatically managed by SessionManager.
+### Mobile app
 
-## Testing
+No configuration is required — tokens are fully managed by `authStore` and `apiClient`. The server URL is set once by the user on the Server Setup screen and stored in `expo-secure-store` under `server_url`.
 
-### Test Login API
+## Testing the API
+
+### Login
+
 ```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin"}'
 ```
 
-Expected response:
+Response:
+
 ```json
 {
-  "accessToken": "eyJhbGc...",
-  "refreshToken": "eyJhbGc...",
-  "tokenType": "Bearer",
-  "expiresIn": 900,
-  "username": "admin",
-  "role": "PARENT"
+  "accessToken":  "eyJhbGciOi…",
+  "refreshToken": "eyJhbGciOi…",
+  "tokenType":    "Bearer",
+  "expiresIn":    3600
 }
 ```
 
-### Test Refresh API
+### Refresh
+
 ```bash
-curl -X POST http://localhost:8080/api/auth/refresh \
-  -H "Content-Type: application/json" \
-  -d '{"refreshToken":"<your-refresh-token>"}'
+curl -X POST http://localhost:8080/api/v1/auth/refresh \
+  -H 'Content-Type: application/json' \
+  -d '{"refreshToken":"<refresh-token>"}'
 ```
 
-### Test Authenticated Request
+### Authenticated request
+
 ```bash
-curl http://localhost:8080/api/some-endpoint \
-  -H "Authorization: Bearer <your-access-token>"
+curl http://localhost:8080/api/v1/auth/me \
+  -H "Authorization: Bearer <access-token>"
 ```
 
-## Security Considerations
+Browse the full API at http://localhost:8080/swagger-ui.html.
 
-1. **Token Storage**: Tokens are stored in SharedPreferences which is reasonably secure for Android apps
-2. **HTTPS**: Always use HTTPS in production to prevent token interception
-3. **Secret Key**: Use a strong random secret key (at least 256 bits) in production
-4. **Token Expiry**: Short-lived access tokens (15 min) limit exposure if compromised
-5. **Refresh Token Rotation**: Consider implementing refresh token rotation for enhanced security
-6. **Logout**: Tokens are cleared client-side; for enhanced security, consider token blacklisting on server
+## Security considerations
+
+1. **Token storage**: `expo-secure-store` uses the Android Keystore / iOS Keychain.
+2. **HTTPS in production**: always front the backend with a reverse proxy (nginx, Traefik, …) that terminates TLS.
+3. **Keystore password**: change `APP_SECURITY_JWT_KEYSTORE_PASSWORD` from the default `changeit`.
+4. **Key rotation**: delete `jwt-keys.pfx` and restart the backend to force a new key pair (invalidates all existing tokens).
+5. **Short-lived access tokens**: 1 hour bounds the exposure window if a token leaks.
+6. **Refresh-token rotation**: every call to `/refresh` issues a new refresh token; the old one remains valid until it expires, so consider pairing rotation with server-side revocation for high-security deployments.
+7. **Logout**: tokens are removed client-side. For enhanced security a denylist / revocation store can be added to `TokenService`.
+8. **CORS**: configured in `SecurityConfig#corsConfigurationSource`; restrict allowed origins for production deployments.
+9. **Rate limiting**: `RateLimitingFilter` throttles authentication endpoints at the Spring Security filter level.
 
 ## Benefits
 
-1. **Persistent Sessions**: Users stay logged in for 30 days (until refresh token expires)
-2. **Security**: Short-lived access tokens with automatic refresh
-3. **Stateless API**: Backend doesn't need to maintain session state
-4. **Hybrid Approach**: Web UI still uses traditional form-based auth, mobile app uses tokens
-5. **Automatic Recovery**: App automatically refreshes tokens when needed
+1. **Persistent sessions** — users stay signed in until the refresh token expires (30 days).
+2. **Stateless backend** — no HTTP session state for the API; horizontally scalable.
+3. **Automatic recovery** — the axios interceptor transparently refreshes expired tokens and queues parallel requests during a refresh.
+4. **Uniform authentication** — every API client (mobile app, Swagger, curl) uses the same stateless JWT flow.
 
-## Migration Notes
+## Future enhancements
 
-### Removed from Android App
-- Cookie-based authentication
-- CookieManager usage
-- Manual cookie extraction and restoration
-- `detectAndSaveSession()` method
-- `restoreCookies()` method
-
-### Added to Android App
-- JWT token storage and management
-- Authorization header injection into WebView
-- Automatic token refresh on app start
-- Token refresh on 401 errors
-- Coroutine-based API client
-
-## Future Enhancements
-
-1. **Biometric Authentication**: Add fingerprint/face unlock for re-authentication
-2. **Token Rotation**: Implement refresh token rotation for enhanced security
-3. **Token Blacklisting**: Add server-side token revocation on logout
-4. **Custom Login Screen**: Replace WebView login with native Android UI
-5. **Push Notifications**: Add device token registration for notifications
-6. **Multi-Device Support**: Track active sessions per user
+- **Biometric unlock** for the mobile app before re-authentication
+- **Server-side refresh-token revocation** (denylist or one-time rotation)
+- **Device management** — list active sessions per user, revoke specific devices
+- **Device-bound tokens** tied to an FCM registration for stronger account hygiene
