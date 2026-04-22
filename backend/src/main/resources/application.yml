@@ -87,6 +87,15 @@ app:
     # Or set via environment: APP_ADMIN_DEFAULT_PASSWORD=your_secure_password
     default-username: admin
     default-password: "admin" # ⚠️ CHANGE AFTER FIRST LOGIN!
+  security:
+    # Secure by default: when true (or when the 'prod' Spring profile is
+    # active), the application refuses to start if insecure default credentials
+    # are detected for APP_ADMIN_DEFAULT_PASSWORD or
+    # APP_SECURITY_JWT_KEYSTORE_PASSWORD.
+    # For local development, override via env var or .env file:
+    #   APP_SECURITY_FAIL_ON_DEFAULT_CREDENTIALS=false
+    # Never disable this in production deployments.
+    fail-on-default-credentials: true
 
 # Firebase Cloud Messaging Configuration
 # The service account JSON must be provided at runtime - it is NOT bundled in the JAR.

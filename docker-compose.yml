@@ -62,6 +62,11 @@ services:
       APP_SECURITY_JWT_KEYSTORE_PATH: /app/config/jwt-keys.pfx
       APP_SECURITY_JWT_KEYSTORE_PASSWORD: ${JWT_KEYSTORE_PASSWORD:-changeit}
 
+      # Fail-fast on default credentials (secure by default).
+      # Set APP_SECURITY_FAIL_ON_DEFAULT_CREDENTIALS=false in .env for local
+      # dev with shipped defaults. NEVER disable in production.
+      APP_SECURITY_FAIL_ON_DEFAULT_CREDENTIALS: ${APP_SECURITY_FAIL_ON_DEFAULT_CREDENTIALS:-true}
+
       # Firebase Cloud Messaging - optional. Mount the service account JSON to enable push
       # notifications. If the file is absent, push notifications are silently disabled.
       FCM_SERVICE_ACCOUNT_PATH: /app/config/firebase-service-account.json

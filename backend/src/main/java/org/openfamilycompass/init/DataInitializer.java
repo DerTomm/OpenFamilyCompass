@@ -55,8 +55,11 @@ public class DataInitializer implements CommandLineRunner {
             admin.setActive(true);
 
             userRepository.save(admin);
-            log.info("Admin user created: username='{}', password='{}'", adminUsername, adminPassword);
-            log.warn("IMPORTANT: Please change the admin password after the first login!");
+            // Never log the initial password in clear text. The value is taken from
+            // app.admin.default-password (or APP_ADMIN_DEFAULT_PASSWORD) and must be
+            // changed on first login anyway.
+            log.info("Admin user '{}' created with the configured initial password.", adminUsername);
+            log.warn("IMPORTANT: Change the admin password on first login.");
         } else {
             log.info("Admin user already exists.");
         }
