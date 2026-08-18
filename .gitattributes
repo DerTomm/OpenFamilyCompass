@@ -1,0 +1,28 @@
+# Enforce LF line endings everywhere: in the repository and in every working
+# tree, regardless of the platform or the contributor's core.autocrlf setting.
+* text=auto eol=lf
+
+# Windows batch interpreters can mis-parse goto targets and labels in files
+# that use bare LF, so these keep CRLF in the working tree. They are still
+# stored with LF in the repository.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets must never be touched by EOL normalization.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.jar binary
+*.keystore binary
+*.jks binary
+*.pfx binary
+*.p12 binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
