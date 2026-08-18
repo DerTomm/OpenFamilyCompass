@@ -1,4 +1,4 @@
-package org.openfamilycompass.dto;
+package org.openfamilycompass.service;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

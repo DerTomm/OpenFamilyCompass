@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.openfamilycompass.dto.BehaviorEvaluationDTO;
 import org.openfamilycompass.model.Behavior;
 import org.openfamilycompass.model.BehaviorEvaluation;
 import org.openfamilycompass.model.PointTransactionType;
