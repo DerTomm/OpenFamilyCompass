@@ -30,9 +30,16 @@ services:
 
   # Backend (Spring Boot)
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    # Default: use the pre-built image from GitHub Container Registry (published on every
+    # GitHub release). No local build required - just `docker compose up -d`.
+    image: ghcr.io/dertomm/openfamilycompass:${BACKEND_IMAGE_TAG:-latest}
+    # For local development against the code currently checked out (e.g. on the
+    # 'development' branch, ahead of the last release), comment out 'image' above and
+    # uncomment the 'build' block below instead. Then rebuild with:
+    #   docker compose up -d --build backend
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile
     container_name: ofc-backend
     depends_on:
       postgres:

@@ -60,6 +60,20 @@ The Docker Compose configuration starts three services:
 
 ### Configuration
 
+#### Backend image: pre-built vs. local build
+
+By default, `docker-compose.yml` pulls the pre-built backend image from GitHub Container
+Registry (`ghcr.io/dertomm/openfamilycompass`) - no local build required, just
+`docker-compose up -d`. This image is published on every GitHub release, so `:latest`
+reflects the last **released** version, not necessarily what's currently checked out
+(e.g. if you're on the `development` branch ahead of the latest release).
+
+- To pin a specific released version instead of always tracking `:latest`, set
+  `BACKEND_IMAGE_TAG` in `.env` (e.g. `BACKEND_IMAGE_TAG=1.2.0`).
+- To build the backend locally from the source currently checked out, edit
+  `docker-compose.yml`: comment out the `image:` line for the `backend` service and
+  uncomment the `build:` block instead, then run `docker-compose up -d --build backend`.
+
 #### Change ports
 
 Change the ports in the `.env` file:
