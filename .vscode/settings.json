@@ -9,8 +9,10 @@
     "java.format.enabled": true,
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.debug.settings.onBuildFailureProceed": true,
+    "java.import.gradle.enabled": false,
     "java.import.exclusions": [
         "**/node_modules/**",
+        "**/android/**",
         "**/.metadata/**",
         "**/archetype-resources/**",
         "**/META-INF/maven/**",
@@ -23,5 +25,13 @@
     "files.exclude": {
         "**/node_modules": true,
         "**/.expo": true
+    },
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/.expo/**": true,
+        "**/app/android/build/**": true,
+        "**/app/android/app/build/**": true,
+        "**/app/android/.gradle/**": true,
+        "**/backend/target/**": true
     }
 }
