@@ -7,37 +7,29 @@
         "development": {
             "developmentClient": true,
             "distribution": "internal",
+            "environment": "development",
             "android": {
                 "gradleCommand": ":app:assembleDebug",
-                "buildType": "apk",
-                "env": {
-                    "GOOGLE_SERVICES_JSON": "@env GOOGLE_SERVICES_JSON"
-                }
+                "buildType": "apk"
             }
         },
         "preview": {
             "distribution": "internal",
+            "environment": "preview",
             "android": {
-                "buildType": "apk",
-                "env": {
-                    "GOOGLE_SERVICES_JSON": "@env GOOGLE_SERVICES_JSON"
-                }
+                "buildType": "apk"
             }
         },
         "production": {
+            "environment": "production",
             "android": {
-                "buildType": "app-bundle",
-                "env": {
-                    "GOOGLE_SERVICES_JSON": "@env GOOGLE_SERVICES_JSON"
-                }
+                "buildType": "app-bundle"
             }
         },
         "production-apk": {
+            "environment": "production",
             "android": {
-                "buildType": "apk",
-                "env": {
-                    "GOOGLE_SERVICES_JSON": "@env GOOGLE_SERVICES_JSON"
-                }
+                "buildType": "apk"
             }
         }
     },
