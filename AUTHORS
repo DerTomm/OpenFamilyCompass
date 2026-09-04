@@ -24,7 +24,7 @@ Add your name here when your first contribution is merged:
 ## Acknowledgments
 
 - Built with [Spring Boot](https://spring.io/projects/spring-boot)
-- Frontend with [Thymeleaf](https://www.thymeleaf.org/) and [Bootstrap](https://getbootstrap.com/)
+- Frontend with [React Native](https://reactnative.dev/) and [Expo](https://expo.dev/)
 - Mobile app with [Android/Kotlin](https://kotlinlang.org/)
 - Database: [PostgreSQL](https://www.postgresql.org/)
 - Containerization: [Docker](https://www.docker.com/)
