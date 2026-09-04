@@ -267,14 +267,24 @@ Installed footprint on the device is typically ~70–80 MB.
 
 ## Versioning
 
-Every Play Store upload must have a new `versionCode`. Bump both fields in `app/app.json` before each release build:
+The visible app version is maintained once in `app/package.json`. Expo, the Android
+Gradle build, and the in-app version display read it from there. Every Play Store
+upload must also have a new `versionCode`; that build number remains in
+`app/app.json`.
 
 ```jsonc
 {
+  // app/package.json
+  "version": "1.1.2"
+}
+```
+
+```jsonc
+{
+  // app/app.json
   "expo": {
-    "version": "1.1.2",         // human-readable
     "android": {
-      "versionCode": 3          // strictly increasing integer
+      "versionCode": 3
     }
   }
 }

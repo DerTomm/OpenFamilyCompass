@@ -27,6 +27,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { profileApi, usersApi } from '../../api/services';
 import { AvatarPicker, UserAvatar } from '../../components/ui';
 import { Avatar as AvatarType } from '../../constants/avatars';
+import { APP_VERSION } from '../../constants/appVersion';
 import { queryKeys } from '../../hooks/useApi';
 import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
@@ -380,7 +381,7 @@ export const ProfileScreen: React.FC = () => {
         {/* Footer */}
         <View style={styles.footer}>
           <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            {t('app.name')} v1.0.0
+            {t('app.name')} v{APP_VERSION}
           </Text>
         </View>
       </ScrollView>

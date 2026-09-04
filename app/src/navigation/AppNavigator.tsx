@@ -7,6 +7,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '../i18n/I18nContext';
+import { APP_VERSION } from '../constants/appVersion';
 import { selectIsAdmin, selectIsChild, useAuthStore } from '../store/authStore';
 
 // Screens
@@ -237,7 +238,7 @@ const VersionFooter: React.FC = () => {
   return (
     <View style={[styles.footer, { backgroundColor: theme.colors.surfaceVariant, borderTopColor: theme.colors.outlineVariant }]}>
       <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-        Version 1.0.0
+        Version {APP_VERSION}
       </Text>
     </View>
   );

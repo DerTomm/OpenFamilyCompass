@@ -4,6 +4,8 @@ apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+def packageJson = new groovy.json.JsonSlurper().parse(new File(projectRoot, "package.json"))
+def expoConfig = new groovy.json.JsonSlurper().parse(new File(projectRoot, "app.json")).expo
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -103,8 +105,8 @@ android {
         applicationId 'org.openfamilycompass.android'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.1.0"
+        versionCode expoConfig.android.versionCode
+        versionName packageJson.version
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
