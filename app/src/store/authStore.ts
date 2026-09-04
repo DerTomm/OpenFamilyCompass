@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { api } from '../api/client';
-import { getApiBaseUrl, secureStorage, STORAGE_KEYS } from '../api/config';
+import { API_CONFIG, getApiBaseUrl, secureStorage, STORAGE_KEYS } from '../api/config';
 import { notificationsApi } from '../api/services';
 import { UserProfileResponse, UserRole } from '../types/api';
 
@@ -17,6 +17,7 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string, expiresIn: number) => Promise<void>;
   fetchUser: () => Promise<void>;
   logout: () => Promise<void>;
+  changeServer: (serverUrl: string) => Promise<void>;
   completeSetup: () => void;
   bumpAvatarVersion: () => void;
 }
@@ -212,6 +213,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('[LOGOUT] Logout error:', error);
       set({ isAuthenticated: false, user: null, isLoading: false });
+    }
+  },
+
+  changeServer: async (serverUrl) => {
+    try {
+      // Unregister against the current server before changing the base URL.
+      const fcmToken = await AsyncStorage.getItem('fcm_current_token');
+      if (fcmToken) {
+        try {
+          await notificationsApi.unregisterDevice(fcmToken);
+        } catch (error) {
+          console.warn('[SERVER] Failed to unregister FCM token:', error);
+        }
+      }
+
+      await AsyncStorage.removeItem('fcm_current_token');
+      await AsyncStorage.removeItem('fcm_device_id');
+      await secureStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+      await secureStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+      await secureStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+      await secureStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
+      await secureStorage.setItem(STORAGE_KEYS.SERVER_URL, serverUrl);
+      API_CONFIG.baseUrl = serverUrl;
+
+      set({ isAuthenticated: false, user: null, isLoading: false, isSetupComplete: true });
+    } catch (error) {
+      set({ isAuthenticated: false, user: null, isLoading: false });
+      throw error;
     }
   },
 
