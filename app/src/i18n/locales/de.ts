@@ -241,6 +241,8 @@ export const de = {
     'settings.theme.light.desc': 'Helles Design mit weißem Hintergrund',
     'settings.theme.dark': 'Dark Mode',
     'settings.theme.dark.desc': 'Dunkles Design mit schwarzem Hintergrund',
+    'settings.server.description': 'Hier kannst du die Adresse deines OpenFamilyCompass-Servers ändern.',
+    'settings.server.relogin': 'Wenn du den Server wechselst, wirst du abgemeldet und musst dich erneut anmelden.',
     'profile.language': 'Sprache',
     'profile.language.en': 'Englisch',
     'profile.language.de': 'Deutsch',

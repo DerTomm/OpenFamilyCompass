@@ -1,4 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
@@ -25,14 +27,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { profileApi, usersApi } from '../../api/services';
 import { AvatarPicker, UserAvatar } from '../../components/ui';
 import { Avatar as AvatarType } from '../../constants/avatars';
-import { queryKeys, usePointTransactions } from '../../hooks/useApi';
+import { queryKeys } from '../../hooks/useApi';
 import { useDialogs } from '../../hooks/useDialogs';
 import { useI18n } from '../../i18n/I18nContext';
+import { ProfileStackParamList } from '../../navigation/types';
 import { selectIsChild, useAuthStore } from '../../store/authStore';
 import { useTheme as useAppTheme } from '../../theme/ThemeContext';
 import { spacing } from '../../theme/theme';
 
+type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
+
 export const ProfileScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
   const queryClient = useQueryClient();
   const { user, logout, fetchUser } = useAuthStore();
   const bumpAvatarVersion = useAuthStore((state) => state.bumpAvatarVersion);
@@ -57,11 +63,6 @@ export const ProfileScreen: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  const { data: transactions, isLoading } = usePointTransactions({
-    userId: user?.id,
-    limit: 5
-  });
 
   const updateProfileMutation = useMutation({
     mutationFn: profileApi.update,
@@ -288,6 +289,18 @@ export const ProfileScreen: React.FC = () => {
             {t('settings.title')}
           </Text>
           <Surface style={styles.menuGroup} elevation={1}>
+            {isChild && (
+              <>
+                <List.Item
+                  title={t('history.points.history')}
+                  left={props => <List.Icon {...props} icon="history" />}
+                  right={props => <List.Icon {...props} icon="chevron-right" />}
+                  onPress={() => navigation.navigate('PointsHistory')}
+                />
+                <Divider />
+              </>
+            )}
+
             {/* Edit Username */}
             <List.Item
               title={t('profile.username')}
@@ -345,10 +358,10 @@ export const ProfileScreen: React.FC = () => {
 
             {/* Notifications */}
             <List.Item
-              title={t('nav.settings')}
-              left={props => <List.Icon {...props} icon="cog" />}
+              title={t('login.server.settings')}
+              left={props => <List.Icon {...props} icon="server" />}
               right={props => <List.Icon {...props} icon="chevron-right" />}
-              onPress={() => { }}
+              onPress={() => navigation.navigate('Settings')}
             />
           </Surface>
         </View>

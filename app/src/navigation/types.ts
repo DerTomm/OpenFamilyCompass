@@ -53,10 +53,8 @@ export type ManageStackParamList = {
 // Profile Stack
 export type ProfileStackParamList = {
   ProfileMain: undefined;
-  ProfileEdit: undefined;
   PointsHistory: undefined;
   Settings: undefined;
-  Notifications: undefined;
 };
 
 // Screen Props Types

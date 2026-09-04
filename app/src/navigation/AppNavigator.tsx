@@ -23,6 +23,8 @@ import { BehaviorOverviewScreen } from '../screens/parent/BehaviorOverviewScreen
 import { ChildDetailScreen } from '../screens/parent/ChildDetailScreen';
 import { ParentDashboardScreen } from '../screens/parent/DashboardScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { PointsHistoryScreen } from '../screens/profile/PointsHistoryScreen';
+import { ServerSettingsScreen } from '../screens/profile/ServerSettingsScreen';
 import { ServerSetupScreen } from '../screens/setup/ServerSetupScreen';
 import { PendingRedemptionsScreen } from '../screens/shop/PendingRedemptionsScreen';
 import { RewardEditScreen } from '../screens/shop/RewardEditScreen';
@@ -199,6 +201,16 @@ const ProfileStackNavigator: React.FC = () => {
         name="ProfileMain"
         component={ProfileScreen}
         options={{ title: t('nav.profile') }}
+      />
+      <ProfileStack.Screen
+        name="PointsHistory"
+        component={PointsHistoryScreen}
+        options={{ title: t('history.points.history') }}
+      />
+      <ProfileStack.Screen
+        name="Settings"
+        component={ServerSettingsScreen}
+        options={{ title: t('login.server.settings') }}
       />
     </ProfileStack.Navigator>
   );
