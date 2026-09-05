@@ -70,7 +70,8 @@ export const BehaviorEditScreen: React.FC = () => {
     });
 
     const updateMutation = useMutation({
-        mutationFn: ({ id, data }: { id: number; data: any }) => behaviorsApi.update(id, data),
+        mutationFn: ({ id, data }: { id: number; data: Parameters<typeof behaviorsApi.update>[1] }) =>
+            behaviorsApi.update(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['behaviors'] });
             queryClient.invalidateQueries({ queryKey: ['behavior', behaviorId] });
@@ -108,12 +109,26 @@ export const BehaviorEditScreen: React.FC = () => {
             return;
         }
 
-        const data = { title, guideline, plusPoints: parsedPlus, minusPoints: parsedMinus, userId };
-
         if (isEditing) {
-            updateMutation.mutate({ id: behaviorId!, data });
+            updateMutation.mutate({
+                id: behaviorId!,
+                data: {
+                    title,
+                    guideline,
+                    plusPoints: parsedPlus,
+                    minusPoints: parsedMinus,
+                    // The update API uses 0 to explicitly remove a child restriction.
+                    userId: userId ?? 0,
+                },
+            });
         } else {
-            createMutation.mutate(data);
+            createMutation.mutate({
+                title,
+                guideline,
+                plusPoints: parsedPlus,
+                minusPoints: parsedMinus,
+                userId,
+            });
         }
     };
 
