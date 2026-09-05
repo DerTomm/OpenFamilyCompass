@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "org.openfamilycompass.android",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2196F3"
