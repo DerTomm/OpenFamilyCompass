@@ -123,7 +123,7 @@ export const behaviorsApi = {
   getById: (id: number) => api.get<BehaviorResponse>(`/behaviors/${id}`),
   create: (data: { title: string; guideline: string; plusPoints: number; minusPoints: number; userId?: number; rank?: number }) =>
     api.post<BehaviorResponse>('/behaviors', data),
-  update: (id: number, data: Partial<{ title: string; guideline: string; plusPoints: number; minusPoints: number; rank: number; active: boolean }>) =>
+  update: (id: number, data: Partial<{ title: string; guideline: string; plusPoints: number; minusPoints: number; userId: number; rank: number; active: boolean }>) =>
     api.put<BehaviorResponse>(`/behaviors/${id}`, data),
   deactivate: (id: number) => api.delete<void>(`/behaviors/${id}`),
 };

@@ -79,6 +79,8 @@ public class BehaviorDto {
         @Min(0)
         private Integer minusPoints;
 
+        private Long userId;
+
         private Integer rank;
         private Boolean active;
     }

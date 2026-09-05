@@ -136,6 +136,16 @@ public class BehaviorApiController {
         if (request.getMinusPoints() != null) {
             behavior.setMinusPoints(request.getMinusPoints());
         }
+        if (request.getUserId() != null) {
+            if (request.getUserId() == 0L) {
+                // 0 explicitly removes the child restriction ("all children").
+                behavior.setUser(null);
+            } else {
+                User user = userService.findById(request.getUserId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
+                behavior.setUser(user);
+            }
+        }
         if (request.getRank() != null) {
             behavior.setRank(request.getRank());
         }
